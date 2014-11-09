@@ -23,12 +23,15 @@ PASSWORD=$3
 SERVER_ALIVE_INTERVAL=60
 SERVER_ALIVE_COUNT_MAX=2
 
+# TODO: Remove debug (echo) lines.
+
 while true; do
   echo "$(date) connecting..."
   sshpass -p "$PASSWORD" \
   ssh -o "ServerAliveInterval=$SERVER_ALIVE_INTERVAL" \
       -o "ServerAliveCountMax=$SERVER_ALIVE_COUNT_MAX" \
       -o "StrictHostKeyChecking=no" \
+      -o "UserKnownHostsFile=/dev/null" \
       -N -R $FWD_PORT:localhost:22 $REMOTE_ADDRESS -p $REMOTE_PORT
   SSH_RETVAL=$?
   echo "$(date) ssh retval: $SSH_RETVAL"
