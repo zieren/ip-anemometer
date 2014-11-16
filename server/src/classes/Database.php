@@ -127,7 +127,7 @@ class Database {
     }
     $q = '';
     foreach ($wind as $data_dict) {
-      $values = $data_dict[WIND_VALUES_KEY];
+      $values = $data_dict[WIND_REVOLUTIONS_KEY];
       // This loop will run more than once iff there were failed uploads, since that results in
       // multiple entries in $wind.
       foreach ($values as $v) {

@@ -46,7 +46,7 @@ class Wind:
   def get_values(self):
     return K.WIND_KEY, {K.WIND_STARTUP_TIME_KEY: self._startup_time,
                         K.WIND_UP_TO_TIME_KEY: time.time(),
-                        K.WIND_VALUES_KEY: self._revolutions.get_and_reset()}
+                        K.WIND_REVOLUTIONS_KEY: self._revolutions.get_and_reset()}
 
   def terminate(self):
     """Unregister the callback and, if MODE_CALIBRATE, terminate the logger."""
