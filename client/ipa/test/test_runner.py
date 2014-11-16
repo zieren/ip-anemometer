@@ -1,13 +1,13 @@
 import unittest
 
-import stats
+import wind_sensor
 import C
 
 
 class Test(unittest.TestCase):
 
-  def test_Stats(self):
-    s = stats.Stats()
+  def test_Revolutions(self):
+    s = wind_sensor.Revolutions()
     edges = C.WIND_EDGES_PER_REV()
 
     # Add N-1 edges.

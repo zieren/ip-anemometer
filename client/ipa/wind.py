@@ -4,7 +4,7 @@ import time
 import C
 import calibration_logger
 import K
-from stats import Stats
+from wind_sensor import Revolutions
 
 # TODO: Implement aggregate mode
 
@@ -18,16 +18,16 @@ class Wind:
 
   def __init__(self, mode):
     self._log = K.get_logger(K.LOG_NAME_WIND)
-    self._stats = Stats()
+    self._revolutions = Revolutions()
     self._mode = mode
     if mode == Wind.MODE_PRECISION:
-      self._register_callback(self._stats.add_edge)
+      self._register_callback(self._revolutions.add_edge)
     elif mode == Wind.MODE_AGGREGATE:
       raise RuntimeError('not implemented: %s' % self._mode_to_string[mode])
     elif mode == Wind.MODE_CALIBRATE:
       self._calibration_logger = calibration_logger.CalibrationLogger()
-      self._stats.calibration_init(self._calibration_logger)
-      self._register_callback(self._stats.calibration_add_edge_and_log)
+      self._revolutions.calibration_init(self._calibration_logger)
+      self._register_callback(self._revolutions.calibration_add_edge_and_log)
     self._startup_time = time.time()
     self._log.info('initialized (mode: %s)' % self._mode_to_string[mode])
 
@@ -46,7 +46,7 @@ class Wind:
   def get_values(self):
     return K.WIND_KEY, {K.WIND_STARTUP_TIME_KEY: self._startup_time,
                         K.WIND_UP_TO_TIME_KEY: time.time(),
-                        K.WIND_VALUES_KEY: self._stats.get_and_reset()}
+                        K.WIND_VALUES_KEY: self._revolutions.get_and_reset()}
 
   def terminate(self):
     """Unregister the callback and, if MODE_CALIBRATE, terminate the logger."""
