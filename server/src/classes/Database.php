@@ -239,28 +239,32 @@ class Database {
   public function echoStats() {
     // Order to match $allTables.
     $sortKeys = array('startup', 'ts', 'ts', 'ts');
+    $limits = array(5, 1, 1, 1);
     for ($i = 0; $i < count($sortKeys); ++$i) {
       $table = $this->allTables[$i];
       $sortKey = $sortKeys[$i];
-      $q1 = 'SELECT * FROM ' . $table . ' ORDER BY ' . $sortKey . ' DESC LIMIT 0, 1';
-      $q2 = 'SELECT COUNT(*) FROM ' . $table;
-      if (($result1 = $this->query($q1)) && ($result2 = $this->query($q2))) {
-        $row1 = $result1->fetch_assoc();
-        $row2 = $result2->fetch_row();
+      $q1 = 'SELECT * FROM '.$table.' ORDER BY '.$sortKey.' DESC LIMIT '.$limits[$i];
+      $q2 = 'SELECT COUNT(*) FROM '.$table;
+      if (($resultRecent = $this->query($q1)) && ($resultCount = $this->query($q2))) {
+        $rowCount = $resultCount->fetch_row();
         echo '<p><table border="1"><tr><td>' . $table . '</td>';
-        if (isset($row1)) {
-          foreach ($row1 as $k => $v) {
-            echo '<td>' . $k . '</td>';
+        $count = 0;
+        while ($row = $resultRecent->fetch_assoc()) {
+          if ($count == 0) {
+            foreach ($row as $k => $v) {
+              echo '<td>' . $k . '</td>';
+            }
+            echo '<td>total</td>';
           }
-        }
-        echo '<td>total</td>';
-        echo '</tr><tr><td>latest</td>';
-        if (isset($row1)) {
-          foreach ($row1 as $k => $v) {
-            echo '<td>' . $v . '</td>';
+          echo '</tr><tr><td>N-'.$count.'</td>';
+          if (isset($row)) {
+            foreach ($row as $k => $v) {
+              echo '<td>' . $v . '</td>';
+            }
           }
+          echo '<td>' . $rowCount[0] . '</td>';
+          $count++;
         }
-        echo '<td>' . $row2[0] . '</td>';
       } else {
         echo '<b>' . $table . '</b>: ERROR: ' . $this->getError();
       }
