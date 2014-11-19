@@ -16,6 +16,7 @@ WIND_KEY = 'wind'
 WIND_STARTUP_TIME_KEY = 'wind_startup'
 WIND_UP_TO_TIME_KEY = 'wind_up_to'
 WIND_REVOLUTIONS_KEY = 'wind_revs'
+WIND_AGGREGATE_STATS_KEY = 'wind_stats'
 UPLOAD_KEY = 'upload'
 CLIENT_MD5_KEY = 'md5'
 STRATUM_KEY = 'stratum'
@@ -34,7 +35,7 @@ RESPONSE_STATUS_OK = 'ok'
 
 CONFIG_FILENAME = 'ipa.cfg'
 RESPONSE_STATUS_UNKNOWN = 'N/A'
-CLIENT_GREETING = 'IP anemometer client 0.0.2 - (c) Jörg Zieren - http://zieren.de - GNU GPL v3'
+CLIENT_GREETING = 'IP anemometer client 0.0.3 - (c) Jörg Zieren - http://zieren.de - GNU GPL v3'
 RETURN_VALUE_SHUTDOWN = 100
 RETURN_VALUE_REBOOT = 101
 

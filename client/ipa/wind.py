@@ -4,9 +4,8 @@ import time
 import C
 import calibration_logger
 import K
-from wind_sensor import Revolutions
-
-# TODO: Implement aggregate mode
+import wind_sensor
+import wind_stats
 
 class Wind:
   """Provides wind speed. Measurement will start immediately on creation."""
@@ -18,17 +17,20 @@ class Wind:
 
   def __init__(self, mode):
     self._log = K.get_logger(K.LOG_NAME_WIND)
-    self._revolutions = Revolutions()
+    self._revolutions = wind_sensor.Revolutions()
     self._mode = mode
+    self._startup_time = time.time()
     if mode == Wind.MODE_PRECISION:
       self._register_callback(self._revolutions.add_edge)
     elif mode == Wind.MODE_AGGREGATE:
-      raise RuntimeError('not implemented: %s' % self._mode_to_string[mode])
+      self._register_callback(self._revolutions.add_edge)
+      self._calc = wind_stats.WindStatsCalculator(self._startup_time * 1000.0)
     elif mode == Wind.MODE_CALIBRATE:
       self._calibration_logger = calibration_logger.CalibrationLogger()
       self._revolutions.calibration_init(self._calibration_logger)
       self._register_callback(self._revolutions.calibration_add_edge_and_log)
-    self._startup_time = time.time()
+    else:
+      raise RuntimeError('invalid mode: %d' % mode)
     self._log.info('initialized (mode: %s)' % self._mode_to_string[mode])
 
   def _register_callback(self, callback):
@@ -44,9 +46,27 @@ class Wind:
                           callback=callback, bouncetime=C.WIND_DEBOUNCE_MILLIS())
 
   def get_values(self):
+    up_to_time = time.time()
+    revs = self._revolutions.get_and_reset()
+    if revs:
+      # In case there was another edge after we took the time, update up_to_time. Not really
+      # relevant for precision mode, but in aggregate mode it would be odd for window N to contain
+      # a timestamp in window N+1.
+      up_to_time = max(up_to_time, revs[-1] / 1000.0)
+    if self._mode == Wind.MODE_PRECISION:
+      return K.WIND_KEY, {K.WIND_STARTUP_TIME_KEY: self._startup_time,
+                          K.WIND_UP_TO_TIME_KEY: up_to_time,
+                          K.WIND_REVOLUTIONS_KEY: revs}
+    if self._mode == Wind.MODE_CALIBRATE:
+      raise RuntimeError('get_values() is not supported in calibration mode')
+    # else: aggregate mode
+    up_to_millis = up_to_time * 1000
+    for ts in revs:
+      self._calc.next_timestamp(ts)
+    stats = self._calc.get_stats_and_reset(up_to_millis)
     return K.WIND_KEY, {K.WIND_STARTUP_TIME_KEY: self._startup_time,
-                        K.WIND_UP_TO_TIME_KEY: time.time(),
-                        K.WIND_REVOLUTIONS_KEY: self._revolutions.get_and_reset()}
+                        K.WIND_UP_TO_TIME_KEY: up_to_time,
+                        K.WIND_AGGREGATE_STATS_KEY: stats}
 
   def terminate(self):
     """Unregister the callback and, if MODE_CALIBRATE, terminate the logger."""

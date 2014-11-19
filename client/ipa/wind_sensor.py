@@ -14,7 +14,7 @@ class Revolutions:
     self._lock = threading.RLock()  # re-entrant for use in calibration_add_edge_and_log
     # Edges seen in the current revolution.
     self._edges = 0
-    # Timestamps of completed revolutions.
+    # Timestamps of completed revolutions (epoch seconds).
     self._revs = []
 
   def get_and_reset(self):
