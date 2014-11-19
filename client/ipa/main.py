@@ -30,7 +30,7 @@ class Anemometer:
     # Create upload thread (started in run() below).
     self._uploader = uploader.Uploader(self._main_cq, self._termination_event)
     # Create data sources.
-    self._wind = wind.Wind(wind.Wind.MODE_PRECISION)  # TODO: Implement mode switch in cfg.
+    self._wind = wind.Wind(wind.Wind.MODE_BOTH_DEBUG)  # TODO: Implement mode switch in cfg.
     self._uploader.add_data_source(self._wind, True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)

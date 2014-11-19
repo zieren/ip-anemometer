@@ -38,8 +38,6 @@ def WIND_INPUT_PIN():
   with _LOCK: return _CFG.getint(_SECTION_WIND, 'input_pin')
 def WIND_EDGES_PER_REV():
   with _LOCK: return _CFG.getint(_SECTION_WIND, 'edges_per_revolution')
-def WIND_SAMPLE_SECONDS():
-  with _LOCK: return _CFG.getint(_SECTION_WIND, 'sample_seconds')
 
 _SECTION_LOGGING = 'Logging'
 def LOGGING_LEVEL():
