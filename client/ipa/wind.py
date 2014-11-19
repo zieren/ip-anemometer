@@ -64,7 +64,7 @@ class Wind:
               K.WIND_UP_TO_TIME_KEY: up_to_time}
     if self._mode == Wind.MODE_PRECISION or self._mode == Wind.MODE_BOTH_DEBUG:
       values[K.WIND_REVOLUTIONS_KEY] = revs
-    elif self._mode == Wind.MODE_AGGREGATE or self._mode == Wind.MODE_BOTH_DEBUG:
+    if self._mode == Wind.MODE_AGGREGATE or self._mode == Wind.MODE_BOTH_DEBUG:
       for ts in revs:
         self._calc.next_timestamp(ts)
       values[K.WIND_AGGREGATE_STATS_KEY] = self._calc.get_stats_and_reset(up_to_time * 1000)
