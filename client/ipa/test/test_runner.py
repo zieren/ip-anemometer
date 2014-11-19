@@ -9,7 +9,7 @@ import C
 
 SEC = 1000
 MIN = 60 * SEC
-TS_0 = 1234567890123
+TS_0 = 1000000000000
 
 class Test(unittest.TestCase):
 
@@ -52,14 +52,44 @@ class Test(unittest.TestCase):
     ts += MIN
     start_ts = end_ts
     end_ts = ts - wind_stats._NO_WIND_DURATION
-    kmh = wind_stats.compute_kmh(SEC)
-    avg_kmh = kmh / 6.0
+    kmh_1 = wind_stats.compute_kmh(SEC)
+    avg_kmh = kmh_1 / 6.0
     self.expectStats(c.get_stats_and_reset(ts),
-                     avg_kmh, kmh, max_ts, {int(kmh): 1 / 6.0, 0: 5 / 6.0}, start_ts, end_ts)
+                     avg_kmh, kmh_1, max_ts, {int(kmh_1): 1 / 6.0, 0: 5 / 6.0}, start_ts, end_ts)
+    # One minute of continuous one-second revolutions.
+    for i in range(60):
+      c.next_timestamp(ts + i * SEC)
+    max_ts = ts + SEC
+    ts += MIN
+    start_ts = end_ts
+    end_ts = ts - SEC
+    # Covers wind_stats._NO_WIND_DURATION from last window with 0 km/h and up to ts - SEC.
+    total_duration = float(wind_stats._NO_WIND_DURATION + 59 * SEC)
+    avg_kmh = kmh_1 * 59 * SEC / total_duration
+    histogram = {int(kmh_1): 59 * SEC / total_duration,
+                 0: wind_stats._NO_WIND_DURATION / total_duration}
+    self.expectStats(c.get_stats_and_reset(ts),
+                     avg_kmh, kmh_1, max_ts, histogram, start_ts, end_ts)
+    # A minute of continuous half-second revolutions.
+    for i in range(120):
+      c.next_timestamp(ts + i * SEC / 2)
+    max_ts = ts + SEC / 2
+    ts += MIN
+    start_ts = end_ts
+    end_ts = ts - SEC / 2
+    # Plus one second from last window, minus half a second in current window.
+    total_duration = float(MIN + SEC - SEC / 2)
+    kmh_05 = wind_stats.compute_kmh(SEC / 2)
+    self.assertNotEqual(int(kmh_1), int(kmh_05))
+    avg_kmh = (kmh_05 * 59.5 * SEC + kmh_1 * SEC) / total_duration
+    histogram = {int(kmh_05): 59.5 * SEC / total_duration,
+                 int(kmh_1): 1 * SEC / total_duration}
+    self.expectStats(c.get_stats_and_reset(ts),
+                     avg_kmh, kmh_05, max_ts, histogram, start_ts, end_ts)
 
   def expectStats(self, stats, avg_kmh, max_kmh, max_timestamp, histogram, start_timestamp,
                   end_timestamp):
-    self.assertEqual(stats[Wind.AVG_KMH], avg_kmh)
+    self.assertAlmostEqual(stats[Wind.AVG_KMH], avg_kmh)
     self.assertEqual(stats[Wind.MAX_KMH], max_kmh)
     self.assertEqual(stats[Wind.MAX_TIMESTAMP], max_timestamp)
     self.assertEqual(stats[Wind.HISTOGRAM], histogram)

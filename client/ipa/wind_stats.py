@@ -1,6 +1,4 @@
-# XXX make sure all is float!
-
-_NO_WIND_DURATION = 10 * 1000 # Longer rotations are considered 0 km/h.
+_NO_WIND_DURATION = float(10 * 1000)  # Longer rotations are considered 0 km/h.
 
 
 class Wind:
@@ -16,17 +14,18 @@ class WindStatsCalculator:
 
   def __init__(self, start_timestamp):
     self._phase = WindStatsCalculator.Phase.BEFORE_FIRST_TIMESTAMP
-    self._previous_timestamp = 0  # will be initialized in the first call
-    self._start_timestamp = start_timestamp
+    self._previous_timestamp = 0.0  # will be initialized in the first call
+    self._start_timestamp = float(start_timestamp)
     self._reset()
 
   def _reset(self):
-    self._max_kmh = 0
-    self._max_timestamp = 0
-    self._avg_kmh = 0
+    self._max_kmh = 0.0
+    self._max_timestamp = 0.0
+    self._avg_kmh = 0.0
     self._histogram = {}
 
   def next_timestamp(self, timestamp):
+    timestamp = float(timestamp)
     if self._phase == WindStatsCalculator.Phase.BEFORE_FIRST_TIMESTAMP:
       self._previous_timestamp = timestamp
       self._phase = WindStatsCalculator.Phase.BEFORE_FIRST_KMH
@@ -58,6 +57,7 @@ class WindStatsCalculator:
     self._avg_kmh += kmh * duration
 
   def get_stats_and_reset(self, end_timestamp):
+    end_timestamp = float(end_timestamp)
     """Return a WindStats object and reset all internal state prior to the time it covers."""
     if self._phase == WindStatsCalculator.Phase.BEFORE_FIRST_TIMESTAMP:
       # didn't initialize self._previous_timestamp yet
