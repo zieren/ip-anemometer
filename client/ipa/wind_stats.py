@@ -1,6 +1,10 @@
+# XXX make sure all is float!
+
+_NO_WIND_DURATION = 10 * 1000 # Longer rotations are considered 0 km/h.
+
+
 class Wind:
-  (AVG_KMH, MAX_KMH, MAX_TIMESTAMP_SECONDS, HISTOGRAM, START_TIMESTAMP_SECONDS,
-   END_TIMESTAMP_SECONDS) = range(6)
+  (AVG_KMH, MAX_KMH, MAX_TIMESTAMP, HISTOGRAM, START_TIMESTAMP, END_TIMESTAMP) = range(6)
 
 
 class WindStatsCalculator:
@@ -10,83 +14,84 @@ class WindStatsCalculator:
   class Phase:
     BEFORE_FIRST_TIMESTAMP, BEFORE_FIRST_KMH, STEADY_STATE = range(3)
 
-  def __init__(self, startTimestampMillis):
+  def __init__(self, start_timestamp):
     self._phase = WindStatsCalculator.Phase.BEFORE_FIRST_TIMESTAMP
+    self._previous_timestamp = 0  # will be initialized in the first call
+    self._start_timestamp = start_timestamp
+    self._reset()
 
-    self._maxKmh = 0
-    self._maxTimestampSeconds = 0
-    self._avgKmh = 0
+  def _reset(self):
+    self._max_kmh = 0
+    self._max_timestamp = 0
+    self._avg_kmh = 0
     self._histogram = {}
 
-    self._previousTimestampMillis
-    self._previousKmh = 0  # assume 0 if we have no timestamps at all
-
-    self._startTimestampMillis = startTimestampMillis
-
-  def nextTimestamp(self, timestampMillis):
+  def next_timestamp(self, timestamp):
     if self._phase == WindStatsCalculator.Phase.BEFORE_FIRST_TIMESTAMP:
-      self._previousTimestampMillis = timestampMillis
+      self._previous_timestamp = timestamp
       self._phase = WindStatsCalculator.Phase.BEFORE_FIRST_KMH
       return
 
     # Compute duration (i.e. weight) and speed.
-    durationSeconds = (timestampMillis - self._previousTimestampMillis) / 1000
-    kmh = WindStatsCalculator.computeKmh(durationSeconds)
+    duration = timestamp - self._previous_timestamp
+    kmh = compute_kmh(duration)
     if self._phase == WindStatsCalculator.Phase.BEFORE_FIRST_KMH:
-      startSilenceDurationSeconds = (self._previousTimestampMillis
-                                     - self._startTimestampMillis) / 1000
+      start_silence_duration = self._previous_timestamp - self._start_timestamp
       # Extrapolation using kmh, or less if the start silence is longer.
-      startKmh = min(kmh, WindStatsCalculator.computeKmh(startSilenceDurationSeconds))
-      self._update(startKmh, startSilenceDurationSeconds, timestampMillis)
+      start_kmh = min(kmh, compute_kmh(start_silence_duration))
+      self._update(start_kmh, start_silence_duration, timestamp)
       self._phase = WindStatsCalculator.Phase.STEADY_STATE
 
-    self._update(kmh, durationSeconds, timestampMillis)
+    self._update(kmh, duration, timestamp)
     # Remember timestamp for next row.
-    self._previousTimestampMillis = timestampMillis
-    # Remember km/h for extrapolation at the end.
-    self._previousKmh = kmh
+    self._previous_timestamp = timestamp
 
-  def _update(self, kmh, durationSeconds, timestampMillis):
+  def _update(self, kmh, duration, timestamp):
     # Update histogram.
-    self._histogram[int(kmh)] += durationSeconds
+    int_kmh = int(kmh)
+    self._histogram[int_kmh] = self._histogram.setdefault(int_kmh, 0.0) + duration
     # Update maximum.
-    if kmh > self._maxKmh:
-      self._maxKmh = kmh
-      self._maxTimestampSeconds = timestampMillis / 1000
+    if kmh > self._max_kmh:
+      self._max_kmh = kmh
+      self._max_timestamp = timestamp
     # Update average.
-    self._avgKmh += kmh * durationSeconds
+    self._avg_kmh += kmh * duration
 
-  def finalizeAndGetStats(self):
-    """Finalizes computation and returns a WindStats object."""
-    if self._phase == WindStatsCalculator.Phase.FINALIZED:
-      raise RuntimeError('cannot finalize stats - already finalized')
+  def get_stats_and_reset(self, end_timestamp):
+    """Return a WindStats object and reset all internal state prior to the time it covers."""
     if self._phase == WindStatsCalculator.Phase.BEFORE_FIRST_TIMESTAMP:
-      # didn't initialize self._previousTimestamp yet
-      self._previousTimestampMillis = self._startTimestampMillis
+      # didn't initialize self._previous_timestamp yet
+      self._previous_timestamp = self._start_timestamp
 
-    endSilenceDurationSeconds = (self._endTimestampMillis
-                                 - self._previousTimestampMillis) / 1000
-    # Extrapolation using self._previousKmh, or less if the end silence is longer.
-    endKmh = min(self._previousKmh, WindStatsCalculator.computeKmh(endSilenceDurationSeconds))
-    self._update(endKmh, endSilenceDurationSeconds, self._previousTimestampMillis)
-    totalDurationSeconds = (self._endTimestampMillis - self._startTimestampMillis) / 1000
+    end_silence_duration = end_timestamp - self._previous_timestamp
+    if end_silence_duration >= _NO_WIND_DURATION:
+      # Generate a "virtual" timestamp that is _NO_WIND_DURATION before the end, so that the next
+      # timestamp is guaranteed to produce 0 km/h. Consider the time up to the virtual timestamp as
+      # 0 km/h.
+      self._update(0.0, end_silence_duration - _NO_WIND_DURATION, self._previous_timestamp)
+      self._previous_timestamp = end_timestamp - _NO_WIND_DURATION  # "virtual" timestamp
+    end_timestamp = self._previous_timestamp
+    total_duration = end_timestamp - self._start_timestamp
     # Compute average.
-    self._avgKmh /= totalDurationSeconds
+    self._avg_kmh /= total_duration
     # Convert histogram to relative values.
     for k, v in self._histogram.iteritems():
-      self._histogram[k] = v / totalDurationSeconds
-    ### ksort(self._histogram) probably not needed
-    self._phase = WindStatsCalculator.Phase.FINALIZED
-    return {Wind.AVG_KMH: self._avgKmh,
-            Wind.MAX_KMH: self._maxKmh,
-            Wind.MAX_TIMESTAMP_SECONDS: self._maxTimestampSeconds,
-            Wind.HISTOGRAM: self._histogram,
-            Wind.START_TIMESTAMP_SECONDS: self._startTimestampMillis / 1000,
-            Wind.END_TIMESTAMP_SECONDS: self._endTimestampMillis / 1000}
+      self._histogram[k] = v / total_duration
+    stats = {Wind.AVG_KMH: self._avg_kmh,
+             Wind.MAX_KMH: self._max_kmh,
+             Wind.MAX_TIMESTAMP: self._max_timestamp,
+             Wind.HISTOGRAM: self._histogram,
+             Wind.START_TIMESTAMP: self._start_timestamp,
+             Wind.END_TIMESTAMP: end_timestamp}
+    self._start_timestamp = end_timestamp  # start next window
+    self._reset()
+    return stats
 
 
-def computeKmh(durationSeconds):
+def compute_kmh(duration):
   """Convert revolution duration to windspeed in km/h."""
+  if duration >= _NO_WIND_DURATION:
+    return 0.0
   # TODO: Extract magic values.
-  rps = 1 / durationSeconds  # rotations per second
-  return 0 if durationSeconds >= 10 else (1.761 / (1 + rps) + 3.013 * rps)
+  rps = 1000.0 / duration  # rotations per second
+  return (1.761 / (1.0 + rps) + 3.013 * rps)
