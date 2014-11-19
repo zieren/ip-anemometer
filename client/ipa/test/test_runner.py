@@ -2,7 +2,7 @@ import unittest
 
 import wind_sensor
 import wind_stats
-from wind_stats import Wind
+from wind_stats import WindKey
 
 import C
 
@@ -32,33 +32,33 @@ class Test(unittest.TestCase):
     self.assertGreater(revs[0], 0)
 
   def test_WindStatsCalculator(self):
-    c = wind_stats.WindStatsCalculator(TS_0)
+    calc = wind_stats.WindStatsCalculator(TS_0)
     # Nothing for a minute -> all zero.
     ts = TS_0 + MIN
     start_ts = TS_0
     end_ts = ts - wind_stats._NO_WIND_DURATION
-    self.expectStats(c.get_stats_and_reset(ts),
+    self.expectStats(calc.get_stats_and_reset(ts),
                      0, 0, 0, {0: 1.0}, start_ts, end_ts)
     # Another minute -> all zero.
     ts += MIN
     start_ts = end_ts
     end_ts = ts - wind_stats._NO_WIND_DURATION
-    self.expectStats(c.get_stats_and_reset(ts),
+    self.expectStats(calc.get_stats_and_reset(ts),
                      0, 0, 0, {0: 1.0}, start_ts, end_ts)
     # 10 one-second revolutions in a minute.
     for i in range(11):  # first revolution was inf long
-      c.next_timestamp(ts + i * SEC)
+      calc.next_timestamp(ts + i * SEC)
     max_ts = ts + SEC  # first at ts + 0 was inf long, so max is only at ts + SEC
     ts += MIN
     start_ts = end_ts
     end_ts = ts - wind_stats._NO_WIND_DURATION
     kmh_1 = wind_stats.compute_kmh(SEC)
     avg_kmh = kmh_1 / 6.0
-    self.expectStats(c.get_stats_and_reset(ts),
+    self.expectStats(calc.get_stats_and_reset(ts),
                      avg_kmh, kmh_1, max_ts, {int(kmh_1): 1 / 6.0, 0: 5 / 6.0}, start_ts, end_ts)
     # One minute of continuous one-second revolutions.
     for i in range(60):
-      c.next_timestamp(ts + i * SEC)
+      calc.next_timestamp(ts + i * SEC)
     max_ts = ts + SEC
     ts += MIN
     start_ts = end_ts
@@ -68,11 +68,11 @@ class Test(unittest.TestCase):
     avg_kmh = kmh_1 * 59 * SEC / total_duration
     histogram = {int(kmh_1): 59 * SEC / total_duration,
                  0: wind_stats._NO_WIND_DURATION / total_duration}
-    self.expectStats(c.get_stats_and_reset(ts),
+    self.expectStats(calc.get_stats_and_reset(ts),
                      avg_kmh, kmh_1, max_ts, histogram, start_ts, end_ts)
     # A minute of continuous half-second revolutions.
     for i in range(120):
-      c.next_timestamp(ts + i * SEC / 2)
+      calc.next_timestamp(ts + i * SEC / 2)
     max_ts = ts + SEC / 2
     ts += MIN
     start_ts = end_ts
@@ -84,14 +84,14 @@ class Test(unittest.TestCase):
     avg_kmh = (kmh_05 * 59.5 * SEC + kmh_1 * SEC) / total_duration
     histogram = {int(kmh_05): 59.5 * SEC / total_duration,
                  int(kmh_1): 1 * SEC / total_duration}
-    self.expectStats(c.get_stats_and_reset(ts),
+    self.expectStats(calc.get_stats_and_reset(ts),
                      avg_kmh, kmh_05, max_ts, histogram, start_ts, end_ts)
 
   def expectStats(self, stats, avg_kmh, max_kmh, max_timestamp, histogram, start_timestamp,
                   end_timestamp):
-    self.assertAlmostEqual(stats[Wind.AVG_KMH], avg_kmh)
-    self.assertEqual(stats[Wind.MAX_KMH], max_kmh)
-    self.assertEqual(stats[Wind.MAX_TIMESTAMP], max_timestamp)
-    self.assertEqual(stats[Wind.HISTOGRAM], histogram)
-    self.assertEqual(stats[Wind.START_TIMESTAMP], start_timestamp)
-    self.assertEqual(stats[Wind.END_TIMESTAMP], end_timestamp)
+    self.assertAlmostEqual(stats[WindKey.AVG_KMH], avg_kmh)
+    self.assertEqual(stats[WindKey.MAX_KMH], max_kmh)
+    self.assertEqual(stats[WindKey.MAX_TIMESTAMP], max_timestamp)
+    self.assertEqual(stats[WindKey.HISTOGRAM], histogram)
+    self.assertEqual(stats[WindKey.START_TIMESTAMP], start_timestamp)
+    self.assertEqual(stats[WindKey.END_TIMESTAMP], end_timestamp)

@@ -12,7 +12,7 @@ abstract class Phase {
 
 /**
  * Calculates wind stats from a sequence of timestamps representing revolutions, and a start/end
- * timestamp pair.
+ * timestamp pair. This should match WindStatsCalculator on the client.
  */
 class WindStatsCalculator {
   private $phase = Phase::BEFORE_FIRST_TIMESTAMP;
@@ -47,7 +47,7 @@ class WindStatsCalculator {
     $durationSeconds = ($timestampMillis - $this->previousTimestampMillis) / 1000;
     $kmh = WindStatsCalculator::computeKmh($durationSeconds);
     if ($this->phase == Phase::BEFORE_FIRST_KMH) {
-      $startSilenceDurationSeconds =  // weight
+      $startSilenceDurationSeconds =
           ($this->previousTimestampMillis - $this->startTimestampMillis) / 1000;
       // Extrapolation using $kmh, or less if the start silence is longer.
       $startKmh = min($kmh, WindStatsCalculator::computeKmh($startSilenceDurationSeconds));
