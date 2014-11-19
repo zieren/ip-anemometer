@@ -20,6 +20,7 @@ define('WIND_KEY', 'wind');
 define('WIND_STARTUP_TIME_KEY', 'wind_startup');
 define('WIND_UP_TO_TIME_KEY', 'wind_up_to');
 define('WIND_REVOLUTIONS_KEY', 'wind_revs');
+define('WIND_AGGREGATE_STATS_KEY', 'wind_stats');
 define('UPLOAD_KEY', 'upload');
 define('CLIENT_MD5_KEY', 'md5');
 define('STRATUM_KEY', 'stratum');
