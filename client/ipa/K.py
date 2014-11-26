@@ -53,7 +53,7 @@ LOG_NAME_UPLOADER = 'ipa.upload'
 LOG_NAME_NTPDSYNC = 'ntpdsync'
 
 
-_LOG_DIR = './logs/'
+_LOG_DIR = '../logs/'
 _LOG_EXT = '.log'
 _LOG_FORMAT = '%(asctime)s - %(name)-10s - %(levelname)-8s - %(message)s'
 
