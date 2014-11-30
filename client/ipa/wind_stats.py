@@ -4,6 +4,9 @@ _NO_WIND_DURATION = float(10 * 1000)  # Longer rotations are considered 0 km/h.
 class WindKey:
   """Keys in the stats dict."""
   (AVG_KMH, MAX_KMH, MAX_TIMESTAMP, HISTOGRAM, START_TIMESTAMP, END_TIMESTAMP) = range(6)
+  # TODO: Should these be string literals for easier access on the server?
+  # TODO: Timestamps should probably be integers in stats result. Make sure serialization doesn't
+  # crop anything.
 
 
 class WindStatsCalculator:
