@@ -11,7 +11,7 @@ function autoloader($class) {
 }
 spl_autoload_register('autoloader');
 
-# ----- Client/server interaction. NOTE: These must match K.py -----
+// ----- Client/server interaction. NOTE: These must match K.py -----
 define('TIMESTAMP_KEY', 'ts');
 define('VALUE_KEY', 'v');
 define('META_KEY', 'meta');
@@ -31,6 +31,14 @@ define('UPLOAD_POST_KEY', 'bz2');
 define('COMMAND_RESTART', 'restart');
 define('RESPONSE_STATUS', 'status');
 define('RESPONSE_STATUS_OK', 'ok');
+
+// Aggregate stats keys:
+define('WIND_KEY_AVG', 0);
+define('WIND_KEY_MAX', 1);
+define('WIND_KEY_MAX_TS', 2);
+define('WIND_KEY_HIST', 3);
+define('WIND_KEY_START_TS', 4);
+define('WIND_KEY_END_TS', 5);
 
 // Keys for server settings.
 define('LOG_LEVEL_KEY', 'logLevel');
