@@ -50,9 +50,9 @@ class Wind:
     GPIO.add_event_detect(C.WIND_INPUT_PIN(), GPIO.BOTH,
                           callback=callback, bouncetime=C.WIND_DEBOUNCE_MILLIS())
 
-  def get_values(self):
+  def get_sample(self):
     if self._mode == Wind.MODE_CALIBRATE:
-      raise RuntimeError('get_values() is not supported in calibration mode')
+      raise RuntimeError('get_sample() is not supported in calibration mode')
     up_to_time = time.time()
     revs = self._revolutions.get_and_reset()
     if revs:
@@ -60,15 +60,15 @@ class Wind:
       # relevant for precision mode, but in aggregate mode it would be odd for window N to contain
       # a timestamp in window N+1.
       up_to_time = max(up_to_time, revs[-1] / 1000.0)
-    values = {K.WIND_STARTUP_TIME_KEY: self._startup_time,
+    sample = {K.WIND_STARTUP_TIME_KEY: self._startup_time,
               K.WIND_UP_TO_TIME_KEY: up_to_time}
     if self._mode == Wind.MODE_PRECISION or self._mode == Wind.MODE_BOTH_DEBUG:
-      values[K.WIND_REVOLUTIONS_KEY] = revs
+      sample[K.WIND_REVOLUTIONS_KEY] = revs
     if self._mode == Wind.MODE_AGGREGATE or self._mode == Wind.MODE_BOTH_DEBUG:
       for ts in revs:
         self._calc.next_timestamp(ts)
-      values[K.WIND_AGGREGATE_STATS_KEY] = self._calc.get_stats_and_reset(up_to_time * 1000)
-    return K.WIND_KEY, values
+      sample[K.WIND_AGGREGATE_STATS_KEY] = self._calc.get_stats_and_reset(up_to_time * 1000)
+    return K.WIND_KEY, sample
 
   def terminate(self):
     """Unregister the callback and, if MODE_CALIBRATE, terminate the logger."""

@@ -9,7 +9,6 @@ import C
 # ----- Client/server interaction. NOTE: These must match common.php -----
 
 TIMESTAMP_KEY = 'ts'
-VALUE_KEY = 'v'
 META_KEY = 'meta'
 TEMP_KEY = 'temp'
 WIND_KEY = 'wind'

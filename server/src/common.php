@@ -13,7 +13,6 @@ spl_autoload_register('autoloader');
 
 // ----- Client/server interaction. NOTE: These must match K.py -----
 define('TIMESTAMP_KEY', 'ts');
-define('VALUE_KEY', 'v');
 define('META_KEY', 'meta');
 define('TEMP_KEY', 'temp');
 define('WIND_KEY', 'wind');

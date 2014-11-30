@@ -30,21 +30,21 @@ class Uploader(threading.Thread):
     self.add_data_source(self, False)
 
   def add_data_source(self, data_source, buffering):
-    """A data source provides a get_values() method that returns a tuple of a key and some type of
-    measurement value. The value type is arbitrary (the server has to handle it). The "buffering"
-    flag controls handling of existing values when polling new values (e.g. when an upload has
-    failed): If True, the uploader maintains a list and new values are appended, if False it stores
-    only a single value and overwrites it with new a value (so that the value appears at most once
-    per upload)."""
+    """A data source provides a get_sample() method that returns a tuple of a key and a sample of
+    arbitrary type (the server has to handle the sample type). The "buffering" flag controls
+    handling of existing samples when polling a new sample (e.g. after an upload has failed): If
+    True, the uploader maintains a list and new samples are appended, if False it stores only a
+    single sample and overwrites it with the new sample (so that the type of sample appears at most
+    once per upload)."""
     self._sources.append((data_source, buffering))
 
   def _poll_data_sources(self):
     for data_source, buffering in self._sources:
-      type_key, values = data_source.get_values()
+      type_key, sample = data_source.get_sample()
       if buffering:
-        self._queue.setdefault(type_key, []).append(values)
+        self._queue.setdefault(type_key, []).append(sample)
       else:  # overwrite
-        self._queue[type_key] = values
+        self._queue[type_key] = sample
 
   def run(self):
     self._log.info('starting (upload interval: %ds)' % C.UPLOAD_INTERVAL_SECONDS())
@@ -58,7 +58,7 @@ class Uploader(threading.Thread):
         self._queue = {}
       wait_seconds = C.UPLOAD_INTERVAL_SECONDS() - (time.time() - start_time)
 
-  def get_values(self):
+  def get_sample(self):
     return K.UPLOAD_KEY, {K.FAILED_UPLOADS_KEY: self._failed_uploads}
 
   def _log_error_or_suppress(self, status, message):
@@ -67,7 +67,7 @@ class Uploader(threading.Thread):
     self._last_status = status
 
   def _upload(self):
-    """Returns True if values were uploaded, False if (likely) not."""
+    """Returns True if data was uploaded, False if (likely) not."""
     data_json = json.dumps(self._queue)
     data_bz2 = bz2.compress(data_json)
     # TODO: Limit upload size as per config (e.g. 100kB for a GPRS link). When size is exceeded,
