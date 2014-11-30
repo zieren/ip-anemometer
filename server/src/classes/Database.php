@@ -71,6 +71,11 @@ class Database {
         && $this->query(
             'CREATE TABLE IF NOT EXISTS wind (ts BIGINT PRIMARY KEY)')
         && $this->query(
+            'CREATE TABLE IF NOT EXISTS wind_a (start_ts BIGINT PRIMARY KEY, '.
+            'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_from INT, hist_to INT)')
+        && $this->query(
+            'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
+        && $this->query(
             'CREATE TABLE IF NOT EXISTS coverage (startup TIMESTAMP PRIMARY KEY, upto TIMESTAMP)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS meta (ts TIMESTAMP PRIMARY KEY, cts TIMESTAMP, '.
@@ -120,26 +125,34 @@ class Database {
     }
   }
 
-  public function insertWind($wind) {
-    if (count($wind) == 0) {
-      $this->log->warning('received empty wind measurements');
-      return;
-    }
-    $q = '';
-    foreach ($wind as $data_dict) {
-      $values = $data_dict[WIND_REVOLUTIONS_KEY];
-      // This loop will run more than once iff there were failed uploads, since that results in
-      // multiple entries in $wind.
-      foreach ($values as $v) {
-        if ($q != '') {
-          $q .= ',';
+  /**
+   * @param array $samples Samples provided by the client. Each is the result of one
+   *     Wind.get_sample() call on the client. Precision and/or aggregate mode data may be present.
+   *     All data present will be inserted. It is an error to specify an empty array.
+   */
+  public function insertWind($samples) {
+    $q = '';  // for precision mode, collect all timestamps from all samples
+    // TODO: Limit query size.
+    foreach ($samples as $sample) {
+      // Process precision mode data (if present).
+      $revolutions = $sample[WIND_REVOLUTIONS_KEY];
+      if ($revolutions) {
+        foreach ($revolutions as $ts) {
+          if ($q != '') {
+            $q .= ',';
+          }
+          $q .= '('.$ts.')';
         }
-        $q .= '('.$v.')';
+      }
+      // Insert aggregate mode stats (if present).
+      $stats = $sample[WIND_AGGREGATE_STATS_KEY];
+      if ($stats) {
+        insertAggregateStats($stats);
       }
     }
 
-    // No sensor values available - this is expected in precision mode when there is no wind.
-    if ($q != '') {
+    // Insert precision mode data (if present).
+    if ($q != '') {  // not precision mode, or no single revolution recorded (i.e. no wind)
       $q = 'REPLACE INTO wind (ts) VALUES '.$q;
       $this->log->debug('QUERY: '.$q);
       if (!$this->query($q)) {
@@ -147,17 +160,60 @@ class Database {
       }
     }
 
-    // We're only interested in the most recent timestamps and ignore those of previous failed
-    // upload attempts (if any).
-    $latest_record = $wind[count($wind) - 1];
-    $startup_timestamp_seconds = $latest_record[WIND_STARTUP_TIME_KEY];
-    $up_to_timestamp_seconds = $latest_record[WIND_UP_TO_TIME_KEY];
+    // Insert coverage. We're only interested in the most recent timestamps and ignore those of
+    // previous failed upload attempts (if any).
+    $latest_sample = $samples[count($samples) - 1];
+    $startup_timestamp_seconds = $latest_sample[WIND_STARTUP_TIME_KEY];
+    $up_to_timestamp_seconds = $latest_sample[WIND_UP_TO_TIME_KEY];
     $q = 'REPLACE INTO coverage (startup, upto) VALUES ("'
         .formatTimestamp($startup_timestamp_seconds).'","'
         .formatTimestamp($up_to_timestamp_seconds).'")';
     if (!$this->query($q)) {
       $this->logCritical('failed to insert coverage timestamps: '.$this->getError());
     }
+  }
+
+  private function insertAggregateStats($stats) {
+    // Insert histogram data first because we need the keys in the hist table.
+    $hist = $stats[WIND_KEY_HIST];
+    $hist_from = $this->insertHistogram($hist);
+    if (!$hist_from) {
+      return;  // error already logged
+    }
+    $hist_to = $hist_from + count($hist) - 1;
+    $q = 'INSERT INTO wind_a (start_ts, end_ts, avg, max, max_ts, hist_from, hist_to) VALUES ('
+        .$stats[WIND_KEY_START_TS].','.$stats[WIND_KEY_END_TS].','.$stats[WIND_KEY_AVG].','
+        .$stats[WIND_KEY_MAX].','.$stats[WIND_KEY_MAX_TS].','.$hist_from.','.$hist_to.')';
+    $this->log->debug('QUERY: '.$q);
+    if (!$this->query($q)) {
+      $this->logCritical('failed to insert aggregate wind measurements: '.$this->getError());
+    }
+  }
+
+  /** Returns the first (lowest) AUTO_INCREMENT ID generated, or NULL on error. */
+  public function insertHistogram($histogram) {
+    $q = '';
+    foreach ($histogram as $v => $p) {  // v=speed, p=percent
+      if ($q != '') {
+        $q .= ',';
+      }
+      $q .= '('.$v.','.$p.')';
+    }
+    $q = 'INSERT INTO hist (v, p) VALUES '.$q;
+    $this->log->debug('QUERY: '.$q);
+    $result = $this->query($q);
+    if (!$result) {
+      $this->logCritical('failed to insert histogram: '.$this->getError());
+      return null;
+    }
+
+    $result = $this->query('SELECT LAST_INSERT_ID()');
+    if (!$result) {
+      $this->logCritical('failed to obtain LAST_INSERT_ID: '.$this->getError());
+      return null;
+    }
+    $row = $result->fetch_row();
+    return $row[0];
   }
 
   public function insertMetadata($meta, $ip) {
