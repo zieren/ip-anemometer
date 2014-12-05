@@ -1,3 +1,5 @@
+<html>
+<body>
 <?php
 /* Store an update file (a .zip) on the server.
  */
@@ -28,3 +30,5 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
 echo '</p>';
 ?>
 <p><a href="index.php?admin">Back to console</a></p>
+</body>
+</html>
