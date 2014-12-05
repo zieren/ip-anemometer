@@ -23,7 +23,7 @@ class Database {
   /** Connects to the database, or exits on error. */
   public function __construct() {
     $this->log = new Katzgrau\KLogger\Logger(LOG_DIR);
-    $this->allTables = array('coverage', 'wind', 'temp', 'meta', 'settings');
+    $this->allTables = array('coverage', 'wind', 'wind_a', 'temp', 'meta', 'settings');
     $this->mysqli = new mysqli('localhost', DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
       $this->logError('failed to connect to MySQL: (' . $mysqli->connect_errno . ') '
@@ -255,6 +255,88 @@ class Database {
     return $this->appSettings;
   }
 
+  public function computeWindStatsAggregate($maxEndTimestamp, $windowDuration) {
+    $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
+    $q = 'SELECT * FROM wind_a WHERE '
+        .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
+        .' AND end_ts <= '.$maxEndTimestamp
+        .' ORDER BY start_ts DESC';
+    if (!($result = $this->query($q))) {
+      return null;
+    }
+
+    // Read samples in reverse chronological order until the desired duration is best approximated.
+    // At the same time, compute running stats except histogram.
+    $actualStartTimestamp = -1;
+    $actualEndTimestamp = -1;
+    $actualWindowDuration = 0;
+    $selectedSamples = array();
+    $minHistId = -1;
+    $maxHistId = -1;
+    $maxKmh = 0;
+    $maxTimestamp = 0;
+    $avgKmh = 0;
+    while ($sample = $result->fetch_assoc()) {
+      // Can we approximate the desired duration better by selecting this row?
+      $sampleDuration = Database::getSampleDuration($sample);
+      if (abs($actualWindowDuration - $windowDuration) <
+          abs($actualWindowDuration + $sampleDuration - $windowDuration)) {
+        break;
+      }
+      $selectedSamples[] = $sample;
+      // Update times and IDs.
+      $actualWindowDuration += $sampleDuration;
+      $actualStartTimestamp = $sample['start_ts'];
+      if ($actualEndTimestamp < 0) {
+        $actualEndTimestamp = $sample['end_ts'];
+      }
+      $minHistId = $sample['hist_from'];
+      if ($maxHistId < 0) {
+        // TODO: Change hist_to to num_buckets or "count" or something.
+        $maxHistId = $sample['hist_to'];
+      }
+      // Update running stats except histogram.
+      if ($sample['max'] > $maxKmh) {
+        $maxKmh = $sample['max'];
+        $maxTimestamp = $sample['max_ts'];
+      }
+      $avgKmh += $sample['avg'] * $sampleDuration;
+    }
+    if (count($selectedSamples) == 0) {
+      return null;
+    }
+    $avgKmh /= $actualWindowDuration;
+
+    // Compute histogram.
+    $q = 'SELECT * from hist WHERE id >= '.$minHistId.' AND id <= '.$maxHistId.' ORDER BY id DESC';
+    if (!($result = $this->query($q))) {
+      return null;
+    }
+    $histogram = array();
+    $i = 0;
+    $sampleDuration = Database::getSampleDuration($selectedSamples[0]);
+    while ($bucket = $result->fetch_assoc()) {
+      $id = intval($bucket['id']);
+      $histFrom = intval($selectedSamples[$i]['hist_from']);
+      if ($id < $histFrom) {  // belongs to next (older) sample
+        ++$i;
+        $sampleDuration = Database::getSampleDuration($selectedSamples[$i]);
+      }
+      $histogram[$bucket['v']] += $bucket['p'] * $sampleDuration;
+    }
+    foreach ($histogram as $v => $p) {
+      $histogram[$v] /= $actualWindowDuration;
+    }
+    ksort($histogram);
+
+    return new WindStats($avgKmh, $maxKmh, $maxTimestamp, $histogram, $actualStartTimestamp,
+      $actualEndTimestamp);
+  }
+
+  private static function getSampleDuration($sample) {
+    return $sample['end_ts'] - $sample['start_ts'];
+  }
+
   /** Compute average and maximum wind speed in km/h. */
   public function computeWindStats($desiredEndTimestamp, $windowDuration) {
     // Restrict to actually covered time, keeping window size if possible.
@@ -289,10 +371,11 @@ class Database {
 
   /** Print a table with database statistics (for debugging). */
   public function echoStats() {
-    // Order to match $allTables.
-    $sortKeys = array('startup', 'ts', 'ts', 'ts');
-    $timestamps = array('ts', 'cts', 'startup', 'upto');
-    $limits = array(5, 1, 1, 1);
+    // Order of $sortKeys and $limits must match $allTables.
+    $sortKeys = array('startup', 'ts', 'start_ts', 'ts', 'ts');
+    $limits = array(5, 1, 1, 1, 1);
+    // List of column names that store timestamps in millis.
+    $timestampColumns = array('ts', 'cts', 'start_ts', 'end_ts', 'startup', 'upto');
     for ($i = 0; $i < count($sortKeys); ++$i) {
       $table = $this->allTables[$i];
       $sortKey = $sortKeys[$i];
@@ -312,7 +395,7 @@ class Database {
           echo '</tr><tr><td>N-'.$count.'</td>';
           if (isset($row)) {
             foreach ($row as $k => $v) {
-              echo '<td>'.(in_array($k, $timestamps) ? formatTimestamp($v) : $v).'</td>';
+              echo '<td>'.(in_array($k, $timestampColumns) ? formatTimestamp($v) : $v).'</td>';
             }
           }
           echo '<td>' . $rowCount[0] . '</td>';

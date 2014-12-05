@@ -1,3 +1,5 @@
+<html>
+<body>
 <?php
 require_once 'common.php';
 
@@ -50,6 +52,28 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   if (!$endTimestamp) {
     $endTimestamp = timestamp();
   }
+  $windStats = $db->computeWindStatsAggregate($endTimestamp, $minutes * 60 * 1000);
+  if (is_null($windStats)) {
+    echo '<p>n/a</p>';
+    return;
+  }
+  $latency = $endTimestamp - $windStats->getEndTimestamp();
+  $latencyText = '@latency='.formatDuration($latency);
+  if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
+    $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
+  }
+  echo '<table border="0" cellpadding="3"><tr><td>';  // TODO: Remove side-by-side debug.
+  echo 'Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
+  echo '<table border="1" cellpadding="3">
+    <tr><td>avg</td><td>max</td><td>time of max</td></tr>
+    <tr><td>'.round($windStats->getAvgKmh(), 1)
+        .'</td><td>'.round($windStats->getMaxKmh(), 1)
+        .'</td><td>'.formatTimestamp($windStats->getMaxTimestamp())
+        .'</td></tr>
+  </table>';
+  printHistogram($windStats->getHistogram());
+
+  echo '</td><td>';  // TODO: Remove side-by-side debug.
   $windStats = $db->computeWindStats($endTimestamp, $minutes * 60 * 1000);
   if (is_null($windStats)) {
     echo '<p>n/a</p>';
@@ -60,7 +84,7 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
     $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
   }
-  echo 'Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
+  echo 'P Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
   echo '<table border="1" cellpadding="3">
     <tr><td>avg</td><td>max</td><td>time of max</td></tr>
     <tr><td>'.round($windStats->getAvgKmh(), 1)
@@ -69,6 +93,7 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
         .'</td></tr>
   </table>';
   printHistogram($windStats->getHistogram());
+  echo '</td></tr></table>';  // TODO: Remove side-by-side debug.
 }
 
 function printHistogram($histogram) {
@@ -142,3 +167,5 @@ echo
 </form>
 <hr />';
 ?>
+</body>
+</html>

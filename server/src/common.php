@@ -44,8 +44,7 @@ define('LOG_LEVEL_KEY', 'logLevel');
 
 // Internal constants.
 define('CLIENT_UPDATE_FILENAME', 'client/ipa-update.zip');
-define('CLIENT_UPDATE_MAX_SIZE', 1024 * 1024);  // 1MB
-define('DATE_FORMAT', 'Y-m-d H:i:s');  // MySQL timestamp format
+define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 
 
 use Psr\Log\LogLevel;
