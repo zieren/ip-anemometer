@@ -1,6 +1,10 @@
 <?php
 require_once 'common.php';
 
+
+define('NO_WIND_DURATION', 10000);  # Revolutions longer than 10 seconds are considered 0 km/h.
+
+
 abstract class Phase {
   const BEFORE_FIRST_TIMESTAMP = 0;
   const BEFORE_FIRST_KMH = 1;
@@ -18,59 +22,58 @@ class WindStatsCalculator {
   private $phase = Phase::BEFORE_FIRST_TIMESTAMP;
 
   private $maxKmh = 0;
-  private $maxTimestampSeconds = 0;
+  private $maxTimestamp = 0;
   private $avgKmh = 0;
   private $histogram = array();
 
-  private $previousTimestampMillis;
+  private $previousTimestamp;
   private $previousKmh = 0;  // assume 0 if we have no timestamps at all
 
   // Initialized in constructor:
-  private $startTimestampMillis;
-  private $endTimestampMillis;
+  private $startTimestamp;
+  private $endTimestamp;
 
-  function __construct($startTimestampMillis, $endTimestampMillis) {
-    $this->startTimestampMillis = $startTimestampMillis;
-    $this->endTimestampMillis = $endTimestampMillis;
+  function __construct($startTimestamp, $endTimestamp) {
+    $this->startTimestamp = $startTimestamp;
+    $this->endTimestamp = $endTimestamp;
   }
 
-  public function nextTimestamp($timestampMillis) {
+  public function nextTimestamp($timestamp) {
     if ($this->phase == Phase::FINALIZED) {
       throw new Exception('cannot update stats - already finalized');
     }
     if ($this->phase == Phase::BEFORE_FIRST_TIMESTAMP) {
-      $this->previousTimestampMillis = $timestampMillis;
+      $this->previousTimestamp = $timestamp;
       $this->phase = Phase::BEFORE_FIRST_KMH;
       return;
     }
     // Compute duration (i.e. weight) and speed.
-    $durationSeconds = ($timestampMillis - $this->previousTimestampMillis) / 1000;
-    $kmh = WindStatsCalculator::computeKmh($durationSeconds);
+    $duration = $timestamp - $this->previousTimestamp;
+    $kmh = WindStatsCalculator::computeKmh($duration);
     if ($this->phase == Phase::BEFORE_FIRST_KMH) {
-      $startSilenceDurationSeconds =
-          ($this->previousTimestampMillis - $this->startTimestampMillis) / 1000;
+      $startSilenceDuration = $this->previousTimestamp - $this->startTimestamp;
       // Extrapolation using $kmh, or less if the start silence is longer.
-      $startKmh = min($kmh, WindStatsCalculator::computeKmh($startSilenceDurationSeconds));
-      $this->update($startKmh, $startSilenceDurationSeconds, $timestampMillis);
+      $startKmh = min($kmh, WindStatsCalculator::computeKmh($startSilenceDuration));
+      $this->update($startKmh, $startSilenceDuration, $timestamp);
       $this->phase = Phase::STEADY_STATE;
     }
-    $this->update($kmh, $durationSeconds, $timestampMillis);
+    $this->update($kmh, $duration, $timestamp);
     // Remember timestamp for next row.
-    $this->previousTimestampMillis = $timestampMillis;
+    $this->previousTimestamp = $timestamp;
     // Remember km/h for extrapolation at the end.
     $this->previousKmh = $kmh;
   }
 
-  private function update($kmh, $durationSeconds, $timestampMillis) {
+  private function update($kmh, $duration , $timestamp ) {
     // Update histogram.
-    $this->histogram[intval($kmh)] += $durationSeconds;
+    $this->histogram[intval($kmh)] += $duration;
     // Update maximum.
     if ($kmh > $this->maxKmh) {
       $this->maxKmh = $kmh;
-      $this->maxTimestampSeconds = $timestampMillis / 1000;
+      $this->maxTimestamp = $timestamp;
     }
     // Update average.
-    $this->avgKmh += $kmh * $durationSeconds;
+    $this->avgKmh += $kmh * $duration;
   }
 
   /** Finalizes computation and returns a WindStats object. */
@@ -79,32 +82,34 @@ class WindStatsCalculator {
     	case Phase::FINALIZED:
     	  throw new Exception('cannot finalize stats - already finalized');
     	case Phase::BEFORE_FIRST_TIMESTAMP:  // didn't initialize $this->previousTimestamp yet
-    	  $this->previousTimestampMillis = $this->startTimestampMillis;
+    	  $this->previousTimestamp = $this->startTimestamp;
     	  break;
     }
-    $endSilenceDurationSeconds =
-        ($this->endTimestampMillis - $this->previousTimestampMillis) / 1000;
+    $endSilenceDuration = $this->endTimestamp - $this->previousTimestamp;
     // Extrapolation using $this->previousKmh, or less if the end silence is longer.
-    $endKmh = min($this->previousKmh, WindStatsCalculator::computeKmh($endSilenceDurationSeconds));
-    $this->update($endKmh, $endSilenceDurationSeconds, $this->previousTimestampMillis);
-    $totalDurationSeconds = ($this->endTimestampMillis - $this->startTimestampMillis) / 1000;
+    $endKmh = min($this->previousKmh, WindStatsCalculator::computeKmh($endSilenceDuration));
+    $this->update($endKmh, $endSilenceDuration, $this->previousTimestamp);
+    $totalDuration = $this->endTimestamp - $this->startTimestamp;
     // Compute average.
-    $this->avgKmh /= $totalDurationSeconds;
+    $this->avgKmh /= $totalDuration;
     // Convert histogram to relative values.
     foreach ($this->histogram as $k => $v) {
-      $this->histogram[$k] = $v / $totalDurationSeconds;
+      $this->histogram[$k] = $v / $totalDuration;
     }
     ksort($this->histogram);
     $this->phase = Phase::FINALIZED;
-    return new WindStats($this->avgKmh, $this->maxKmh, $this->maxTimestampSeconds, $this->histogram,
-        $this->startTimestampMillis / 1000, $this->endTimestampMillis / 1000);
+    return new WindStats($this->avgKmh, $this->maxKmh, $this->maxTimestamp, $this->histogram,
+        $this->startTimestamp, $this->endTimestamp);
   }
 
   /** Convert revolution duration to windspeed in km/h. */
-  private static function computeKmh($durationSeconds) {
-    // TODO: Extract magic values.
-    $rps = 1 / $durationSeconds;  // rotations per second
-    return $durationSeconds >= 10 ? 0 : (1.761 / (1 + $rps) + 3.013 * $rps);
+  private static function computeKmh($duration) {
+    // TODO: Extract magic values, including NO_WIND_DURATION above.
+    if ($duration > NO_WIND_DURATION) {
+      return 0;
+    }
+    $rps = durationToRps($duration);  // rotations per second
+    return 1.761 / (1 + $rps) + 3.013 * $rps;
   }
 }
 ?>

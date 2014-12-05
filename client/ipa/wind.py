@@ -1,8 +1,8 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
-import time
 
 import C
 import calibration_logger
+import common
 import K
 import wind_sensor
 import wind_stats
@@ -21,15 +21,15 @@ class Wind:
     self._log = K.get_logger(K.LOG_NAME_WIND)
     self._revolutions = wind_sensor.Revolutions()
     self._mode = mode
-    self._startup_time = time.time()
+    self._startup_time = common.timestamp()
     if mode == Wind.MODE_PRECISION:
       self._register_callback(self._revolutions.add_edge)
     elif mode == Wind.MODE_AGGREGATE:
       self._register_callback(self._revolutions.add_edge)
-      self._calc = wind_stats.WindStatsCalculator(self._startup_time * 1000.0)
+      self._calc = wind_stats.WindStatsCalculator(self._startup_time)
     elif mode == Wind.MODE_BOTH_DEBUG:
       self._register_callback(self._revolutions.add_edge)
-      self._calc = wind_stats.WindStatsCalculator(self._startup_time * 1000.0)
+      self._calc = wind_stats.WindStatsCalculator(self._startup_time)
     elif mode == Wind.MODE_CALIBRATE:
       self._calibration_logger = calibration_logger.CalibrationLogger()
       self._revolutions.calibration_init(self._calibration_logger)
@@ -53,13 +53,13 @@ class Wind:
   def get_sample(self):
     if self._mode == Wind.MODE_CALIBRATE:
       raise RuntimeError('get_sample() is not supported in calibration mode')
-    up_to_time = time.time()
+    up_to_time = common.timestamp()
     revs = self._revolutions.get_and_reset()
     if revs:
       # In case there was another edge after we took the time, update up_to_time. Not really
       # relevant for precision mode, but in aggregate mode it would be odd for window N to contain
       # a timestamp in window N+1.
-      up_to_time = max(up_to_time, revs[-1] / 1000.0)
+      up_to_time = max(up_to_time, revs[-1])
     sample = {K.WIND_STARTUP_TIME_KEY: self._startup_time,
               K.WIND_UP_TO_TIME_KEY: up_to_time}
     if self._mode == Wind.MODE_PRECISION or self._mode == Wind.MODE_BOTH_DEBUG:
@@ -67,7 +67,7 @@ class Wind:
     if self._mode == Wind.MODE_AGGREGATE or self._mode == Wind.MODE_BOTH_DEBUG:
       for ts in revs:
         self._calc.next_timestamp(ts)
-      sample[K.WIND_AGGREGATE_STATS_KEY] = self._calc.get_stats_and_reset(up_to_time * 1000)
+      sample[K.WIND_AGGREGATE_STATS_KEY] = self._calc.get_stats_and_reset(up_to_time)
     return K.WIND_KEY, sample
 
   def terminate(self):

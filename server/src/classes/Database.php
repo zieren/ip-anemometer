@@ -76,9 +76,9 @@ class Database {
         && $this->query(
             'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS coverage (startup TIMESTAMP PRIMARY KEY, upto TIMESTAMP)')
+            'CREATE TABLE IF NOT EXISTS coverage (startup BIGINT PRIMARY KEY, upto BIGINT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS meta (ts TIMESTAMP PRIMARY KEY, cts TIMESTAMP, '.
+            'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '.
             'stratum INT, fails INT, ip VARCHAR(15))')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS settings (k VARCHAR(256) PRIMARY KEY, v TEXT)')) {
@@ -147,7 +147,7 @@ class Database {
       // Insert aggregate mode stats (if present).
       $stats = $sample[WIND_AGGREGATE_STATS_KEY];
       if ($stats) {
-        insertAggregateStats($stats);
+        $this->insertAggregateStats($stats);
       }
     }
 
@@ -162,12 +162,10 @@ class Database {
 
     // Insert coverage. We're only interested in the most recent timestamps and ignore those of
     // previous failed upload attempts (if any).
-    $latest_sample = $samples[count($samples) - 1];
-    $startup_timestamp_seconds = $latest_sample[WIND_STARTUP_TIME_KEY];
-    $up_to_timestamp_seconds = $latest_sample[WIND_UP_TO_TIME_KEY];
-    $q = 'REPLACE INTO coverage (startup, upto) VALUES ("'
-        .formatTimestamp($startup_timestamp_seconds).'","'
-        .formatTimestamp($up_to_timestamp_seconds).'")';
+    $latestSample = $samples[count($samples) - 1];
+    $startupTimestamp = $latestSample[WIND_STARTUP_TIME_KEY];
+    $upToTimestamp = $latestSample[WIND_UP_TO_TIME_KEY];
+    $q = 'REPLACE INTO coverage (startup, upto) VALUES ('.$startupTimestamp.','.$upToTimestamp.')';
     if (!$this->query($q)) {
       $this->logCritical('failed to insert coverage timestamps: '.$this->getError());
     }
@@ -217,8 +215,8 @@ class Database {
   }
 
   public function insertMetadata($meta, $ip) {
-    $q = 'REPLACE INTO meta (cts, stratum, fails, ip) VALUES ("'.formatTimestamp(
-        $meta[CLIENT_TIMESTAMP_KEY]).'",'.$meta[STRATUM_KEY].','.$meta[FAILED_UPLOADS_KEY].',"'
+    $q = 'REPLACE INTO meta (ts, cts, stratum, fails, ip) VALUES ('.timestamp().','.
+        $meta[CLIENT_TIMESTAMP_KEY].','.$meta[STRATUM_KEY].','.$meta[FAILED_UPLOADS_KEY].',"'
         .$ip.'")';
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
@@ -258,10 +256,9 @@ class Database {
   }
 
   /** Compute average and maximum wind speed in km/h. */
-  public function computeWindStats($desiredEndTimestampSeconds, $windowSeconds) {
+  public function computeWindStats($desiredEndTimestamp, $windowDuration) {
     // Restrict to actually covered time, keeping window size if possible.
-    $q = 'SELECT UNIX_TIMESTAMP(startup), UNIX_TIMESTAMP(upto) FROM coverage'
-        .' ORDER BY startup DESC LIMIT 1';
+    $q = 'SELECT startup, upto FROM coverage ORDER BY startup DESC LIMIT 1';
     if (!($result = $this->query($q))) {
       return null;
     }
@@ -269,25 +266,24 @@ class Database {
     if ($row == null) {
       return null;  // DB is empty
     }
-    $startupTimestampSeconds = $row[0];
-    $uptoTimestampSeconds = $row[1];
-    $endTimestampMillis = min($desiredEndTimestampSeconds, $uptoTimestampSeconds) * 1000;
-    $startTimestampMillis =
-        max($endTimestampMillis - $windowSeconds * 1000, $startupTimestampSeconds * 1000);
+    $startupTimestamp = $row[0];
+    $uptoTimestamp = $row[1];
+    $endTimestamp = min($desiredEndTimestamp, $uptoTimestamp);
+    $startTimestamp = max($endTimestamp - $windowDuration, $startupTimestamp);
     // TODO: Indicate if this deviates significantly from the desired range. Maybe return the
     // actual range?
 
-    $q = 'SELECT ts FROM wind WHERE ts >= '.$startTimestampMillis.' AND ts <= '
-        .$endTimestampMillis.' ORDER BY ts';
+    $q = 'SELECT ts FROM wind WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     if ($result = $this->query($q)) {
-      $windStatsCalculator = new WindStatsCalculator($startTimestampMillis, $endTimestampMillis);
+      $windStatsCalculator = new WindStatsCalculator($startTimestamp, $endTimestamp);
       while ($row = $result->fetch_row()) {
         $windStatsCalculator->nextTimestamp($row[0]);
       }
       // TODO: Also compute cumulative histogram here.
       return $windStatsCalculator->finalizeAndGetStats();
     }
-    $this->logCritical('failed to compute wind stats: '.$this->getError());
+    $this->logCritical('failed to compute wind stats: "'.$q.'" -> '.$this->getError());
     return null;
   }
 
@@ -295,6 +291,7 @@ class Database {
   public function echoStats() {
     // Order to match $allTables.
     $sortKeys = array('startup', 'ts', 'ts', 'ts');
+    $timestamps = array('ts', 'cts', 'startup', 'upto');
     $limits = array(5, 1, 1, 1);
     for ($i = 0; $i < count($sortKeys); ++$i) {
       $table = $this->allTables[$i];
@@ -315,7 +312,7 @@ class Database {
           echo '</tr><tr><td>N-'.$count.'</td>';
           if (isset($row)) {
             foreach ($row as $k => $v) {
-              echo '<td>' . $v . '</td>';
+              echo '<td>'.(in_array($k, $timestamps) ? formatTimestamp($v) : $v).'</td>';
             }
           }
           echo '<td>' . $rowCount[0] . '</td>';
@@ -338,20 +335,6 @@ class Database {
   }
 
   // TODO: Remove testing methods.
-  public function echoTempAverage($periodSeconds) {
-    $minTimestampMillis = int((time() - $periodSeconds) * 1000 + 0.5);
-    $q = 'SELECT ts, AVG(t) AS avg_t FROM temp WHERE ts >= "' . $minTimestampMillis . '"';
-    if (!($result = $this->query($q))) {
-      echo $this->getError();
-      return;
-    }
-    echo '<table border="1">';
-    while ($row = $result->fetch_assoc()) {
-      echo '<tr><td>' . $row['ts'] . '</td><td>' . $row['avg_t'] . '</td></tr>';
-    }
-    echo '</table>';
-  }
-
   public function echoTemp() {
     if (!($result = $this->query('SELECT * FROM temp ORDER BY ts DESC LIMIT 3'))) {
       echo $this->getError();
@@ -359,7 +342,7 @@ class Database {
     }
     echo '<table border="1">';
     while ($row = $result->fetch_assoc()) {
-      echo '<tr><td>' . formatTimestamp($row['ts'] / 1000) . '</td><td>' . $row['t'] . '</td></tr>';
+      echo '<tr><td>' . formatTimestamp($row['ts']) . '</td><td>' . $row['t'] . '</td></tr>';
     }
     echo '</table>';
   }

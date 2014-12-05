@@ -1,12 +1,13 @@
-_NO_WIND_DURATION = float(10 * 1000)  # Longer rotations are considered 0 km/h.
+import common
+
+
+_NO_WIND_DURATION = 10000L  # Revolutions longer than 10 seconds are considered 0 km/h.
 
 
 class WindKey:
   """Keys in the stats dict."""
   (AVG_KMH, MAX_KMH, MAX_TIMESTAMP, HISTOGRAM, START_TIMESTAMP, END_TIMESTAMP) = range(6)
   # TODO: Should these be string literals for easier access on the server?
-  # TODO: Timestamps should probably be integers in stats result. Make sure serialization doesn't
-  # crop anything.
 
 
 class WindStatsCalculator:
@@ -19,7 +20,7 @@ class WindStatsCalculator:
     """start_timestamp: Startup of the wind sensor."""
     self._phase = WindStatsCalculator._BEFORE_FIRST_TIMESTAMP
     self._previous_timestamp = 0.0  # will be initialized in the first call
-    self._start_timestamp = float(start_timestamp)
+    self._start_timestamp = start_timestamp
     self._reset()
 
   def _reset(self):
@@ -30,7 +31,6 @@ class WindStatsCalculator:
 
   def next_timestamp(self, timestamp):
     """Consider the next timestamp for statistics."""
-    timestamp = float(timestamp)
     if self._phase == WindStatsCalculator._BEFORE_FIRST_TIMESTAMP:
       self._previous_timestamp = timestamp
       self._phase = WindStatsCalculator._BEFORE_FIRST_KMH
@@ -66,7 +66,6 @@ class WindStatsCalculator:
     first call, and at the end timestamp of the previous call for all subsequent calls. They end at
     the last revolution timestamp before end_timestamp, but never more than _NO_WIND_DURATION before
     end_timestamp (padding with zero km/h). The end timestamp is returned in the result. """
-    end_timestamp = float(end_timestamp)
     if self._phase == WindStatsCalculator._BEFORE_FIRST_TIMESTAMP:
       # didn't initialize self._previous_timestamp yet
       self._previous_timestamp = self._start_timestamp
@@ -101,5 +100,5 @@ def compute_kmh(duration):
   if duration >= _NO_WIND_DURATION:
     return 0.0
   # TODO: Extract magic values (including _NO_WIND_DURATION).
-  rps = 1000.0 / duration  # rotations per second
+  rps = common.duration_to_rps(duration)  # rotations per second
   return (1.761 / (1.0 + rps) + 3.013 * rps)

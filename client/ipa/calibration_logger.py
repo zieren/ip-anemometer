@@ -1,7 +1,7 @@
 import Queue
-import datetime
 import threading
 
+import common
 import K
 
 
@@ -15,15 +15,13 @@ class LoggerWorker(threading.Thread):
 
   def run(self):
     while True:
-      time_and_duration = self._queue.get()
-      if time_and_duration == None:
+      timestamp_and_duration = self._queue.get()
+      if timestamp_and_duration == None:
         return
-      t = time_and_duration[0]
-      rps = 1 / time_and_duration[1]
-      message = '%s.%03d\t%.3f' % (  # \t for transfer to spreadsheet
-          datetime.datetime.fromtimestamp(t).strftime('%H:%M:%S'),
-          (t - int(t)) * 1000,  # millisecond part of time
-          rps)
+      timestamp = timestamp_and_duration[0]
+      rps = common.duration_to_rps(timestamp_and_duration[1])
+      # \t for transfer to spreadsheet
+      message = '%s\t%.3f' % (common.timestamp_to_string(timestamp), rps)
       self._log.info(message)
 
 
@@ -36,9 +34,9 @@ class CalibrationLogger:
     self._worker = LoggerWorker(self._queue, log)
     self._worker.start()
 
-  def log(self, time_and_duration):
-    '''time_and_duration is a tuple of timestamp and duration, both in (float) seconds.'''
-    self._queue.put(time_and_duration)
+  def log(self, timestamp_and_duration):
+    '''timestamp_and_duration is a tuple of timestamp and duration, both in millis.'''
+    self._queue.put(timestamp_and_duration)
 
   def terminate(self):
     self._queue.put(None)  # terminate worker

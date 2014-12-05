@@ -3,27 +3,31 @@
 class WindStats {
   private $avgKmh;
   private $maxKmh;
-  private $maxTimestampSeconds;
+  private $maxTimestamp;
   private $histogram;
-  private $startTimestampSeconds;
-  private $endTimestampSeconds;
+  private $startTimestamp;
+  private $endTimestamp;
 
-  function __construct($avgKmh, $maxKmh, $maxTimestampSeconds, $histogram, $startTimestampSeconds,
-      $endTimestampSeconds) {
+  function __construct($avgKmh, $maxKmh, $maxTimestamp, $histogram, $startTimestamp,
+      $endTimestamp) {
     $this->avgKmh = $avgKmh;
     $this->maxKmh = $maxKmh;
-    $this->maxTimestampSeconds = $maxTimestampSeconds;
+    $this->maxTimestamp = $maxTimestamp;
     $this->histogram = $histogram;
-    $this->startTimestampSeconds = $startTimestampSeconds;
-    $this->endTimestampSeconds = $endTimestampSeconds;
+    $this->startTimestamp = $startTimestamp;
+    $this->endTimestamp = $endTimestamp;
   }
 
   public function getAvgKmh() { return $this->avgKmh; }
   public function getMaxKmh() { return $this->maxKmh; }
-  public function getMaxTimestampSeconds() { return $this->maxTimestampSeconds; }
+  public function getMaxTimestamp() { return $this->maxTimestamp; }
   public function getHistogram() { return $this->histogram; }
-  public function getStartTimestampSeconds() { return $this->startTimestampSeconds; }
-  public function getEndTimestampSeconds() { return $this->endTimestampSeconds; }
-}
+  public function getStartTimestamp() { return $this->startTimestamp; }
+  public function getEndTimestamp() { return $this->endTimestamp; }
 
+  public function toString() {
+    return 'avgKmh='.$this->avgKmh.', maxKmh='.$this->maxKmh.', maxTimestamp='.$this->maxTimestamp
+        .', startTimestamp='.$this->startTimestamp.', endTimestamp='.$this->endTimestamp;
+  }
+}
 ?>

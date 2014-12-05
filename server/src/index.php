@@ -45,19 +45,19 @@ if (isset($_POST[$DROP]) && $_POST[$CONFIRM]) {
 
 // Compute actual wind measurements.
 
-function printRecentWindStats($minutes, $endTimestampSeconds = 0) {
+function printRecentWindStats($minutes, $endTimestamp = 0) {
   global $db;
-  if (!$endTimestampSeconds) {
-    $endTimestampSeconds = time();
+  if (!$endTimestamp) {
+    $endTimestamp = timestamp();
   }
-  $windStats = $db->computeWindStats($endTimestampSeconds, $minutes * 60);
+  $windStats = $db->computeWindStats($endTimestamp, $minutes * 60 * 1000);
   if (is_null($windStats)) {
     echo '<p>n/a</p>';
     return;
   }
-  $latencySeconds = $endTimestampSeconds - $windStats->getEndTimestampSeconds();
-  $latencyText = '@latency='.formatDuration($latencySeconds);
-  if ($latencySeconds > 15 * 60) {  // TODO: Extract this.
+  $latency = $endTimestamp - $windStats->getEndTimestamp();
+  $latencyText = '@latency='.formatDuration($latency);
+  if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
     $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
   }
   echo 'Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
@@ -65,7 +65,7 @@ function printRecentWindStats($minutes, $endTimestampSeconds = 0) {
     <tr><td>avg</td><td>max</td><td>time of max</td></tr>
     <tr><td>'.round($windStats->getAvgKmh(), 1)
         .'</td><td>'.round($windStats->getMaxKmh(), 1)
-        .'</td><td>'.formatTimestamp($windStats->getMaxTimestampSeconds())
+        .'</td><td>'.formatTimestamp($windStats->getMaxTimestamp())
         .'</td></tr>
   </table>';
   printHistogram($windStats->getHistogram());

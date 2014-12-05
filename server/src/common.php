@@ -86,12 +86,20 @@ function getCurentPagePathURL() {
   return substr($pageURL, 0, $lastSlash + 1);
 }
 
-function formatTimestamp($timestampSeconds) {
-  return date(DATE_FORMAT, $timestampSeconds);
+function formatTimestamp($timestamp) {
+  return date(DATE_FORMAT, $timestamp / 1000);
 }
 
-function formatDuration($seconds) {
+function formatDuration($millis) {
+  $seconds = $millis / 1000;
   return sprintf("%02d:%02d:%02d", floor($seconds / 3600), ($seconds / 60) % 60, $seconds % 60);
 }
 
+function durationToRps($duration) {
+  return 1000 / $duration;
+}
+
+function timestamp() {
+  return time() * 1000;
+}
 ?>

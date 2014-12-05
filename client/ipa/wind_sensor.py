@@ -1,5 +1,5 @@
+import common
 import threading
-import time
 
 import C
 
@@ -22,15 +22,14 @@ class Revolutions:
     with self._lock:
       revs = self._revs
       self._revs = []
-    # Round to milliseconds.
-    return [int(1000 * t + 0.5) for t in revs]
+    return revs
 
   def add_edge(self, pin_ignored):
     """Counts one edge."""
     with self._lock:
       self._edges = (self._edges + 1) % Revolutions._EDGES_PER_REV
       if self._edges == 0:
-        self._revs.append(time.time())
+        self._revs.append(common.timestamp())
 
   # ---------- Calibration methods ----------
 
