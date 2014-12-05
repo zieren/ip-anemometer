@@ -65,7 +65,7 @@ class WindStatsCalculator:
     """Return statistics in a dict keyed by WindKey. Statistics begin at the start_timestamp for the
     first call, and at the end timestamp of the previous call for all subsequent calls. They end at
     the last revolution timestamp before end_timestamp, but never more than _NO_WIND_DURATION before
-    end_timestamp (padding with zero km/h). The actual end timestamp is returned in the result. """
+    end_timestamp (padding with zero km/h). The end timestamp is returned in the result. """
     end_timestamp = float(end_timestamp)
     if self._phase == WindStatsCalculator._BEFORE_FIRST_TIMESTAMP:
       # didn't initialize self._previous_timestamp yet
