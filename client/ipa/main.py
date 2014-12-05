@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # TODO: Unique and proper formatting (mostly newlines) throughout.
 # TODO: There are several instances where we're at risk of flooding logs with repeated messages.
 # Maybe wrap loggers and output repetition counts for duplicates? Though that would only work for
