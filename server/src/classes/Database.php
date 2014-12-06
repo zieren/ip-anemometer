@@ -26,9 +26,9 @@ class Database {
     $this->allTables = array('coverage', 'wind', 'wind_a', 'temp', 'meta', 'settings');
     $this->mysqli = new mysqli('localhost', DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
-      $this->logError('failed to connect to MySQL: (' . $mysqli->connect_errno . ') '
-          . $this->mysqli->connect_error);
-      exit();
+      $this->logCritical('failed to connect to MySQL: ('.$mysqli->connect_errno.') '
+          .$this->mysqli->connect_error);
+      exit(1);
     }
     assert($this->mysqli->select_db(DB_NAME));
   }
@@ -72,7 +72,7 @@ class Database {
             'CREATE TABLE IF NOT EXISTS wind (ts BIGINT PRIMARY KEY)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS wind_a (start_ts BIGINT PRIMARY KEY, '.
-            'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_from INT, hist_to INT)')
+            'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
         && $this->query(
@@ -173,15 +173,15 @@ class Database {
 
   private function insertAggregateStats($stats) {
     // Insert histogram data first because we need the keys in the hist table.
-    $hist = $stats[WIND_KEY_HIST];
-    $hist_from = $this->insertHistogram($hist);
-    if (!$hist_from) {
+    $histogram = $stats[WIND_KEY_HIST];
+    $histId = $this->insertHistogram($histogram);
+    if (!$histId) {
       return;  // error already logged
     }
-    $hist_to = $hist_from + count($hist) - 1;
-    $q = 'INSERT INTO wind_a (start_ts, end_ts, avg, max, max_ts, hist_from, hist_to) VALUES ('
+    $buckets = count($histogram);
+    $q = 'INSERT INTO wind_a (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
         .$stats[WIND_KEY_START_TS].','.$stats[WIND_KEY_END_TS].','.$stats[WIND_KEY_AVG].','
-        .$stats[WIND_KEY_MAX].','.$stats[WIND_KEY_MAX_TS].','.$hist_from.','.$hist_to.')';
+        .$stats[WIND_KEY_MAX].','.$stats[WIND_KEY_MAX_TS].','.$histId.','.$buckets.')';
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
       $this->logCritical('failed to insert aggregate wind measurements: '.$this->getError());
@@ -257,18 +257,17 @@ class Database {
 
   public function computeWindStatsAggregate($maxEndTimestamp, $windowDuration) {
     $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
-    $q = 'SELECT * FROM wind_a WHERE '
+    $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind_a WHERE '
         .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
         .' AND end_ts <= '.$maxEndTimestamp
         .' ORDER BY start_ts DESC';
-    if (!($result = $this->query($q))) {
-      return null;
-    }
+    $result = $this->checkQuery($q);
+    if (!$result) return null;
 
     // Read samples in reverse chronological order until the desired duration is best approximated.
     // At the same time, compute running stats except histogram.
-    $actualStartTimestamp = -1;
-    $actualEndTimestamp = -1;
+    $actualStartTimestamp = 0;
+    $actualEndTimestamp = 0;
     $actualWindowDuration = 0;
     $selectedSamples = array();
     $minHistId = -1;
@@ -287,13 +286,12 @@ class Database {
       // Update times and IDs.
       $actualWindowDuration += $sampleDuration;
       $actualStartTimestamp = $sample['start_ts'];
-      if ($actualEndTimestamp < 0) {
+      if (!$actualEndTimestamp) {
         $actualEndTimestamp = $sample['end_ts'];
       }
-      $minHistId = $sample['hist_from'];
+      $minHistId = $sample['hist_id'];
       if ($maxHistId < 0) {
-        // TODO: Change hist_to to num_buckets or "count" or something.
-        $maxHistId = $sample['hist_to'];
+        $maxHistId = $minHistId + $sample['buckets'] - 1;
       }
       // Update running stats except histogram.
       if ($sample['max'] > $maxKmh) {
@@ -309,16 +307,14 @@ class Database {
 
     // Compute histogram.
     $q = 'SELECT * from hist WHERE id >= '.$minHistId.' AND id <= '.$maxHistId.' ORDER BY id DESC';
-    if (!($result = $this->query($q))) {
-      return null;
-    }
+    $result = $this->checkQuery($q);
     $histogram = array();
     $i = 0;
     $sampleDuration = Database::getSampleDuration($selectedSamples[0]);
     while ($bucket = $result->fetch_assoc()) {
       $id = intval($bucket['id']);
-      $histFrom = intval($selectedSamples[$i]['hist_from']);
-      if ($id < $histFrom) {  // belongs to next (older) sample
+      $histId = intval($selectedSamples[$i]['hist_id']);
+      if ($id < $histId) {  // belongs to next (older) sample
         ++$i;
         $sampleDuration = Database::getSampleDuration($selectedSamples[$i]);
       }
@@ -439,6 +435,20 @@ class Database {
           .$row['stratum'].'</td></tr>';
     }
     echo '</table>';
+  }
+
+  // TODO: Use this.
+  private function checkQuery($query, $message = null) {
+    $result = $this->query($query);
+    if (!$result) {
+      if ($message) {
+        $extendedMessage = $message.' -- ';
+      }
+      $extendedMessage .= 'Error: '.$this->getError().' -- Query: '.$query;
+      $this->log->critical($extendedMessage);
+      // TODO: exit($extendedMessage);
+    }
+    return $result;
   }
 }
 ?>
