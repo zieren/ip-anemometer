@@ -352,8 +352,6 @@ class Database {
     $uptoTimestamp = $row[1];
     $endTimestamp = min($desiredEndTimestamp, $uptoTimestamp);
     $startTimestamp = max($endTimestamp - $windowDuration, $startupTimestamp);
-    // TODO: Indicate if this deviates significantly from the desired range. Maybe return the
-    // actual range?
 
     $q = 'SELECT ts FROM wind WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
