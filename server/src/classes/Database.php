@@ -276,6 +276,7 @@ class Database {
     $maxTimestamp = 0;
     $avgKmh = 0;
     while ($sample = $result->fetch_assoc()) {
+      // TODO: What about gaps?
       // Can we approximate the desired duration better by selecting this row?
       $sampleDuration = Database::getSampleDuration($sample);
       if (abs($actualWindowDuration - $windowDuration) <
