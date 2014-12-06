@@ -1,5 +1,6 @@
 <?php
 /* Common constants and functions.
+ * TODO: Split this file up.
  */
 
 require_once('config.php');
@@ -46,6 +47,11 @@ define('LOG_LEVEL_KEY', 'logLevel');
 define('CLIENT_UPDATE_FILENAME', 'client/ipa-update.zip');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 
+// Request arguments.
+define('REQ_WINDOW_MINUTES', 'm');
+define('REQ_TIMESTAMP', 'ts');
+define('REQ_WINDOW_MINUTES_DEFAULT', 60);
+define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 
 use Psr\Log\LogLevel;
 $LOG_LEVELS = array(
@@ -100,5 +106,9 @@ function durationToRps($duration) {
 
 function timestamp() {
   return time() * 1000;
+}
+
+function minutesToMillis($minutes) {
+  return $minutes * 60 * 1000;
 }
 ?>

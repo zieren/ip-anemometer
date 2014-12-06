@@ -1,5 +1,6 @@
 <html>
-<body>
+<body bgcolor="#ffff99">
+<h1>Down for maintenance... data below is just an ILLUSION!</h1>
 <?php
 require_once 'common.php';
 
