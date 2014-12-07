@@ -269,12 +269,13 @@ class Database {
     $actualStartTimestamp = 0;
     $actualEndTimestamp = 0;
     $actualWindowDuration = 0;
-    $selectedSamples = array();
     $minHistId = 0;
     $maxHistId = 0;
     $maxKmh = 0;
     $maxTimestamp = 0;
     $avgKmh = 0;
+    $selectedSamples = array();
+    $timeSeries = array();
     while ($sample = $result->fetch_assoc()) {
       // TODO: What about gaps?
       // Can we approximate the desired duration better by selecting this row?
@@ -283,6 +284,11 @@ class Database {
           abs($actualWindowDuration + $sampleDuration - $windowDuration)) {
         break;
       }
+      $timeSeries[] = array(
+          intval($sample['start_ts'] / 2 + $sample['end_ts'] / 2),
+          floatval($sample['avg']),
+          floatval($sample['max'])
+      );
       $selectedSamples[] = $sample;
       // Update times and IDs.
       $actualWindowDuration += $sampleDuration;
@@ -330,7 +336,8 @@ class Database {
         WIND_KEY_MAX_TS => intval($maxTimestamp),
         WIND_KEY_HIST => $histogram,
         WIND_KEY_START_TS => floatval($actualStartTimestamp),
-        WIND_KEY_END_TS => floatval($actualEndTimestamp)
+        WIND_KEY_END_TS => floatval($actualEndTimestamp),
+        WIND_KEY_TIME_SERIES => $timeSeries
     );
   }
 

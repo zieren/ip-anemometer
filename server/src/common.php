@@ -40,6 +40,9 @@ define('WIND_KEY_HIST', 3);
 define('WIND_KEY_START_TS', 4);
 define('WIND_KEY_END_TS', 5);
 
+// Additional stats only computed on the server. Keep these in sync with ipa.js.
+define('WIND_KEY_TIME_SERIES', 6);
+
 // Keys for server settings.
 define('LOG_LEVEL_KEY', 'logLevel');
 
