@@ -32,7 +32,7 @@ define('COMMAND_RESTART', 'restart');
 define('RESPONSE_STATUS', 'status');
 define('RESPONSE_STATUS_OK', 'ok');
 
-// Aggregate stats keys:
+// Wind stats keys. NOTE: Keep these in sync with wind_stats.py and ipa.js.
 define('WIND_KEY_AVG', 0);
 define('WIND_KEY_MAX', 1);
 define('WIND_KEY_MAX_TS', 2);

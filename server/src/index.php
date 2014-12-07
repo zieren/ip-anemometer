@@ -58,7 +58,7 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
     echo '<p>n/a</p>';
     return;
   }
-  $latency = $endTimestamp - $windStats->getEndTimestamp();
+  $latency = $endTimestamp - $windStats[WIND_KEY_END_TS];
   $latencyText = '@latency='.formatDuration($latency);
   if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
     $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
@@ -67,12 +67,12 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   echo 'Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
   echo '<table border="1" cellpadding="3">
     <tr><td>avg</td><td>max</td><td>time of max</td></tr>
-    <tr><td>'.round($windStats->getAvgKmh(), 1)
-        .'</td><td>'.round($windStats->getMaxKmh(), 1)
-        .'</td><td>'.formatTimestamp($windStats->getMaxTimestamp())
+    <tr><td>'.round($windStats[WIND_KEY_AVG], 1)
+        .'</td><td>'.round($windStats[WIND_KEY_MAX], 1)
+        .'</td><td>'.formatTimestamp($windStats[WIND_KEY_MAX_TS])
         .'</td></tr>
   </table>';
-  printHistogram($windStats->getHistogram());
+  printHistogram($windStats[WIND_KEY_HIST]);
 
   echo '</td><td>';  // TODO: Remove side-by-side debug.
   $windStats = $db->computeWindStats($endTimestamp, $minutes * 60 * 1000);
@@ -80,7 +80,7 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
     echo '<p>n/a</p>';
     return;
   }
-  $latency = $endTimestamp - $windStats->getEndTimestamp();
+  $latency = $endTimestamp - $windStats[WIND_KEY_END_TS];
   $latencyText = '@latency='.formatDuration($latency);
   if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
     $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
@@ -88,12 +88,12 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   echo 'P Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
   echo '<table border="1" cellpadding="3">
     <tr><td>avg</td><td>max</td><td>time of max</td></tr>
-    <tr><td>'.round($windStats->getAvgKmh(), 1)
-        .'</td><td>'.round($windStats->getMaxKmh(), 1)
-        .'</td><td>'.formatTimestamp($windStats->getMaxTimestamp())
+    <tr><td>'.round($windStats[WIND_KEY_AVG], 1)
+        .'</td><td>'.round($windStats[WIND_KEY_MAX], 1)
+        .'</td><td>'.formatTimestamp($windStats[WIND_KEY_MAX_TS])
         .'</td></tr>
   </table>';
-  printHistogram($windStats->getHistogram());
+  printHistogram($windStats[WIND_KEY_HIST]);
   echo '</td></tr></table>';  // TODO: Remove side-by-side debug.
 }
 

@@ -23,7 +23,7 @@ if (isset($settings[LOG_LEVEL_KEY])) {
 $stats = $db->computeWindStatsAggregate($timestamp, minutesToMillis($windowMinutes));
 
 if ($stats) {
-  echo $stats->toJson();
+  echo json_encode($stats);
 } else {
   echo "!e";
 }

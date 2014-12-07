@@ -270,8 +270,8 @@ class Database {
     $actualEndTimestamp = 0;
     $actualWindowDuration = 0;
     $selectedSamples = array();
-    $minHistId = -1;
-    $maxHistId = -1;
+    $minHistId = 0;
+    $maxHistId = 0;
     $maxKmh = 0;
     $maxTimestamp = 0;
     $avgKmh = 0;
@@ -291,7 +291,7 @@ class Database {
         $actualEndTimestamp = $sample['end_ts'];
       }
       $minHistId = $sample['hist_id'];
-      if ($maxHistId < 0) {
+      if (!$maxHistId) {
         $maxHistId = $minHistId + $sample['buckets'] - 1;
       }
       // Update running stats except histogram.
@@ -313,9 +313,7 @@ class Database {
     $i = 0;
     $sampleDuration = Database::getSampleDuration($selectedSamples[0]);
     while ($bucket = $result->fetch_assoc()) {
-      $id = intval($bucket['id']);
-      $histId = intval($selectedSamples[$i]['hist_id']);
-      if ($id < $histId) {  // belongs to next (older) sample
+      if ($bucket['id'] < $selectedSamples[$i]['hist_id']) {  // belongs to next (older) sample
         ++$i;
         $sampleDuration = Database::getSampleDuration($selectedSamples[$i]);
       }
@@ -326,11 +324,18 @@ class Database {
     }
     ksort($histogram);
 
-    return new WindStats($avgKmh, $maxKmh, $maxTimestamp, $histogram, $actualStartTimestamp,
-      $actualEndTimestamp);
+    return array(
+        WIND_KEY_AVG => $avgKmh,  // already float
+        WIND_KEY_MAX => floatval($maxKmh),
+        WIND_KEY_MAX_TS => intval($maxTimestamp),
+        WIND_KEY_HIST => $histogram,
+        WIND_KEY_START_TS => floatval($actualStartTimestamp),
+        WIND_KEY_END_TS => floatval($actualEndTimestamp)
+    );
   }
 
   private static function getSampleDuration($sample) {
+    // We rely on the difference fitting into an integer.
     return $sample['end_ts'] - $sample['start_ts'];
   }
 

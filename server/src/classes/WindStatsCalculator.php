@@ -98,8 +98,14 @@ class WindStatsCalculator {
     }
     ksort($this->histogram);
     $this->phase = Phase::FINALIZED;
-    return new WindStats($this->avgKmh, $this->maxKmh, $this->maxTimestamp, $this->histogram,
-        $this->startTimestamp, $this->endTimestamp);
+    return array(
+        WIND_KEY_AVG => $this->avgKmh,
+        WIND_KEY_MAX => $this->maxKmh,
+        WIND_KEY_MAX_TS => $this->maxTimestamp,
+        WIND_KEY_HIST => $this->histogram,
+        WIND_KEY_START_TS => $this->startTimestamp,
+        WIND_KEY_END_TS => $this->endTimestamp
+    );
   }
 
   /** Convert revolution duration to windspeed in km/h. */

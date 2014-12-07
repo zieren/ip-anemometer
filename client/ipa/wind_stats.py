@@ -7,6 +7,7 @@ _NO_WIND_DURATION = 10000L  # Revolutions longer than 10 seconds are considered 
 class WindKey:
   """Keys in the stats dict."""
   (AVG_KMH, MAX_KMH, MAX_TIMESTAMP, HISTOGRAM, START_TIMESTAMP, END_TIMESTAMP) = range(6)
+  # NOTE: Keep these in sync with common.php and ipa.js.
   # TODO: Should these be string literals for easier access on the server?
 
 
