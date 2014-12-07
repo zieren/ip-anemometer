@@ -17,12 +17,19 @@ function onLoadHandler() {
 
   // Create the data table.
   var data = new google.visualization.DataTable();
-  data.addColumn('number', 't');
+  data.addColumn('datetime', 't');
   data.addColumn('number', 'avg');
   data.addColumn('number', 'max');
-  data.addRows(stats[6]);
+  // data.addRows(stats[6]);
+  var timeSeries = stats[6];
+  for (var i = 0; i < timeSeries.length; ++i) {
+    var row = timeSeries[i];
+    row[0] = new Date(row[0]);
+    data.addRow(row);
+  }
   var options = {
     title: 'Wind [km/h]',
+    hAxis: { format: 'HH:mm:ss' },
     legend: { position: 'bottom' }
   };
   // Instantiate and draw our chart, passing in some options.
