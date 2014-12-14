@@ -34,9 +34,9 @@ function createDummyStats() {
   $stats[WIND_KEY_END_TS] = $timestamp;
   $hist = array();
   $sum = 0;
-  $numBins = rand(1, 30);
+  $numBins = max(1, rand(-5, 30));
   $skipBin = rand(0, $numBins * 1.2);
-  for ($i = 0; $i <= $numBins; ++$i) {
+  for ($i = 0; $i < $numBins; ++$i) {
     if ($i == $skipBin) {
       continue;
     }

@@ -51,13 +51,16 @@ function onLoadHandler() {
     hAxis: {gridlines: {count: -1}},
     series: {
       0: {targetAxisIndex: 0, type: 'bars'},
-      1: {targetAxisIndex: 1}
+      1: {targetAxisIndex: 1, type: 'lines'}
     },
     vAxes: {
-      0: {},
-      1: {maxValue: 100}
+      0: {minValue: 0},
+      1: {minValue: 0, maxValue: 100}
     }
   };
+  if (Object.keys(histogram).length == 1) {
+    options.vAxes[0].maxValue = 100;
+  }
   var histogramChart = new google.visualization.ComboChart(document.getElementById('hist_div'));
   histogramChart.draw(histogramDataTable, options);
 }
