@@ -53,6 +53,7 @@ define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human r
 // Request arguments.
 define('REQ_WINDOW_MINUTES', 'm');
 define('REQ_TIMESTAMP', 'ts');
+define('REQ_DUMMY', 'dummy');
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 

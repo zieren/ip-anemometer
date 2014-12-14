@@ -2,40 +2,64 @@
 <head>
 <title>IP Anemometer</title>
 <link rel="stylesheet" type="text/css" href="ipa.css" />
-<script type="text/javascript" src="ipa.js"></script>
 
+<script type="text/javascript" src="ipa.js"></script>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript">
 google.load('visualization', '1.0', {'packages':['corechart']});
 google.setOnLoadCallback(onLoadHandler);
 
-// Callback that creates and populates a data table,
-// instantiates the pie chart, passes in the data and
-// draws it.
 function onLoadHandler() {
   var stats = ipa.requestStats(document.getElementById('ipaMinutes').value);  // XXX
+  if (stats == null) {
+    // TODO: Handle this properly.
+    document.getElementById('ipaWind').innerHTML = "n/a";
+    return;
+  }
 
-  // Create the data table.
-  var data = new google.visualization.DataTable();
-  data.addColumn('datetime', 't');
-  data.addColumn('number', 'avg');
-  data.addColumn('number', 'max');
-  // data.addRows(stats[6]);
-  var timeSeries = stats[6];
+  var speedDataTable = new google.visualization.DataTable();
+  speedDataTable.addColumn('datetime', 't');
+  speedDataTable.addColumn('number', 'avg');
+  speedDataTable.addColumn('number', 'max');
+  var timeSeries = stats[ipa.WIND_KEY_TIME_SERIES];
   for (var i = 0; i < timeSeries.length; ++i) {
     var row = timeSeries[i];
     row[0] = new Date(row[0]);
-    data.addRow(row);
+    speedDataTable.addRow(row);
   }
   var options = {
     title: 'Wind [km/h]',
-    hAxis: { format: 'HH:mm:ss' },
-    legend: { position: 'bottom' }
+    hAxis: {format: 'HH:mm:ss'},
+    legend: {position: 'bottom'}
   };
-  // Instantiate and draw our chart, passing in some options.
-  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-  chart.draw(data, options);
+  var speedChart = new google.visualization.LineChart(document.getElementById('time_div'));
+  speedChart.draw(speedDataTable, options);
 
+  var histogramDataTable = new google.visualization.DataTable();
+  var histogram = stats[ipa.WIND_KEY_HIST];
+  histogramDataTable.addColumn('number', 'km/h');
+  histogramDataTable.addColumn('number', '%');
+  histogramDataTable.addColumn('number', '%>=');
+  var totalPercent = 100;
+  for (var kmh in histogram) {
+    var percent = histogram[kmh] * 100;
+    histogramDataTable.addRow([parseInt(kmh), percent, totalPercent]);
+    totalPercent -= percent;
+  }
+  options = {
+    title: 'Wind [km/h]',
+    hAxis: {gridlines: {count: -1}},
+    series: {
+      0: {targetAxisIndex: 0, type: 'bars'},
+      1: {targetAxisIndex: 1}
+    },
+    vAxes: {
+      0: {},
+      1: {maxValue: 100}
+    }
+  };
+  var histogramChart = new google.visualization.ComboChart(document.getElementById('hist_div'));
+  histogramChart.draw(histogramDataTable, options);
 }
 </script>
 
@@ -46,7 +70,10 @@ Minutes:
 <input id="ipaMinutes" type="text" maxlength="4" size="4" onkeyup="onLoadHandler()" value="3" />
 <hr />
 
-<div id="chart_div" style="width:400; height:300"></div>
+<div style="width: 100%; overflow: hidden;">
+<div id="time_div" style="width: 400px; height: 300px; float: left"></div>
+<div id="hist_div" style="margin-left: 400px; width: 400px; height: 300px"></div>
+</div>
 
 </body>
 </html>
