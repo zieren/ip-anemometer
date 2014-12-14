@@ -1,5 +1,8 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+source lib.sh
+
 FWD_PORT=2222
 WAIT_SECONDS=60
 
@@ -23,17 +26,16 @@ PASSWORD=$3
 SERVER_ALIVE_INTERVAL=60
 SERVER_ALIVE_COUNT_MAX=2
 
-# TODO: Remove debug (echo) lines.
-
 while true; do
-  echo "$(date) connecting..."
+  log "connecting..."
   sshpass -p "$PASSWORD" \
   ssh -o "ServerAliveInterval=$SERVER_ALIVE_INTERVAL" \
       -o "ServerAliveCountMax=$SERVER_ALIVE_COUNT_MAX" \
       -o "StrictHostKeyChecking=no" \
       -o "UserKnownHostsFile=/dev/null" \
+      -o "ConnectTimeout=15" \
       -N -R $FWD_PORT:localhost:22 $REMOTE_ADDRESS -p $REMOTE_PORT
   SSH_RETVAL=$?
-  echo "$(date) ssh retval: $SSH_RETVAL"
+  log "ssh retval: $SSH_RETVAL"
   sleep $WAIT_SECONDS
 done
