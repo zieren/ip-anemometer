@@ -59,6 +59,7 @@ function ls_logs() {
 
 log "IP anemometer wrapper $VERSION - (c) Joerg Zieren - http://zieren.de - GNU GPL v3"
 
+log "Waiting for clock to sync..."
 ./await_clock_sync.sh
 
 while true; do
