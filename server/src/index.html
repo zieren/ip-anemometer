@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>IP Anemometer</title>
+
+<link rel="stylesheet" type="text/css" href="ipa.css" />
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="ipa.js"></script>
+<script type="text/javascript">
+
+google.setOnLoadCallback(updateChart);
+
+var clearElement = function(element) {
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+  return element;
+}
+
+function updateChart() {
+  var options = {
+    minutes: document.getElementById('ipaMinutes').value
+  }
+  var chart = new ipa.Chart(options);
+  chart.requestStats();
+
+  chart.drawTextAvgAndMax(clearElement(document.getElementById('ipaWind')));
+  chart.drawTimeRange(clearElement(document.getElementById('range_div')));
+  chart.drawTimeSeries(clearElement(document.getElementById('time_div')));
+  chart.drawHistogram(clearElement(document.getElementById('hist_div')));
+}
+</script>
+
+</head>
+<body>
+<div id="ipaWind">loading...</div>
+Minutes:
+<input id="ipaMinutes" type="text" maxlength="4" size="4" onkeyup="updateChart()" value="60" />
+
+<div id="range_div" style="width: 400px; text-align: center;"></div>
+<div id="time_div" style="width: 400px; height: 300px;"></div>
+<div id="hist_div" style="width: 400px; height: 300px;"></div>
+
+</body>
+</html>

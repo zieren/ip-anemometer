@@ -1,3 +1,17 @@
-table, td {
+table.avgAndMax {
 	border: 1px solid black;
+	xbackground: #ddd;
+}
+
+table.avgAndMax td {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+td.avg {
+	background: #9bf;
+}
+
+td.max {
+	background: #f99;
 }

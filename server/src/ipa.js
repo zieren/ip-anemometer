@@ -1,90 +1,174 @@
-var ipa = new function() {
-  // NOTE: Keep WIND_KEY_* in sync with wind_stats.py and common.php.
-  this.WIND_KEY_AVG = 0;
-  this.WIND_KEY_MAX = 1;
-  this.WIND_KEY_MAX_TS = 2;
-  this.WIND_KEY_HIST = 3;
-  this.WIND_KEY_START_TS = 4;
-  this.WIND_KEY_END_TS = 5;
+google.load('visualization', '1.0', {'packages': ['corechart']});
 
-  // Additional stats only computed on the server. Keep these in sync with ipa.js.
-  this.WIND_KEY_TIME_SERIES = 6;
+var ipa = {};
 
-  var WIND_MINUTES_DEFAULT = 5;
+// NOTE: Keep keys in sync with wind_stats.py and common.php.
+ipa.key = {};
+ipa.key.WIND_AVG = 0;
+ipa.key.WIND_MAX = 1;
+ipa.key.WIND_MAX_TS = 2;
+ipa.key.WIND_HIST = 3;
+ipa.key.WIND_START_TS = 4;
+ipa.key.WIND_END_TS = 5;
+// Additional stats only computed on the server. Keep these in sync with common.php.
+ipa.key.WIND_TIME_SERIES = 6;
 
-//  window.addEventListener('load', function() {
-//    var inputMinutes = document.getElementById('ipaMinutes');
-//    inputMinutes.value = WIND_MINUTES_DEFAULT;
-//    inputMinutes.focus();
-//    requestStats(WIND_MINUTES_DEFAULT);
-//  });
+// Options and their defaults.
+ipa.Options = function() {
+  this.dummy = false;  // Use dummy data for testing?
+  this.minutes = 60;  // Window size.
+  this.fractionalDigits = 1;  // For textual histogram.
+}
 
-  this.requestStats = function(minutes) {
-    var request = new XMLHttpRequest();
-//    request.onreadystatechange = function() {
-//      if (request.readyState == 4 && request.status == 200) {
-//        outputStats(request.responseText);
-//      }
-//    }
-    request.open("GET", "ipa.php?dummy=1&m=" + minutes, false);
-    request.send();
-    if (request.responseText == "n/a") {
-      return null;
-    }
-    var stats = JSON.parse(request.responseText);
-    outputStats(stats);
-    return stats;
+// Keep these in sync with common.php.
+ipa.constants = {};
+ipa.constants.RESPONSE_NO_STATS = 'n/a';
+
+ipa.Chart = function(options) {  // XXX need to specify server URL
+  this.options = new ipa.Options();
+  for (var i in options) {
+    this.options[i] = options[i];
   }
+}
 
-  var insertCellsFunction = function(tr) {
-    return function(var_args) {
-      for (var i = 0; i < arguments.length; ++i) {
-        var td = tr.insertCell();
-        td.appendChild(document.createTextNode(arguments[i]));
+/**
+ * Request stats from the server.
+ *
+ * @param {function} opt_callback
+ *     If specified, the request is asynchronous and this callback is run on completion (with the
+ *     XMLHttpRequest object as its argument). Otherwise the request is synchronous.
+ */
+ipa.Chart.prototype.requestStats = function(opt_callback) {
+  var isAsync = typeof(opt_callback) !== 'undefined';
+  var request = new XMLHttpRequest();
+  request.open('GET', 'ipa.php?dummy=' + (this.options.dummy ? '1' : '0')
+      + '&m=' + this.options.minutes, isAsync);  // XXX use options
+  if (isAsync) {
+    var chart = this;
+    request.onreadystatechange = function() {
+      if (request.readyState == 4 && request.status == 200) {
+        chart.stats = JSON.parse(request.responseText);
+        // TODO: Should we run the callback for all states instead of just success?
+        opt_callback(request);
       }
     }
   }
-
-  var outputStats = function(stats) {
-    var body = document.body;
-    var div = document.getElementById("ipaWind");
-    div.innerHTML = '';
-
-    var table = document.createElement('table');
-    insertCellsFunction(table.insertRow())('avg', 'max', 'max@');
-    insertCellsFunction(table.insertRow())(
-        stats[ipa.WIND_KEY_AVG].toFixed(1),
-        stats[ipa.WIND_KEY_MAX].toFixed(1),  // XXX int?!
-        formatTimestamp(stats[ipa.WIND_KEY_MAX_TS]));
-    div.appendChild(table);
-
-    var histogram = stats[ipa.WIND_KEY_HIST];
-    table = document.createElement('table');
-    var trV = insertCellsFunction(table.insertRow());
-    var trP = insertCellsFunction(table.insertRow());
-    var trC = insertCellsFunction(table.insertRow());
-    trV('km/h');
-    trP('%');
-    trC('%>=');
-    var c = 100;
-    for (var v in histogram) {
-      var p = histogram[v] * 100;
-      trV(v);
-      trP(p.toFixed(1));
-      trC(c.toFixed(1));
-      c -= p;
+  request.send();
+  if (!isAsync) {
+    // TODO: Handle request error.
+    if (request.responseText === ipa.constants.RESPONSE_NO_STATS) {
+      this.stats = null;
+    } else {
+      this.stats = JSON.parse(request.responseText);
     }
-    div.appendChild(table);
-
-    div.appendChild(document.createTextNode(formatTimestamp(stats[ipa.WIND_KEY_START_TS]) + ' to '
-        + formatTimestamp(stats[ipa.WIND_KEY_END_TS])));
   }
+}
 
-  var formatTimestamp = function(timestamp) {
-    var date = new Date(timestamp);
-    var hh = ('0' + date.getHours()).slice(-2);
-    var mm = ('0' + date.getMinutes()).slice(-2);
-    var ss = ('0' + date.getSeconds()).slice(-2);
-    return hh + ':' + mm + ':' + ss;
+ipa.Chart.prototype.drawTextAvgAndMax = function(element) {
+  var table = document.createElement('table');  // XXX add css tags
+  table.className = 'avgAndMax';
+  ipa.Chart.insertCells_(table.insertRow())('avg', 'max', 'max@');
+  table.firstChild.firstChild.children[0].className = 'avg';
+  table.firstChild.firstChild.children[1].className = 'max';
+  table.firstChild.firstChild.children[2].className = 'maxts';
+  ipa.Chart.insertCells_(table.insertRow())(
+      this.stats[ipa.key.WIND_AVG].toFixed(this.options.fractionalDigits),
+      this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits),
+      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_MAX_TS]));
+  element.appendChild(table);
+}
+
+ipa.Chart.insertCells_ = function(tr) {
+  return function(var_args) {
+    for (var i = 0; i < arguments.length; ++i) {
+      var td = tr.insertCell();
+      td.appendChild(document.createTextNode(arguments[i]));
+    }
   }
+}
+
+ipa.Chart.formatTimestamp_ = function(timestamp) {
+  var date = new Date(timestamp);
+  var hh = ('0' + date.getHours()).slice(-2);
+  var mm = ('0' + date.getMinutes()).slice(-2);
+  var ss = ('0' + date.getSeconds()).slice(-2);
+  return hh + ':' + mm + ':' + ss;
+}
+
+ipa.Chart.prototype.drawTimeSeries = function(element) {
+  var timeSeriesTable = new google.visualization.DataTable();
+  timeSeriesTable.addColumn('datetime', 't');
+  timeSeriesTable.addColumn('number', 'avg');
+  timeSeriesTable.addColumn('number', 'max');
+  var timeSeries = this.stats[ipa.key.WIND_TIME_SERIES];
+  for (var i = 0; i < timeSeries.length; ++i) {
+    var row = timeSeries[i];
+    row[0] = new Date(row[0]);  // convert timestamp to Date object
+    timeSeriesTable.addRow(row);
+  }
+  var options = {
+    title: 'Wind [km/h]',
+    hAxis: {format: 'HH:mm:ss'},
+    legend: {position: 'top'}
+  };
+  var timeSeriesChart = new google.visualization.LineChart(element);
+  timeSeriesChart.draw(timeSeriesTable, options);
+}
+
+ipa.Chart.prototype.drawHistogram = function(element) {
+  var histogramDataTable = new google.visualization.DataTable();
+  histogramDataTable.addColumn('number', 'km/h');
+  histogramDataTable.addColumn('number', '%');
+  histogramDataTable.addColumn('number', '%>=');
+  var histogram = this.stats[ipa.key.WIND_HIST];
+  var totalPercent = 100;
+  for (var kmh in histogram) {
+    var percent = histogram[kmh] * 100;
+    histogramDataTable.addRow([parseInt(kmh), percent, totalPercent]);
+    totalPercent -= percent;
+  }
+  options = {
+    title: 'Wind [km/h]',
+    hAxis: {gridlines: {count: -1}},  // -1 means automatic
+    series: {
+      0: {targetAxisIndex: 0, type: 'bars'},
+      1: {targetAxisIndex: 1, type: 'lines'}
+    },
+    vAxes: {
+      0: {minValue: 0},
+      1: {minValue: 0, maxValue: 100}
+    }
+  };
+  // If there's only one bar we need to force a range of 0..100.
+  if (Object.keys(histogram).length == 1) {
+    options.vAxes[0].maxValue = 100;
+  }
+  var histogramChart = new google.visualization.ComboChart(element);
+  histogramChart.draw(histogramDataTable, options);
+}
+
+ipa.Chart.prototype.drawTextHistogram = function(element) {
+  var histogram = this.stats[ipa.key.WIND_HIST];
+  table = document.createElement('table');
+  var trSpeed = ipa.Chart.insertCells_(table.insertRow());
+  var trPercent = ipa.Chart.insertCells_(table.insertRow());
+  var trCumulative = ipa.Chart.insertCells_(table.insertRow());
+  trSpeed('km/h');
+  trPercent('%');
+  trCumulative('%>=');
+  var totalPercent = 100;
+  for (var kmh in histogram) {
+    var percent = histogram[kmh] * 100;
+    trSpeed(kmh);
+    trPercent(percent.toFixed(this.options.fractionalDigits));
+    trCumulative(totalPercent.toFixed(this.options.fractionalDigits));
+    totalPercent -= percent;
+  }
+  element.appendChild(table);
+}
+
+ipa.Chart.prototype.drawTimeRange = function(element) {
+  element.appendChild(document.createTextNode(
+      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_START_TS])
+      + ' to ' + ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_END_TS])));
 }

@@ -50,10 +50,12 @@ define('LOG_LEVEL_KEY', 'logLevel');
 define('CLIENT_UPDATE_FILENAME', 'client/ipa-update.zip');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 
-// Request arguments.
+// Request/response constants. Keep these in sync with ipa.js.
 define('REQ_WINDOW_MINUTES', 'm');
 define('REQ_TIMESTAMP', 'ts');
 define('REQ_DUMMY', 'dummy');
+define('RESPONSE_NO_STATS', 'n/a');
+// TODO: These don't belong here:
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 
