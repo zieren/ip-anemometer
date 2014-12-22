@@ -67,14 +67,18 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
 ipa.Chart.prototype.drawTextAvgAndMax = function(element) {
   var table = document.createElement('table');  // XXX add css tags
   table.className = 'avgAndMax';
-  ipa.Chart.insertCells_(table.insertRow())('avg', 'max', 'max@');
+  ipa.Chart.insertCells_(table.insertRow())('avg',
+      this.stats[ipa.key.WIND_AVG].toFixed(this.options.fractionalDigits));
   table.firstChild.firstChild.children[0].className = 'avg';
-  table.firstChild.firstChild.children[1].className = 'max';
-  table.firstChild.firstChild.children[2].className = 'maxts';
-  ipa.Chart.insertCells_(table.insertRow())(
-      this.stats[ipa.key.WIND_AVG].toFixed(this.options.fractionalDigits),
-      this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits),
+  table.firstChild.firstChild.children[1].className = 'avgValue';
+  ipa.Chart.insertCells_(table.insertRow())('max',
+      this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits));
+  table.firstChild.firstChild.children[0].className = 'max';
+  table.firstChild.firstChild.children[1].className = 'maxValue';
+  ipa.Chart.insertCells_(table.insertRow())('max@',
       ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_MAX_TS]));
+  table.firstChild.firstChild.children[0].className = 'maxts';
+  table.firstChild.firstChild.children[1].className = 'maxtsValue';
   element.appendChild(table);
 }
 
