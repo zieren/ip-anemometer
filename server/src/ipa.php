@@ -24,6 +24,7 @@ function computeStats() {
   return $db->computeWindStatsAggregate($timestamp, minutesToMillis($windowMinutes));
 }
 
+/** Create inconsistent random dummy stats for testing. */
 function createDummyStats() {
   $timestamp = timestamp() - 30 * 1000;
 
@@ -70,6 +71,6 @@ if ($_REQUEST[REQ_DUMMY]) {
 if ($stats) {
   echo json_encode($stats);
 } else {
-  echo "n/a";
+  echo RESPONSE_NO_STATS;
 }
 ?>
