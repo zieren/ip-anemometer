@@ -1,17 +1,41 @@
-table.avgAndMax {
+table.summary {
 	border: 1px solid black;
-	xbackground: #ddd;
+    border-spacing: 0;
 }
 
-table.avgAndMax td {
+table.summary td {
 	padding-left: 5px;
 	padding-right: 5px;
 }
 
-td.avg {
-	background: #9bf;
+td.avg, td.avgValue {
+	background: #acf;
 }
 
-td.max {
-	background: #f99;
+td.max, td.maxValue {
+	background: #fcc;
+}
+
+td.maxts, td.maxtsValue {
+	background: #ffc;
+}
+
+td.from, td.fromValue {
+	background: #ca5;
+}
+
+td.to, td.toValue {
+	background: #bf9;
+}
+
+div#minutes, div#summary, div#time, div#hist {
+	width: 300px;
+}
+
+div#time, div#hist {
+	height: 300px;
+}
+
+div#minutes {
+	margin-bottom: 10px;
 }

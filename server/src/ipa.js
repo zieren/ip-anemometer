@@ -18,13 +18,14 @@ ipa.Options = function() {
   this.dummy = false;  // Use dummy data for testing?
   this.minutes = 60;  // Window size.
   this.fractionalDigits = 1;  // For textual histogram.
+  this.url = 'ipa.php';  // Default in same directory.
 }
 
 // Keep these in sync with common.php.
 ipa.constants = {};
 ipa.constants.RESPONSE_NO_STATS = 'n/a';
 
-ipa.Chart = function(options) {  // XXX need to specify server URL
+ipa.Chart = function(options) {
   this.options = new ipa.Options();
   for (var i in options) {
     this.options[i] = options[i];
@@ -41,8 +42,9 @@ ipa.Chart = function(options) {  // XXX need to specify server URL
 ipa.Chart.prototype.requestStats = function(opt_callback) {
   var isAsync = typeof(opt_callback) !== 'undefined';
   var request = new XMLHttpRequest();
-  request.open('GET', 'ipa.php?dummy=' + (this.options.dummy ? '1' : '0')
-      + '&m=' + this.options.minutes, isAsync);  // XXX use options
+  var minutes = parseInt('0' + this.options.minutes);
+  request.open('GET', this.options.url + '?dummy=' + (this.options.dummy ? '1' : '0')
+      + '&m=' + minutes, isAsync);
   if (isAsync) {
     var chart = this;
     request.onreadystatechange = function() {
@@ -64,39 +66,30 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
   }
 }
 
-ipa.Chart.prototype.drawTextAvgAndMax = function(element) {
-  var table = document.createElement('table');  // XXX add css tags
-  table.className = 'avgAndMax';
+ipa.Chart.prototype.drawSummary = function(element) {
+  var table = document.createElement('table');
+  table.className = 'summary';
   ipa.Chart.insertCells_(table.insertRow())('avg',
-      this.stats[ipa.key.WIND_AVG].toFixed(this.options.fractionalDigits));
-  table.firstChild.firstChild.children[0].className = 'avg';
-  table.firstChild.firstChild.children[1].className = 'avgValue';
+      this.stats[ipa.key.WIND_AVG].toFixed(this.options.fractionalDigits) + ' km/h');
+  table.firstChild.lastChild.children[0].className = 'avg';
+  table.firstChild.lastChild.children[1].className = 'avgValue';
   ipa.Chart.insertCells_(table.insertRow())('max',
-      this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits));
-  table.firstChild.firstChild.children[0].className = 'max';
-  table.firstChild.firstChild.children[1].className = 'maxValue';
+      this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits) + ' km/h');
+  table.firstChild.lastChild.children[0].className = 'max';
+  table.firstChild.lastChild.children[1].className = 'maxValue';
   ipa.Chart.insertCells_(table.insertRow())('max@',
       ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_MAX_TS]));
-  table.firstChild.firstChild.children[0].className = 'maxts';
-  table.firstChild.firstChild.children[1].className = 'maxtsValue';
+  table.firstChild.lastChild.children[0].className = 'maxts';
+  table.firstChild.lastChild.children[1].className = 'maxtsValue';
+  ipa.Chart.insertCells_(table.insertRow())('from',
+      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_START_TS]));
+  table.firstChild.lastChild.children[0].className = 'from';
+  table.firstChild.lastChild.children[1].className = 'fromValue';
+  ipa.Chart.insertCells_(table.insertRow())('to',
+      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_END_TS]));
+  table.firstChild.lastChild.children[0].className = 'to';
+  table.firstChild.lastChild.children[1].className = 'toValue';
   element.appendChild(table);
-}
-
-ipa.Chart.insertCells_ = function(tr) {
-  return function(var_args) {
-    for (var i = 0; i < arguments.length; ++i) {
-      var td = tr.insertCell();
-      td.appendChild(document.createTextNode(arguments[i]));
-    }
-  }
-}
-
-ipa.Chart.formatTimestamp_ = function(timestamp) {
-  var date = new Date(timestamp);
-  var hh = ('0' + date.getHours()).slice(-2);
-  var mm = ('0' + date.getMinutes()).slice(-2);
-  var ss = ('0' + date.getSeconds()).slice(-2);
-  return hh + ':' + mm + ':' + ss;
 }
 
 ipa.Chart.prototype.drawTimeSeries = function(element) {
@@ -171,8 +164,19 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
   element.appendChild(table);
 }
 
-ipa.Chart.prototype.drawTimeRange = function(element) {
-  element.appendChild(document.createTextNode(
-      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_START_TS])
-      + ' to ' + ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_END_TS])));
+ipa.Chart.insertCells_ = function(tr) {
+  return function(var_args) {
+    for (var i = 0; i < arguments.length; ++i) {
+      var td = tr.insertCell();
+      td.appendChild(document.createTextNode(arguments[i]));
+    }
+  }
+}
+
+ipa.Chart.formatTimestamp_ = function(timestamp) {
+  var date = new Date(timestamp);
+  var hh = ('0' + date.getHours()).slice(-2);
+  var mm = ('0' + date.getMinutes()).slice(-2);
+  var ss = ('0' + date.getSeconds()).slice(-2);
+  return hh + ':' + mm + ':' + ss;
 }
