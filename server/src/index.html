@@ -28,13 +28,19 @@ function updateChart() {
   chart.drawTimeSeries(clearElement(document.getElementById('time')));
   chart.drawHistogram(clearElement(document.getElementById('hist')));
 }
+
+function handleKeyPress(event) {
+  if (event.keyCode == 13) {
+    updateChart();
+  }
+}
 </script>
 
 </head>
 <body>
 <div id="minutes" align="center">
   Minutes:
-  <input id="minutesInput" type="text" maxlength="4" size="4" onkeyup="updateChart()" value="60" />
+  <input id="minutesInput" type="text" maxlength="4" size="4" onkeypress="handleKeyPress(event)" value="60" />
   <button onclick="updateChart()">Load</button>
 </div>
 <div id="summary" align="center"></div>
