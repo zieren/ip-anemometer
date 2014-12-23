@@ -1,5 +1,9 @@
 ip-anemometer
 =============
 
-Web anemometer with Raspberry Pi. Prelimilary documentation:
-https://docs.google.com/document/d/1ikiMd9jaUXMWHKGu72YUyqmb3UueC90prFY840xz0fI/edit
+This is a hardware+software project. A wind sensor is connected to a Raspberry
+Pi. Measurements are uploaded using a 3G USB stick. A server stores the data in
+a MySQL database. Average/maximum speed and a speed histogram can be shown on a
+website.
+
+Preliminary documentation: http://goo.gl/6b0WuI
