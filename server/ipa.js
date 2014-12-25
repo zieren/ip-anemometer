@@ -19,6 +19,7 @@ ipa.Options = function() {
   this.minutes = 60;  // Window size.
   this.fractionalDigits = 1;  // For textual histogram.
   this.url = 'ipa.php';  // Default in same directory.
+  this.showTimeOfMax = false;  // Show timestamp of maximum.
 }
 
 // Keep these in sync with common.php.
@@ -77,10 +78,12 @@ ipa.Chart.prototype.drawSummary = function(element) {
       this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'max';
   table.firstChild.lastChild.children[1].className = 'maxValue';
-  ipa.Chart.insertCells_(table.insertRow())('max@',
-      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_MAX_TS]));
-  table.firstChild.lastChild.children[0].className = 'maxts';
-  table.firstChild.lastChild.children[1].className = 'maxtsValue';
+  if (this.options.showTimeOfMax) {
+    ipa.Chart.insertCells_(table.insertRow())('max@',
+        ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_MAX_TS]));
+    table.firstChild.lastChild.children[0].className = 'maxts';
+    table.firstChild.lastChild.children[1].className = 'maxtsValue';
+  }
   ipa.Chart.insertCells_(table.insertRow())('from',
       ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_START_TS]));
   table.firstChild.lastChild.children[0].className = 'from';
