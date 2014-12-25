@@ -105,7 +105,7 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   }
   var options = {
     title: 'Wind [km/h]',
-    hAxis: {format: 'HH:mm:ss'},
+    hAxis: {format: 'HH:mm'},
     legend: {position: 'top'}
   };
   var timeSeriesChart = new google.visualization.LineChart(element);
