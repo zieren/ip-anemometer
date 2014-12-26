@@ -186,7 +186,7 @@ ipa.Chart.prototype.drawTemperature = function(element) {
     temperatureTable.addRow(row);
   }
   var options = {
-    title: 'Temperature [°C]',
+    title: 'System Temperature [°C]',
     hAxis: {format: 'HH:mm'},
     legend: {position: 'top'}
   };
