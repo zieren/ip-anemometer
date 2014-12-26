@@ -347,7 +347,7 @@ class Database {
         WIND_KEY_HIST => $histogram,
         WIND_KEY_START_TS => intval($actualStartTimestamp),
         WIND_KEY_END_TS => intval($actualEndTimestamp),
-        WIND_KEY_TIME_SERIES => Database::downsample($timeSeries, $outputLength)
+        WIND_KEY_TIME_SERIES => Database::downsampleWind($timeSeries, $outputLength)
     );
   }
 
@@ -356,7 +356,7 @@ class Database {
     return $sample['end_ts'] - $sample['start_ts'];
   }
 
-  private static function downsample($input, $outputLength) {
+  private static function downsampleWind($input, $outputLength) {
     $inputLength = count($input);
     $output = array();
     if ($inputLength <= $outputLength || $inputLength <= 1) {  // nothing to downsample
@@ -429,6 +429,57 @@ class Database {
     return array($windowStart, $windowEnd, 0, -1);  // number of elements as in WIND_KEY_SAMPLE_*
   }
 
+  private static function downsampleTemperature($input, $outputLength) {
+    $inputLength = count($input);
+    if ($inputLength <= $outputLength || $inputLength <= 1) {  // nothing to downsample
+      return $input;
+    }
+    $output = array();
+    $startTs = $input[0][0];
+    $endTs = $input[$inputLength - 1][0];
+    $bucketIndex = 0;
+    $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, $bucketIndex);
+    $temps = array();
+    $timestamps = array();
+    for ($i = 0; $i < $inputLength; ++$i) {
+      $ts = $input[$i][0];
+      $temp = $input[$i][1];
+      if ($ts < $nextBucket) {
+        $temps[] = $temp;
+        $timestamps[] = $ts;
+      }
+      if ($ts >= $nextBucket || $i + 1 == $inputLength) {
+        if ($temps) {
+          $output[] = array(
+            intval(Database::average($timestamps)),
+            floatval(Database::average($temps)));
+        }
+      }
+      if ($ts >= $nextBucket) {
+        $temps = array($temp);
+        $timestamps = array($ts);
+        $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, ++$bucketIndex);
+      }
+    }
+    return $output;
+  }
+
+  private static function getNextBucket($startTs, $endTs, $outputLength, $bucketIndex) {
+    if ($bucketIndex + 1 == $outputLength) {
+      return PHP_INT_MAX;  // last bucket catches all
+    }
+    return intval((($endTs - $startTs) / $outputLength) * ($bucketIndex + 1) + $startTs);
+  }
+
+  private static function average($values) {
+    $average = 0;
+    $n = count($values);
+    foreach ($values as $v) {
+      $average += $v / $n;
+    }
+    return $average;
+  }
+
   /** Compute average and maximum wind speed in km/h. */
   public function computeWindStats($desiredEndTimestamp, $windowDuration) {
     // Restrict to actually covered time, keeping window size if possible.
@@ -456,6 +507,21 @@ class Database {
       return $windStatsCalculator->finalizeAndGetStats();
     }
     $this->logCritical('failed to compute wind stats: "'.$q.'" -> '.$this->getError());
+    return null;
+  }
+
+  public function readTemperature($endTimestamp, $windowDuration, $timeSeriesPoints) {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    $q = 'SELECT ts, t FROM temp WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $temp = array();
+    if ($result = $this->query($q)) {
+      while ($row = $result->fetch_row()) {
+        $temp[] = array(intval($row[0]), floatval($row[1]));
+      }
+      return Database::downsampleTemperature($temp, $timeSeriesPoints);
+    }
+    $this->logCritical('failed to compute temp stats: "'.$q.'" -> '.$this->getError());
     return null;
   }
 

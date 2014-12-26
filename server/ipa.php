@@ -16,6 +16,7 @@ function computeStats() {
   if (!$timeSeriesPoints) {
     $timeSeriesPoints = REQ_TIME_SERIES_POINTS_DEFAULT;
   }
+  $tempMinutes = intval($_REQUEST[REQ_TEMP_MINUTES]);
 
   $db = new Database();
   // Apply settings.
@@ -26,8 +27,16 @@ function computeStats() {
     $db->setLogLevel(getLogLevel($settings[LOG_LEVEL_KEY]));
   }
 
-  return $db->computeWindStatsAggregate(
+  $stats = $db->computeWindStatsAggregate(
       $timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
+  if (!$stats) {
+    return NULL;  // TODO: Handle absent values per type, not globally.
+  }
+  if ($tempMinutes) {
+    $stats[TEMP_KEY_TIME_SERIES] = $db->readTemperature(
+        $timestamp, minutesToMillis($tempMinutes), $timeSeriesPoints);
+  }
+  return $stats;
 }
 
 /** Create inconsistent random dummy stats for testing. */

@@ -39,6 +39,7 @@ define('WIND_KEY_MAX_TS', 2);
 define('WIND_KEY_HIST', 3);
 define('WIND_KEY_START_TS', 4);
 define('WIND_KEY_END_TS', 5);
+define('TEMP_KEY_TIME_SERIES', 7);
 
 // Additional stats only computed on the server. Keep these in sync with ipa.js.
 define('WIND_KEY_TIME_SERIES', 6);
@@ -61,6 +62,7 @@ define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human r
 define('REQ_WINDOW_MINUTES', 'm');
 define('REQ_TIMESTAMP', 'ts');
 define('REQ_TIME_SERIES_POINTS', 'p');
+define('REQ_TEMP_MINUTES', 'tm');
 define('REQ_DUMMY', 'dummy');
 define('RESPONSE_NO_STATS', 'n/a');
 // Defaults and limits for request arguments.

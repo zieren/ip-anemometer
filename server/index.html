@@ -27,6 +27,7 @@ function updateChart() {
   chart.drawSummary(clearElement(document.getElementById('summary')));
   chart.drawTimeSeries(clearElement(document.getElementById('time')));
   chart.drawHistogram(clearElement(document.getElementById('hist')));
+  chart.drawTemperature(clearElement(document.getElementById('temp')));
 }
 
 function handleKeyPress(event) {
@@ -46,6 +47,7 @@ function handleKeyPress(event) {
 <div id="summary" align="center"></div>
 <div id="time"></div>
 <div id="hist"></div>
+<div id="temp"></div>
 
 </body>
 </html>

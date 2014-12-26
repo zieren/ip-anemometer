@@ -10,6 +10,7 @@ ipa.key.WIND_MAX_TS = 2;
 ipa.key.WIND_HIST = 3;
 ipa.key.WIND_START_TS = 4;
 ipa.key.WIND_END_TS = 5;
+ipa.key.TEMP_TIME_SERIES = 7;
 // Additional stats only computed on the server. Keep these in sync with common.php.
 ipa.key.WIND_TIME_SERIES = 6;
 //The time series is a list of 3-tuples (timestamp, avg, max).
@@ -21,6 +22,7 @@ ipa.Options = function() {
   this.fractionalDigits = 1;  // For textual output.
   this.timeSeriesPoints = 30;  // Number of points in time series. Increase for wider charts.
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
+  this.temperatureMinutes= 24 * 60;  // Show temperature (0 to disable).
   this.dummy = false;  // Output inconsistent dummy data for testing.
 }
 
@@ -49,6 +51,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       this.options.url
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
+      + '&tm=' + this.options.temperatureMinutes
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
   if (isAsync) {
@@ -170,6 +173,25 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
     totalPercent -= percent;
   }
   element.appendChild(table);
+}
+
+ipa.Chart.prototype.drawTemperature = function(element) {
+  var temperatureTable = new google.visualization.DataTable();
+  temperatureTable.addColumn('datetime', 't');
+  temperatureTable.addColumn('number', 't');
+  var timeSeries = this.stats[ipa.key.TEMP_TIME_SERIES];
+  for (var i = 0; i < timeSeries.length; ++i) {
+    var row = timeSeries[i];
+    row[0] = new Date(row[0]);  // convert timestamp to Date object
+    temperatureTable.addRow(row);
+  }
+  var options = {
+    title: 'Temperature [°C]',
+    hAxis: {format: 'HH:mm'},
+    legend: {position: 'top'}
+  };
+  var temperatureChart = new google.visualization.LineChart(element);
+  temperatureChart.draw(temperatureTable, options);
 }
 
 ipa.Chart.insertCells_ = function(tr) {
