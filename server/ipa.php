@@ -2,14 +2,19 @@
 require_once 'common.php';
 
 function computeStats() {
+  // TODO: These defaults should match the ones in ipa.js.
   $windowMinutes = intval($_REQUEST[REQ_WINDOW_MINUTES]);
-  $timestamp = intval($_REQUEST[REQ_TIMESTAMP]);
   if (!$windowMinutes) {  // omitted or zero
     $windowMinutes = REQ_WINDOW_MINUTES_DEFAULT;
   }
   $windowMinutes = min($windowMinutes, REQ_WINDOW_MINUTES_MAX);
+  $timestamp = intval($_REQUEST[REQ_TIMESTAMP]);
   if (!$timestamp) {
     $timestamp = timestamp();
+  }
+  $timeSeriesPoints = intval($_REQUEST[REQ_TIME_SERIES_POINTS]);
+  if (!$timeSeriesPoints) {
+    $timeSeriesPoints = REQ_TIME_SERIES_POINTS_DEFAULT;
   }
 
   $db = new Database();
@@ -21,7 +26,8 @@ function computeStats() {
     $db->setLogLevel(getLogLevel($settings[LOG_LEVEL_KEY]));
   }
 
-  return $db->computeWindStatsAggregate($timestamp, minutesToMillis($windowMinutes));
+  return $db->computeWindStatsAggregate(
+      $timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
 }
 
 /** Create inconsistent random dummy stats for testing. */

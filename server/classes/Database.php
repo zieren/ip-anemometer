@@ -255,7 +255,16 @@ class Database {
     return $this->appSettings;
   }
 
-  public function computeWindStatsAggregate($maxEndTimestamp, $windowDuration) {
+  /**
+   * Compute statistics for the specified time period.
+   *
+   * @param int $maxEndTimestamp Consider samples up to this end timestamp in millis (usually the
+   *    current time).
+   * @param int $windowDuration Length of the window to consider, in millis.
+   * @param int $outputLength Maximum number of samples in time series (downsample if required).
+   * @return array An array indexed by WIND_KEY_*.
+   */
+  public function computeWindStatsAggregate($maxEndTimestamp, $windowDuration, $outputLength) {
     $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
     $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind_a WHERE '
         .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
@@ -284,8 +293,9 @@ class Database {
           abs($actualWindowDuration + $sampleDuration - $windowDuration)) {
         break;
       }
-      $timeSeries[] = array(
-          intval($sample['start_ts'] / 2 + $sample['end_ts'] / 2),
+      $timeSeries[] = array(  // order as per WIND_KEY_SAMPLE_*
+          intval($sample['start_ts']),
+          intval($sample['end_ts']),
           floatval($sample['avg']),
           floatval($sample['max'])
       );
@@ -335,15 +345,88 @@ class Database {
         WIND_KEY_MAX => floatval($maxKmh),
         WIND_KEY_MAX_TS => intval($maxTimestamp),
         WIND_KEY_HIST => $histogram,
-        WIND_KEY_START_TS => floatval($actualStartTimestamp),
-        WIND_KEY_END_TS => floatval($actualEndTimestamp),
-        WIND_KEY_TIME_SERIES => $timeSeries
+        WIND_KEY_START_TS => intval($actualStartTimestamp),
+        WIND_KEY_END_TS => intval($actualEndTimestamp),
+        WIND_KEY_TIME_SERIES => Database::downsample($timeSeries, $outputLength)
     );
   }
 
   private static function getSampleDuration($sample) {
     // We rely on the difference fitting into an integer.
     return $sample['end_ts'] - $sample['start_ts'];
+  }
+
+  private static function downsample($input, $outputLength) {
+    $inputLength = count($input);
+    $output = array();
+    if ($inputLength <= $outputLength || $inputLength <= 1) {  // nothing to downsample
+      foreach ($input as $sample) {
+        $output[] = array(
+            Database::center($sample[WIND_KEY_SAMPLE_START_TS], $sample[WIND_KEY_SAMPLE_END_TS]),
+            $sample[WIND_KEY_SAMPLE_AVG],
+            $sample[WIND_KEY_SAMPLE_MAX],
+        );
+      }
+      return $output;
+    }
+    $startTs = $input[$inputLength - 1][WIND_KEY_SAMPLE_START_TS];
+    $endTs = $input[0][WIND_KEY_SAMPLE_END_TS];
+    $windowStart = $startTs;
+    $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, 0);
+    $window = Database::newWindow($windowStart, $windowEnd);
+    $windowDuration = 0;  // actually covered time in window (there might be gaps)
+    $i = $inputLength - 1;  // order is by decreasing timestamp
+    while ($i >= 0) {
+      // Shortcuts.
+      $inputStart = $input[$i][WIND_KEY_SAMPLE_START_TS];
+      $inputEnd = $input[$i][WIND_KEY_SAMPLE_END_TS];
+      $inputCenter = Database::center($inputStart, $inputEnd);
+      $inputAvg = $input[$i][WIND_KEY_SAMPLE_AVG];
+      $inputMax = $input[$i][WIND_KEY_SAMPLE_MAX];
+      $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
+      // If there is a gap in the input the overlap may be negative.
+      if ($overlap <= 0) {
+        $i--;
+        continue;
+      }
+      $windowDuration += $overlap;
+      $window[WIND_KEY_SAMPLE_AVG] += $inputAvg * $overlap;
+      // Consider the maximum if the window includes the center of the current sample.
+      if ($windowStart <= $inputCenter && $inputCenter < $windowEnd) {
+        $window[WIND_KEY_SAMPLE_MAX] = max($window[WIND_KEY_SAMPLE_MAX], $inputMax);
+      }
+      // If the current input reaches into the next window, or is the last input, output the sample
+      // and proceed to the next window.
+      if ($inputEnd > $windowEnd || $i == 0) {
+        $output[] = array(
+        	Database::center($windowStart, $windowEnd),
+            $window[WIND_KEY_SAMPLE_AVG] / $windowDuration,
+            $window[WIND_KEY_SAMPLE_MAX]
+        );
+        if ($i == 0) {
+          break;
+        }
+        $windowStart = $windowEnd;
+        $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, count($output));
+        $windowDuration = 0;
+        $window = Database::newWindow($windowStart, $windowEnd);
+      } else {  // next input still overaps with the current window
+        $i--;
+      }
+    }
+    return $output;
+  }
+
+  private static function center($start, $end) {
+    return intval(($end - $start) / 2 + $start);
+  }
+
+  private static function getWindowEnd($startTs, $endTs, $outputLength, $i) {
+    return intval((($endTs - $startTs) / $outputLength) * ($i + 1) + $startTs);
+  }
+
+  private static function newWindow($windowStart, $windowEnd) {
+    return array($windowStart, $windowEnd, 0, -1);  // number of elements as in WIND_KEY_SAMPLE_*
   }
 
   /** Compute average and maximum wind speed in km/h. */

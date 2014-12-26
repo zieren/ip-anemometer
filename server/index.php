@@ -53,7 +53,7 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   if (!$endTimestamp) {
     $endTimestamp = timestamp();
   }
-  $windStats = $db->computeWindStatsAggregate($endTimestamp, $minutes * 60 * 1000);
+  $windStats = $db->computeWindStatsAggregate($endTimestamp, $minutes * 60 * 1000, 30);
   if (is_null($windStats)) {
     echo '<p>n/a</p>';
     return;

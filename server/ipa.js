@@ -12,14 +12,16 @@ ipa.key.WIND_START_TS = 4;
 ipa.key.WIND_END_TS = 5;
 // Additional stats only computed on the server. Keep these in sync with common.php.
 ipa.key.WIND_TIME_SERIES = 6;
+//The time series is a list of 3-tuples (timestamp, avg, max).
 
 // Options and their defaults.
 ipa.Options = function() {
-  this.dummy = false;  // Use dummy data for testing?
+  this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
   this.minutes = 60;  // Window size.
-  this.fractionalDigits = 1;  // For textual histogram.
-  this.url = 'ipa.php';  // Default in same directory.
-  this.showTimeOfMax = false;  // Show timestamp of maximum.
+  this.fractionalDigits = 1;  // For textual output.
+  this.timeSeriesPoints = 30;  // Number of points in time series. Increase for wider charts.
+  this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
+  this.dummy = false;  // Output inconsistent dummy data for testing.
 }
 
 // Keep these in sync with common.php.
@@ -43,9 +45,12 @@ ipa.Chart = function(options) {
 ipa.Chart.prototype.requestStats = function(opt_callback) {
   var isAsync = typeof(opt_callback) !== 'undefined';
   var request = new XMLHttpRequest();
-  var minutes = parseInt('0' + this.options.minutes);
-  request.open('GET', this.options.url + '?dummy=' + (this.options.dummy ? '1' : '0')
-      + '&m=' + minutes, isAsync);
+  request.open('GET',
+      this.options.url
+      + '?m=' + this.options.minutes
+      + '&p=' + this.options.timeSeriesPoints
+      + (this.options.dummy ? '&dummy=1' : ''),
+      isAsync);
   if (isAsync) {
     var chart = this;
     request.onreadystatechange = function() {

@@ -42,6 +42,13 @@ define('WIND_KEY_END_TS', 5);
 
 // Additional stats only computed on the server. Keep these in sync with ipa.js.
 define('WIND_KEY_TIME_SERIES', 6);
+// The time series is a list of 3-tuples (timestamp, avg, max).
+
+// Internal keys (time series before downsampling).
+define('WIND_KEY_SAMPLE_START_TS', 0);
+define('WIND_KEY_SAMPLE_END_TS', 1);
+define('WIND_KEY_SAMPLE_AVG', 2);
+define('WIND_KEY_SAMPLE_MAX', 3);
 
 // Keys for server settings.
 define('LOG_LEVEL_KEY', 'logLevel');
@@ -53,11 +60,13 @@ define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human r
 // Request/response constants. Keep these in sync with ipa.js.
 define('REQ_WINDOW_MINUTES', 'm');
 define('REQ_TIMESTAMP', 'ts');
+define('REQ_TIME_SERIES_POINTS', 'p');
 define('REQ_DUMMY', 'dummy');
 define('RESPONSE_NO_STATS', 'n/a');
-// TODO: These don't belong here:
+// Defaults and limits for request arguments.
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
+define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);
 
 use Psr\Log\LogLevel;
 $LOG_LEVELS = array(
