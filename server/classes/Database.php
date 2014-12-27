@@ -385,7 +385,7 @@ class Database {
       $inputMax = $input[$i][WIND_KEY_SAMPLE_MAX];
       $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
       // If there is a gap in the input the overlap may be negative.
-      if ($overlap <= 0) {
+      if ($overlap < 0) {
         $i--;
         continue;
       }
