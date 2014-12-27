@@ -39,7 +39,7 @@ if __name__ == "__main__":
   else:
     log.info('--- clock in sync ---')
 
-  wind = Wind(Wind.MODE_CALIBRATE)
+  wind = Wind(calibration_mode=True)
   raw_input('Press ENTER to quit...\n')  # just in case there's a kb and a screen
   wind.terminate()
   threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())

@@ -15,12 +15,14 @@ class WindStatsCalculator:
   """Calculates wind stats from a sequence of timestamps representing revolutions. This should match
   WindStatsCalculator on the server."""
 
+  # States we move through strictly forward.
   _BEFORE_FIRST_TIMESTAMP, _BEFORE_FIRST_KMH, _STEADY_STATE = range(3)
 
   def __init__(self, start_timestamp):
     """start_timestamp: Startup of the wind sensor."""
     self._phase = WindStatsCalculator._BEFORE_FIRST_TIMESTAMP
     self._previous_timestamp = 0.0  # will be initialized in the first call
+    # TODO: Consider removing start timestamp and only use sample start/end timestamps.
     self._start_timestamp = start_timestamp
     self._reset()
 
