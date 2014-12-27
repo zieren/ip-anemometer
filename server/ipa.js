@@ -18,6 +18,7 @@ ipa.key.WIND_TIME_SERIES = 6;
 // Options and their defaults.
 ipa.Options = function() {
   this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
+  this.upToTimestampMillis = -1;  // Newest data to include. -1 means all up to now.
   this.minutes = 60;  // Window size.
   this.fractionalDigits = 1;  // For textual output.
   this.timeSeriesPoints = 30;  // Number of points in time series. Increase for wider charts.
@@ -52,6 +53,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
       + '&tm=' + this.options.temperatureMinutes
+      + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
   if (isAsync) {
