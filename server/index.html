@@ -8,41 +8,54 @@
 <script type="text/javascript" src="ipa.js"></script>
 <script type="text/javascript">
 
-google.setOnLoadCallback(updateChart);
+var ipaView = {};
 
-var clearElement = function(element) {
+ipaView.clearElement = function(element) {
   while (element.firstChild) {
     element.removeChild(element.firstChild);
   }
   return element;
 }
 
-function updateChart() {
-  var options = {
-    minutes: document.getElementById('minutesInput').value
-  }
-  var chart = new ipa.Chart(options);
+ipaView.options = {};
+
+ipaView.updateChart = function() {
+  ipaView.options.minutes = document.getElementById('minutesInput').value;
+
+  var chart = new ipa.Chart(ipaView.options);
   chart.requestStats();
 
-  chart.drawSummary(clearElement(document.getElementById('summary')));
-  chart.drawTimeSeries(clearElement(document.getElementById('time')));
-  chart.drawHistogram(clearElement(document.getElementById('hist')));
-  chart.drawTemperature(clearElement(document.getElementById('temp')));
+  chart.drawSummary(ipaView.clearElement(document.getElementById('summary')));
+  chart.drawTimeSeries(ipaView.clearElement(document.getElementById('time')));
+  chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
+  chart.drawTemperature(ipaView.clearElement(document.getElementById('temp')));
 }
 
-function handleKeyPress(event) {
+ipaView.handleKeyPress = function(event) {
   if (event.keyCode == 13) {
-    updateChart();
+    ipaView.updateChart();
   }
 }
+
+ipaView.goDebug = function() {
+  ipaView.options.timeSeriesPoints = 123456;  // effectively disable downsampling
+  document.getElementById('time').style.width = '100%';
+  document.getElementById('hist').style.width = '100%';
+  document.getElementById('temp').style.width = '100%';
+  ipaView.updateChart();
+}
+
+google.setOnLoadCallback(ipaView.updateChart);
+
 </script>
 
 </head>
 <body>
 <div id="minutes" align="center">
-  Minutes:
-  <input id="minutesInput" type="text" maxlength="4" size="4" onkeypress="handleKeyPress(event)" value="60" />
-  <button onclick="updateChart()">Load</button>
+  <span onclick="ipaView.goDebug()">Minutes</span>:
+  <input id="minutesInput" type="text" maxlength="4" size="4"
+      onkeypress="ipaView.handleKeyPress(event)" value="60" />
+  <button onclick="ipaView.updateChart()">Load</button>
 </div>
 <div id="summary" align="center"></div>
 <div id="time"></div>
