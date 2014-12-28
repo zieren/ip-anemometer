@@ -41,6 +41,8 @@ class Uploader(threading.Thread):
   def _poll_data_sources(self):
     for data_source, buffering in self._sources:
       type_key, sample = data_source.get_sample()
+      if not sample:  # no data available
+        continue
       if buffering:
         self._queue.setdefault(type_key, []).append(sample)
       else:  # overwrite
