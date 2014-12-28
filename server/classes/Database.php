@@ -371,8 +371,9 @@ class Database {
     }
     $startTs = $input[$inputLength - 1][WIND_KEY_SAMPLE_START_TS];
     $endTs = $input[0][WIND_KEY_SAMPLE_END_TS];
+    $wi = 0;  // window index
     $windowStart = $startTs;
-    $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, 0);
+    $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, $wi);
     $window = Database::newWindow($windowStart, $windowEnd);
     $windowDuration = 0;  // actually covered time in window (there might be gaps)
     $i = $inputLength - 1;  // order is by decreasing timestamp
@@ -383,11 +384,18 @@ class Database {
       $inputCenter = Database::center($inputStart, $inputEnd);
       $inputAvg = $input[$i][WIND_KEY_SAMPLE_AVG];
       $inputMax = $input[$i][WIND_KEY_SAMPLE_MAX];
-      $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
-      // If there is a gap in the input the overlap may be negative.
-      if ($overlap < 0) {
-        $i--;
-        continue;
+      while (true) {
+        $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
+//         echo '<p>i='.$i.',is='.($inputStart%1000000).',ie='.($inputEnd%1000000)
+//             .',ws='.($windowStart%1000000).',we='.($windowEnd%1000000)
+//             .',ol='.$overlap.'</p>';
+        if ($overlap >= 0) {
+          break;
+        }
+        // If there is a gap in the input the overlap may be negative. Advance the window to catch
+        // up.
+        $windowStart = $windowEnd;
+        $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, ++$wi);
       }
       $windowDuration += $overlap;
       $window[WIND_KEY_SAMPLE_AVG] += $inputAvg * $overlap;
@@ -407,7 +415,7 @@ class Database {
           break;
         }
         $windowStart = $windowEnd;
-        $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, count($output));
+        $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, ++$wi);
         $windowDuration = 0;
         $window = Database::newWindow($windowStart, $windowEnd);
       } else {  // next input still overaps with the current window
@@ -421,8 +429,8 @@ class Database {
     return intval(($end - $start) / 2 + $start);
   }
 
-  private static function getWindowEnd($startTs, $endTs, $outputLength, $i) {
-    return intval((($endTs - $startTs) / $outputLength) * ($i + 1) + $startTs);
+  private static function getWindowEnd($startTs, $endTs, $outputLength, $wi) {
+    return intval((($endTs - $startTs) / $outputLength) * ($wi + 1) + $startTs);
   }
 
   private static function newWindow($windowStart, $windowEnd) {
