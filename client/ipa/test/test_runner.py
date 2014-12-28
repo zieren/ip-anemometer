@@ -13,6 +13,10 @@ TS_0 = 1000000000000
 
 class Test(unittest.TestCase):
 
+  def test_Meta(self):
+    # Tests rely on this.
+    self.assertGreater(MIN, wind_stats._NO_WIND_DURATION)
+
   def test_Revolutions(self):
     s = wind_sensor.Revolutions()
     edges = C.WIND_EDGES_PER_REV()
@@ -33,6 +37,7 @@ class Test(unittest.TestCase):
 
   def test_WindStatsCalculator(self):
     calc = wind_stats.WindStatsCalculator(TS_0)
+
     # Nothing for a minute -> all zero.
     ts = TS_0 + MIN
     start_ts = TS_0
@@ -86,6 +91,28 @@ class Test(unittest.TestCase):
                  int(kmh_1): 1 * SEC / total_duration}
     self.expectStats(calc.get_stats_and_reset(ts),
                      avg_kmh, kmh_05, max_ts, histogram, start_ts, end_ts)
+
+  def test_WindStatsCalculator_noRevsFastUpdate(self):
+    calc = wind_stats.WindStatsCalculator(TS_0)
+    ts = TS_0 + wind_stats._NO_WIND_DURATION - 1000L
+    self.assertEqual(calc.get_stats_and_reset(ts), None)
+
+  def test_WindStatsCalculator_firstTimestampEqualsCreationTimestamp(self):
+    calc = wind_stats.WindStatsCalculator(TS_0)
+    calc.next_timestamp(TS_0)
+    calc.next_timestamp(TS_0 + SEC)
+
+  def test_WindStatsCalculator_startTimestampEqualsPreviousTimestamp(self):
+    calc = wind_stats.WindStatsCalculator(TS_0)
+    for i in range(60):
+      calc.next_timestamp(TS_0 + i * SEC)
+    calc.get_stats_and_reset(TS_0 + MIN)
+    self.assertEqual(calc.get_stats_and_reset(TS_0 + MIN + SEC), None)
+
+  def test_WindStatsCalculator_sameTimestampTwice(self):
+    calc = wind_stats.WindStatsCalculator(TS_0)
+    calc.next_timestamp(TS_0 + SEC)
+    calc.next_timestamp(TS_0 + SEC)
 
   def expectStats(self, stats, avg_kmh, max_kmh, max_timestamp, histogram, start_timestamp,
                   end_timestamp):

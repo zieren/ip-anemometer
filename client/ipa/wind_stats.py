@@ -22,7 +22,7 @@ class WindStatsCalculator:
     """start_timestamp: Startup of the wind sensor."""
     self._phase = WindStatsCalculator._BEFORE_FIRST_TIMESTAMP
     self._previous_timestamp = 0.0  # will be initialized in the first call
-    # TODO: Consider removing start timestamp and only use sample start/end timestamps.
+    # TODO: Make sure end timestamps are considered exclusive throughout.
     self._start_timestamp = start_timestamp
     self._reset()
 
@@ -41,12 +41,15 @@ class WindStatsCalculator:
 
     # Compute duration (i.e. weight) and speed.
     duration = timestamp - self._previous_timestamp
+    if duration <= 0:  # maybe ntpd adjusted the clock?
+      return
     kmh = compute_kmh(duration)
     if self._phase == WindStatsCalculator._BEFORE_FIRST_KMH:
       start_silence_duration = self._previous_timestamp - self._start_timestamp
-      # Extrapolation using kmh, or less if the start silence is longer.
-      start_kmh = min(kmh, compute_kmh(start_silence_duration))
-      self._update(start_kmh, start_silence_duration, timestamp)
+      if start_silence_duration > 0:
+        # Extrapolation using kmh, or less if the start silence is longer.
+        start_kmh = min(kmh, compute_kmh(start_silence_duration))
+        self._update(start_kmh, start_silence_duration, timestamp)
       self._phase = WindStatsCalculator._STEADY_STATE
 
     self._update(kmh, duration, timestamp)
@@ -69,8 +72,13 @@ class WindStatsCalculator:
     first call, and at the end timestamp of the previous call for all subsequent calls. They end at
     the last revolution timestamp before end_timestamp, but never more than _NO_WIND_DURATION before
     end_timestamp (padding with zero km/h). The end timestamp is returned in the result. """
+
     if self._phase == WindStatsCalculator._BEFORE_FIRST_TIMESTAMP:
-      # didn't initialize self._previous_timestamp yet
+      if end_timestamp - self._start_timestamp < _NO_WIND_DURATION:
+        # We can still have a nonzero speed for this interval so we can't return anything.
+        return None
+      # We have exceeded _NO_WIND_DURATION so we can safely set the previous revolution's timestamp
+      # to be the start timestamp. We will insert a "virtual" timestamp below.
       self._previous_timestamp = self._start_timestamp
 
     end_silence_duration = end_timestamp - self._previous_timestamp
@@ -82,6 +90,11 @@ class WindStatsCalculator:
       self._previous_timestamp = end_timestamp - _NO_WIND_DURATION  # "virtual" timestamp
     end_timestamp = self._previous_timestamp
     total_duration = end_timestamp - self._start_timestamp
+    # If we are called in intervals smaller than _NO_WIND_DURATION and no revolution has occured,
+    # the previous timestamp was the last sample's end timestamp and is now our start timestamp,
+    # resulting in a total_duration of 0. Don't return anything, for the same reason as above.
+    if total_duration == 0:
+      return None
     # Compute average.
     self._avg_kmh /= total_duration
     # Convert histogram to relative values.

@@ -14,6 +14,7 @@ class Wind:
     self._log = K.get_logger(K.LOG_NAME_WIND)
     self._revolutions = wind_sensor.Revolutions()
     self._startup_time = common.timestamp()
+    # TODO: Consider removing start timestamp and only use sample start/end timestamps.
     self._calibration_mode = calibration_mode
     if calibration_mode:
       self._calibration_logger = calibration_logger.CalibrationLogger()
@@ -47,9 +48,12 @@ class Wind:
       up_to_time = max(up_to_time, revs[-1])
     for ts in revs:
       self._calc.next_timestamp(ts)
+    stats = self._calc.get_stats_and_reset(up_to_time)
+    if not stats:  # no stats available yet
+      return K.WIND_KEY, None
     sample = {K.WIND_STARTUP_TIME_KEY: self._startup_time,
               K.WIND_UP_TO_TIME_KEY: up_to_time,
-              K.WIND_AGGREGATE_STATS_KEY: self._calc.get_stats_and_reset(up_to_time)}
+              K.WIND_AGGREGATE_STATS_KEY: stats}
     return K.WIND_KEY, sample
 
   def terminate(self):
