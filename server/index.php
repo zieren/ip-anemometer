@@ -52,7 +52,7 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   if (!$endTimestamp) {
     $endTimestamp = timestamp();
   }
-  $windStats = $db->computeWindStatsAggregate($endTimestamp, $minutes * 60 * 1000, 30);
+  $windStats = $db->computeWindStats($endTimestamp, $minutes * 60 * 1000, 30);
   if (is_null($windStats)) {
     echo '<p>n/a</p>';
     return;
@@ -62,7 +62,6 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
   if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
     $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
   }
-  echo '<table border="0" cellpadding="3"><tr><td>';  // TODO: Remove side-by-side debug.
   echo 'Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
   echo '<table border="1" cellpadding="3">
     <tr><td>avg</td><td>max</td><td>time of max</td></tr>
@@ -72,28 +71,6 @@ function printRecentWindStats($minutes, $endTimestamp = 0) {
         .'</td></tr>
   </table>';
   printHistogram($windStats[WIND_KEY_HIST]);
-
-  echo '</td><td>';  // TODO: Remove side-by-side debug.
-  $windStats = $db->computeWindStats($endTimestamp, $minutes * 60 * 1000);
-  if (is_null($windStats)) {
-    echo '<p>n/a</p>';
-    return;
-  }
-  $latency = $endTimestamp - $windStats[WIND_KEY_END_TS];
-  $latencyText = '@latency='.formatDuration($latency);
-  if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
-    $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
-  }
-  echo 'P Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
-  echo '<table border="1" cellpadding="3">
-    <tr><td>avg</td><td>max</td><td>time of max</td></tr>
-    <tr><td>'.round($windStats[WIND_KEY_AVG], 1)
-        .'</td><td>'.round($windStats[WIND_KEY_MAX], 1)
-        .'</td><td>'.formatTimestamp($windStats[WIND_KEY_MAX_TS])
-        .'</td></tr>
-  </table>';
-  printHistogram($windStats[WIND_KEY_HIST]);
-  echo '</td></tr></table>';  // TODO: Remove side-by-side debug.
 }
 
 function printHistogram($histogram) {

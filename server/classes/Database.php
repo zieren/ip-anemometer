@@ -68,7 +68,7 @@ class Database {
   public function createTables() {
     if ($this->query(
             'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)')
-        && $this->query(
+        && $this->query(  // TODO: Remove precision mode table.
             'CREATE TABLE IF NOT EXISTS wind (ts BIGINT PRIMARY KEY)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS wind_a (start_ts BIGINT PRIMARY KEY, '.
@@ -126,37 +126,17 @@ class Database {
   }
 
   /**
+   * Insert the specified data.
+   *
    * @param array $samples Samples provided by the client. Each is the result of one
-   *     Wind.get_sample() call on the client. Precision and/or aggregate mode data may be present.
-   *     All data present will be inserted. It is an error to specify an empty array.
+   *     Wind.get_sample() call on the client. Actual wind speed data may be absent, but coverage
+   *     data must be present.
    */
   public function insertWind($samples) {
-    $q = '';  // for precision mode, collect all timestamps from all samples
-    // TODO: Limit query size.
     foreach ($samples as $sample) {
-      // Process precision mode data (if present).
-      $revolutions = $sample[WIND_REVOLUTIONS_KEY];
-      if ($revolutions) {
-        foreach ($revolutions as $ts) {
-          if ($q != '') {
-            $q .= ',';
-          }
-          $q .= '('.$ts.')';
-        }
-      }
-      // Insert aggregate mode stats (if present).
       $stats = $sample[WIND_AGGREGATE_STATS_KEY];
       if ($stats) {
-        $this->insertAggregateStats($stats);
-      }
-    }
-
-    // Insert precision mode data (if present).
-    if ($q != '') {  // not precision mode, or no single revolution recorded (i.e. no wind)
-      $q = 'REPLACE INTO wind (ts) VALUES '.$q;
-      $this->log->debug('QUERY: '.$q);
-      if (!$this->query($q)) {
-        $this->logCritical('failed to insert wind measurements: '.$this->getError());
+        $this->insertStats($stats);
       }
     }
 
@@ -171,8 +151,8 @@ class Database {
     }
   }
 
-  private function insertAggregateStats($stats) {
-    // Insert histogram data first because we need the keys in the hist table.
+  private function insertStats($stats) {
+    // Insert histogram data first because we need the id-s in the hist table.
     $histogram = $stats[WIND_KEY_HIST];
     $histId = $this->insertHistogram($histogram);
     if (!$histId) {
@@ -184,7 +164,7 @@ class Database {
         .$stats[WIND_KEY_MAX].','.$stats[WIND_KEY_MAX_TS].','.$histId.','.$buckets.')';
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
-      $this->logCritical('failed to insert aggregate wind measurements: '.$this->getError());
+      $this->logCritical('failed to insert wind measurements: '.$this->getError());
     }
   }
 
@@ -261,10 +241,11 @@ class Database {
    * @param int $maxEndTimestamp Consider samples up to this end timestamp in millis (usually the
    *    current time).
    * @param int $windowDuration Length of the window to consider, in millis.
-   * @param int $outputLength Maximum number of samples in time series (downsample if required).
+   * @param int $outputLength Maximum number of samples in time series (will be downsampled if
+   *    required).
    * @return array An array indexed by WIND_KEY_*.
    */
-  public function computeWindStatsAggregate($maxEndTimestamp, $windowDuration, $outputLength) {
+  public function computeWindStats($maxEndTimestamp, $windowDuration, $outputLength) {
     $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
     $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind_a WHERE '
         .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
@@ -486,36 +467,6 @@ class Database {
       $average += $v / $n;
     }
     return $average;
-  }
-
-  /** Compute average and maximum wind speed in km/h. */
-  public function computeWindStats($desiredEndTimestamp, $windowDuration) {
-    // Restrict to actually covered time, keeping window size if possible.
-    $q = 'SELECT startup, upto FROM coverage ORDER BY startup DESC LIMIT 1';
-    if (!($result = $this->query($q))) {
-      return null;
-    }
-    $row = $result->fetch_row();
-    if ($row == null) {
-      return null;  // DB is empty
-    }
-    $startupTimestamp = $row[0];
-    $uptoTimestamp = $row[1];
-    $endTimestamp = min($desiredEndTimestamp, $uptoTimestamp);
-    $startTimestamp = max($endTimestamp - $windowDuration, $startupTimestamp);
-
-    $q = 'SELECT ts FROM wind WHERE ts >= '.$startTimestamp
-        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
-    if ($result = $this->query($q)) {
-      $windStatsCalculator = new WindStatsCalculator($startTimestamp, $endTimestamp);
-      while ($row = $result->fetch_row()) {
-        $windStatsCalculator->nextTimestamp($row[0]);
-      }
-      // TODO: Also compute cumulative histogram here.
-      return $windStatsCalculator->finalizeAndGetStats();
-    }
-    $this->logCritical('failed to compute wind stats: "'.$q.'" -> '.$this->getError());
-    return null;
   }
 
   public function readTemperature($endTimestamp, $windowDuration, $timeSeriesPoints) {

@@ -27,7 +27,7 @@ function computeStats() {
     $db->setLogLevel(getLogLevel($settings[LOG_LEVEL_KEY]));
   }
 
-  $stats = $db->computeWindStatsAggregate(
+  $stats = $db->computeWindStats(
       $timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
   if (!$stats) {
     return NULL;  // TODO: Handle absent values per type, not globally.
