@@ -28,7 +28,7 @@ td.to, td.toValue {
 	background: #bf9;
 }
 
-div#minutes, div#summary, div#time, div#hist, div#temp {
+div#minutes, div#summary, div#time, div#hist, div#temp, div#expand {
 	width: 300px;
 }
 

@@ -37,7 +37,7 @@ ipaView.handleKeyPress = function(event) {
   }
 }
 
-ipaView.goDebug = function() {
+ipaView.expand = function() {
   ipaView.options.timeSeriesPoints = 123456;  // effectively disable downsampling
   document.getElementById('time').style.width = '100%';
   document.getElementById('hist').style.width = '100%';
@@ -52,7 +52,7 @@ google.setOnLoadCallback(ipaView.updateChart);
 </head>
 <body>
 <div id="minutes" align="center">
-  <span onclick="ipaView.goDebug()">Minutes</span>:
+  Minutes:
   <input id="minutesInput" type="text" maxlength="4" size="4"
       onkeypress="ipaView.handleKeyPress(event)" value="60" />
   <button onclick="ipaView.updateChart()">Load</button>
@@ -61,6 +61,9 @@ google.setOnLoadCallback(ipaView.updateChart);
 <div id="time"></div>
 <div id="hist"></div>
 <div id="temp"></div>
+<div id="expand" align="center">
+  <button onclick="ipaView.expand()">Max Width</button>
+</div>
 
 </body>
 </html>
