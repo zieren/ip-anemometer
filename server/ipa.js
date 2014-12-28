@@ -119,6 +119,9 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   var options = {
     title: 'Wind [km/h]',
     hAxis: {format: 'HH:mm'},
+    // If all values are 0 the chart shows a value range of [-1, 1]. So we specify a range of [0, 1]
+    // to render a pretty chart in that case. If values exceed the max of 1 it will be ignored.
+    vAxis: {minValue: 0, maxValue: 1},
     legend: {position: 'top'}
   };
   var timeSeriesChart = new google.visualization.LineChart(element);
