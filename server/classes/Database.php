@@ -440,7 +440,7 @@ class Database {
     return array($windowStart, $windowEnd, 0, -1);  // number of elements as in WIND_KEY_SAMPLE_*
   }
 
-  private static function downsampleTemperature($input, $outputLength) {
+  private static function downsampleTimeSeries($input, $outputLength) {
     $inputLength = count($input);
     if ($inputLength <= $outputLength || $inputLength <= 1) {  // nothing to downsample
       return $input;
@@ -450,24 +450,24 @@ class Database {
     $endTs = $input[$inputLength - 1][0];
     $bucketIndex = 0;
     $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, $bucketIndex);
-    $temps = array();
+    $values = array();
     $timestamps = array();
     for ($i = 0; $i < $inputLength; ++$i) {
       $ts = $input[$i][0];
-      $temp = $input[$i][1];
+      $value = $input[$i][1];
       if ($ts < $nextBucket) {
-        $temps[] = $temp;
+        $values[] = $value;
         $timestamps[] = $ts;
       }
       if ($ts >= $nextBucket || $i + 1 == $inputLength) {
-        if ($temps) {
+        if ($values) {
           $output[] = array(
             intval(Database::average($timestamps)),
-            floatval(Database::average($temps)));
+            floatval(Database::average($values)));
         }
       }
       if ($ts >= $nextBucket) {
-        $temps = array($temp);
+        $values = array($value);
         $timestamps = array($ts);
         $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, ++$bucketIndex);
       }
@@ -500,9 +500,24 @@ class Database {
       while ($row = $result->fetch_row()) {
         $temp[] = array(intval($row[0]), floatval($row[1]));
       }
-      return Database::downsampleTemperature($temp, $timeSeriesPoints);
+      return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
     }
-    $this->logCritical('failed to compute temp stats: "'.$q.'" -> '.$this->getError());
+    $this->logCritical('failed to read temperature: "'.$q.'" -> '.$this->getError());
+    return null;
+  }
+
+  public function readSignalStrength($endTimestamp, $windowDuration, $timeSeriesPoints) {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    $q = 'SELECT ts, strength FROM link WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $strength = array();
+    if ($result = $this->query($q)) {
+      while ($row = $result->fetch_row()) {
+        $strength[] = array(intval($row[0]), intval($row[1]));
+      }
+      return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
+    }
+    $this->logCritical('failed to read signal strength: "'.$q.'" -> '.$this->getError());
     return null;
   }
 

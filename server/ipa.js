@@ -10,10 +10,12 @@ ipa.key.WIND_MAX_TS = 2;
 ipa.key.WIND_HIST = 3;
 ipa.key.WIND_START_TS = 4;
 ipa.key.WIND_END_TS = 5;
+// TODO: Clean this mess up.
 ipa.key.TEMP_TIME_SERIES = 7;
+ipa.key.LINK_STRENGTH_TIME_SERIES = 8;
 // Additional stats only computed on the server. Keep these in sync with common.php.
 ipa.key.WIND_TIME_SERIES = 6;
-//The time series is a list of 3-tuples (timestamp, avg, max).
+// The time series is a list of 3-tuples (timestamp, avg, max).
 
 // Options and their defaults.
 ipa.Options = function() {
@@ -24,6 +26,7 @@ ipa.Options = function() {
   this.timeSeriesPoints = 30;  // Number of points in time series. Increase for wider charts.
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
   this.temperatureMinutes= 24 * 60;  // Show temperature (0 to disable).
+  this.signalStrengthMinutes = 24 * 60;  // Show signal strength (0 to disable).
   this.dummy = false;  // Output inconsistent dummy data for testing.
 }
 
@@ -53,6 +56,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
       + '&tm=' + this.options.temperatureMinutes
+      + '&sm=' + this.options.signalStrengthMinutes
       + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
@@ -182,8 +186,8 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
 
 ipa.Chart.prototype.drawTemperature = function(element) {
   var temperatureTable = new google.visualization.DataTable();
-  temperatureTable.addColumn('datetime', 't');
-  temperatureTable.addColumn('number', 't');
+  temperatureTable.addColumn('datetime');
+  temperatureTable.addColumn('number');
   var timeSeries = this.stats[ipa.key.TEMP_TIME_SERIES];
   for (var i = 0; i < timeSeries.length; ++i) {
     var row = timeSeries[i];
@@ -191,12 +195,31 @@ ipa.Chart.prototype.drawTemperature = function(element) {
     temperatureTable.addRow(row);
   }
   var options = {
-    title: 'System Temperature [°C]',
+    title: 'CPU temperature [°C]',
     hAxis: {format: 'HH:mm'},
-    legend: {position: 'top'}
+    legend: 'none'
   };
   var temperatureChart = new google.visualization.LineChart(element);
   temperatureChart.draw(temperatureTable, options);
+}
+
+ipa.Chart.prototype.drawSignalStrength = function(element) {
+  var strengthTable = new google.visualization.DataTable();
+  strengthTable.addColumn('datetime');
+  strengthTable.addColumn('number');
+  var timeSeries = this.stats[ipa.key.LINK_STRENGTH_TIME_SERIES];
+  for (var i = 0; i < timeSeries.length; ++i) {
+    var row = timeSeries[i];
+    row[0] = new Date(row[0]);  // convert timestamp to Date object
+    strengthTable.addRow(row);
+  }
+  var options = {
+    title: 'Signal strength [%]',
+    hAxis: {format: 'HH:mm'},
+    legend: 'none'
+  };
+  var strengthChart = new google.visualization.LineChart(element);
+  strengthChart.draw(strengthTable, options);
 }
 
 ipa.Chart.insertCells_ = function(tr) {

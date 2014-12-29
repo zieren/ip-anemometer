@@ -29,6 +29,7 @@ ipaView.updateChart = function() {
   chart.drawTimeSeries(ipaView.clearElement(document.getElementById('time')));
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
   chart.drawTemperature(ipaView.clearElement(document.getElementById('temp')));
+  chart.drawSignalStrength(ipaView.clearElement(document.getElementById('signalStrength')));
 }
 
 ipaView.handleKeyPress = function(event) {
@@ -39,9 +40,10 @@ ipaView.handleKeyPress = function(event) {
 
 ipaView.expand = function() {
   ipaView.options.timeSeriesPoints = 123456;  // effectively disable downsampling
-  document.getElementById('time').style.width = '100%';
-  document.getElementById('hist').style.width = '100%';
-  document.getElementById('temp').style.width = '100%';
+  var charts = document.getElementsByClassName('chart');
+  for (var i = 0; i < charts.length; ++i) {
+    charts[i].style.width = '100%';
+  }
   ipaView.updateChart();
 }
 
@@ -58,9 +60,11 @@ google.setOnLoadCallback(ipaView.updateChart);
   <button onclick="ipaView.updateChart()">Load</button>
 </div>
 <div id="summary" align="center"></div>
-<div id="time"></div>
-<div id="hist"></div>
-<div id="temp"></div>
+<div id="time" class="chart"></div>
+<div id="hist" class="chart"></div>
+<h3>System status (last 24h)</h3>
+<div id="temp" class="chart"></div>
+<div id="signalStrength" class="chart"></div>
 <div id="expand" align="center">
   <button onclick="ipaView.expand()">Max Width</button>
 </div>

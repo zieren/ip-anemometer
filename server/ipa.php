@@ -17,6 +17,7 @@ function computeStats() {
     $timeSeriesPoints = REQ_TIME_SERIES_POINTS_DEFAULT;
   }
   $tempMinutes = intval($_REQUEST[REQ_TEMP_MINUTES]);
+  $strengthMinutes = intval($_REQUEST[REQ_SIGNAL_STRENGTH_MINUTES]);
 
   $db = new Database();
   // Apply settings.
@@ -34,6 +35,10 @@ function computeStats() {
   }
   if ($tempMinutes) {
     $stats[TEMP_KEY_TIME_SERIES] = $db->readTemperature(
+        $timestamp, minutesToMillis($tempMinutes), $timeSeriesPoints);
+  }
+  if ($strengthMinutes) {
+    $stats[LINK_STRENGTH_KEY_TIME_SERIES] = $db->readSignalStrength(
         $timestamp, minutesToMillis($tempMinutes), $timeSeriesPoints);
   }
   return $stats;
