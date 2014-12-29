@@ -21,14 +21,14 @@ class WindStatsCalculator:
   def __init__(self, start_timestamp):
     """start_timestamp: Startup of the wind sensor."""
     self._phase = WindStatsCalculator._BEFORE_FIRST_TIMESTAMP
-    self._previous_timestamp = 0.0  # will be initialized in the first call
+    self._previous_timestamp = 0  # will be initialized in the first call
     # TODO: Make sure end timestamps are considered exclusive throughout.
     self._start_timestamp = start_timestamp
     self._reset()
 
   def _reset(self):
     self._max_kmh = 0.0
-    self._max_timestamp = 0.0
+    self._max_timestamp = 0
     self._avg_kmh = 0.0
     self._histogram = {}
 
@@ -53,7 +53,7 @@ class WindStatsCalculator:
       self._phase = WindStatsCalculator._STEADY_STATE
 
     self._update(kmh, duration, timestamp)
-    # Remember timestamp for next row.
+    # Remember timestamp for next call.
     self._previous_timestamp = timestamp
 
   def _update(self, kmh, duration, timestamp):
@@ -73,6 +73,12 @@ class WindStatsCalculator:
     the last revolution timestamp before end_timestamp, but never more than _NO_WIND_DURATION before
     end_timestamp (padding with zero km/h). The end timestamp is returned in the result. """
 
+    if self._phase != WindStatsCalculator._STEADY_STATE:
+      if end_timestamp - self._start_timestamp < _NO_WIND_DURATION:
+        # We can still have a nonzero speed for this interval so we can't return anything.
+        return None
+
+
     if self._phase == WindStatsCalculator._BEFORE_FIRST_TIMESTAMP:
       if end_timestamp - self._start_timestamp < _NO_WIND_DURATION:
         # We can still have a nonzero speed for this interval so we can't return anything.
@@ -82,19 +88,22 @@ class WindStatsCalculator:
       self._previous_timestamp = self._start_timestamp
 
     end_silence_duration = end_timestamp - self._previous_timestamp
-    if end_silence_duration >= _NO_WIND_DURATION:
+    if end_silence_duration > _NO_WIND_DURATION:
       # Generate a "virtual" timestamp that is _NO_WIND_DURATION before the end, so that the next
-      # timestamp is guaranteed to produce 0 km/h. Consider the time up to the virtual timestamp as
-      # 0 km/h.
+      # timestamp will produce 0 km/h. Consider the time up to the virtual timestamp as 0 km/h.
       self._update(0.0, end_silence_duration - _NO_WIND_DURATION, self._previous_timestamp)
       self._previous_timestamp = end_timestamp - _NO_WIND_DURATION  # "virtual" timestamp
     end_timestamp = self._previous_timestamp
     total_duration = end_timestamp - self._start_timestamp
     # If we are called in intervals smaller than _NO_WIND_DURATION and no revolution has occured,
-    # the previous timestamp was the last sample's end timestamp and is now our start timestamp,
+    # self._previous_timestamp was the last sample's end timestamp and is now self._start_timestamp,
     # resulting in a total_duration of 0. Don't return anything, for the same reason as above.
     if total_duration == 0:
       return None
+
+    # end_timestamp - self._previous_timestamp <= _NO_WIND_DURATION
+    # self._previous_timestamp > self._start_timestamp
+
     # Compute average.
     self._avg_kmh /= total_duration
     # Convert histogram to relative values.
