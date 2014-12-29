@@ -6,6 +6,9 @@ import C  # TODO: Break dependency of K on C
 import K
 
 
+_COMMANDLINE = ['curl', '-s', '-S', 'http://hi.link/api/monitoring/status']
+
+
 class HuaweiStatus:
   """Provides status of the Huawei 3G stick, such as signal strength."""
 
@@ -26,7 +29,7 @@ class HuaweiStatus:
 
   def _get_status(self):  # change this to provide more status
     try:
-      return self._parse_status(subprocess.check_output('../huawei_status.sh'))
+      return self._parse_status(subprocess.check_output(_COMMANDLINE))
     except Exception as e:  # Catch all errors including parsing.
       self._log.error('failed to get Huawei 3G stick status: %s' % str(e))
 
