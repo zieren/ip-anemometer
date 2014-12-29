@@ -1,5 +1,6 @@
 import unittest
 
+import huawei_status
 import wind_sensor
 import wind_stats
 from wind_stats import WindKey
@@ -43,17 +44,17 @@ class Test(unittest.TestCase):
     start_ts = TS_0
     end_ts = ts - wind_stats._NO_WIND_DURATION
     self.expectStats(calc.get_stats_and_reset(ts),
-                     0, 0, 0, {0: 1.0}, start_ts, end_ts)
+                     0, 0, end_ts, {0: 1.0}, start_ts, end_ts)
     # Another minute -> all zero.
     ts += MIN
     start_ts = end_ts
     end_ts = ts - wind_stats._NO_WIND_DURATION
     self.expectStats(calc.get_stats_and_reset(ts),
-                     0, 0, 0, {0: 1.0}, start_ts, end_ts)
+                     0, 0, end_ts, {0: 1.0}, start_ts, end_ts)
     # 10 one-second revolutions in a minute.
     for i in range(11):  # first revolution was inf long
       calc.next_timestamp(ts + i * SEC)
-    max_ts = ts + SEC  # first at ts + 0 was inf long, so max is only at ts + SEC
+    max_ts = ts + 10 * SEC  # first at ts + 0 was inf long, all others are identical
     ts += MIN
     start_ts = end_ts
     end_ts = ts - wind_stats._NO_WIND_DURATION
@@ -64,7 +65,7 @@ class Test(unittest.TestCase):
     # One minute of continuous one-second revolutions.
     for i in range(60):
       calc.next_timestamp(ts + i * SEC)
-    max_ts = ts + SEC
+    max_ts = ts + 59 * SEC
     ts += MIN
     start_ts = end_ts
     end_ts = ts - SEC
@@ -78,7 +79,7 @@ class Test(unittest.TestCase):
     # A minute of continuous half-second revolutions.
     for i in range(120):
       calc.next_timestamp(ts + i * SEC / 2)
-    max_ts = ts + SEC / 2
+    max_ts = ts + 119 * SEC / 2
     ts += MIN
     start_ts = end_ts
     end_ts = ts - SEC / 2
@@ -122,3 +123,11 @@ class Test(unittest.TestCase):
     self.assertEqual(stats[WindKey.HISTOGRAM], histogram)
     self.assertEqual(stats[WindKey.START_TIMESTAMP], start_timestamp)
     self.assertEqual(stats[WindKey.END_TIMESTAMP], end_timestamp)
+
+
+  def test_HuaweiStatus(self):
+    huawei = huawei_status.HuaweiStatus()
+    status_xml = open('test/status-1.xml').read()
+    status = huawei._parse_status(status_xml)
+    self.assertEqual(status['status'], '901')
+    self.assertEqual(status['strength'], '97')

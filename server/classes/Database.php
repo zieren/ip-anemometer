@@ -78,6 +78,8 @@ class Database {
         && $this->query(
             'CREATE TABLE IF NOT EXISTS coverage (startup BIGINT PRIMARY KEY, upto BIGINT)')
         && $this->query(
+            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, status INT, strength INT)')
+        && $this->query(
             'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '.
             'stratum INT, fails INT, ip VARCHAR(15))')
         && $this->query(
@@ -106,7 +108,7 @@ class Database {
   }
 
   public function insertTemperature($temp) {
-      if (count($temp) == 0) {
+    if (count($temp) == 0) {
       $this->log->warning('received empty temperature measurements');
       return;
     }
@@ -125,8 +127,28 @@ class Database {
     }
   }
 
+  public function insertLinkStatus($linkStatus) {
+    if (count($linkStatus) == 0) {
+      $this->log->warning('received empty link status');
+      return;
+    }
+    $q = '';
+    foreach ($linkStatus as $v) {
+      if ($q != '') {
+        $q .= ',';
+      }
+      $q .= '('.$v[TIMESTAMP_KEY].','.$v[LINK_STATUS_KEY].','.$v[LINK_STRENGTH_KEY].')';
+    }
+
+    $q = 'INSERT INTO link (ts, status, strength) VALUES '.$q;
+    $this->log->debug('QUERY: '.$q);
+    if (!$this->query($q)) {
+      $this->logCritical('failed to insert link status: ' . $this->getError());
+    }
+  }
+
   /**
-   * Insert the specified data.
+   * Insert wind and coverage data.
    *
    * @param array $samples Samples provided by the client. Each is the result of one
    *     Wind.get_sample() call on the client. Actual wind speed data may be absent, but coverage
@@ -136,7 +158,7 @@ class Database {
     foreach ($samples as $sample) {
       $stats = $sample[WIND_AGGREGATE_STATS_KEY];
       if ($stats) {
-        $this->insertStats($stats);
+        $this->insertWindSpeed($stats);
       }
     }
 
@@ -151,7 +173,7 @@ class Database {
     }
   }
 
-  private function insertStats($stats) {
+  private function insertWindSpeed($stats) {
     // Insert histogram data first because we need the id-s in the hist table.
     $histogram = $stats[WIND_KEY_HIST];
     $histId = $this->insertHistogram($histogram);

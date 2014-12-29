@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+<ConnectionStatus>901</ConnectionStatus>
+<SignalStrength>97</SignalStrength>
+<SignalIcon>5</SignalIcon>
+<CurrentNetworkType>7</CurrentNetworkType>
+<CurrentServiceDomain>3</CurrentServiceDomain>
+<RoamingStatus>0</RoamingStatus>
+<BatteryStatus></BatteryStatus>
+<BatteryLevel></BatteryLevel>
+<simlockStatus></simlockStatus>
+<WanIPAddress>10.66.65.199</WanIPAddress>
+<PrimaryDns>139.7.30.126</PrimaryDns>
+<SecondaryDns>139.7.30.125</SecondaryDns>
+<CurrentWifiUser></CurrentWifiUser>
+<TotalWifiUser></TotalWifiUser>
+<ServiceStatus>2</ServiceStatus>
+<SimStatus>1</SimStatus>
+<WifiStatus></WifiStatus>
+</response>

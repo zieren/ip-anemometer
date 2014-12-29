@@ -27,6 +27,9 @@ COMMAND_SHUTDOWN = 'shutdown'
 COMMAND_REBOOT = 'reboot'
 RESPONSE_STATUS = 'status'
 RESPONSE_STATUS_OK = 'ok'
+LINK_KEY = 'link'
+LINK_STATUS_KEY = 'status'
+LINK_STRENGTH_KEY = 'strength'
 
 
 # ----- Client constants -----
@@ -45,7 +48,7 @@ RETURN_VALUE_REBOOT = 101
 LOG_NAME_MAIN = 'ipa'
 LOG_NAME_TEMP = 'ipa.temp'
 LOG_NAME_WIND = 'ipa.wind'
-LOG_NAME_METADATA = 'ipa.meta'
+LOG_NAME_LINK = 'ipa.link'
 LOG_NAME_UPLOADER = 'ipa.upload'
 
 LOG_NAME_NTPDSYNC = 'ntpdsync'

@@ -42,6 +42,10 @@ function handleRequest($logger) {
       $db->insertTemperature($data[TEMP_KEY]);
     }
 
+    if (isset($data[LINK_KEY])) {
+      $db->insertLinkStatus($data[LINK_KEY]);
+    }
+
     $response = array(RESPONSE_STATUS => RESPONSE_STATUS_OK);
     // TODO: Add support for reboot, shutdown etc.
 

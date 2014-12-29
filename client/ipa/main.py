@@ -11,6 +11,7 @@ import threading
 
 import C
 import common
+import huawei_status
 import K
 import metadata
 import temperature
@@ -36,6 +37,7 @@ class Anemometer:
     self._uploader.add_data_source(self._wind, True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)
+    self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
 
 
   def _shutdown(self):
