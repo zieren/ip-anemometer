@@ -43,13 +43,17 @@ class Wind:
     up_to_time = common.timestamp()
     revs = self._revolutions.get_and_reset()
     if revs:
-      # In case there was another edge after we took the time, update up_to_time. It would be odd
-      # for window N to contain a timestamp in window N+1.
+      # In case there was another edge after we read the time, update up_to_time. It would be odd
+      # for window N to contain a timestamp in window N+1. (Technically up_to_time should be
+      # exclusive, so setting it to the time of the last revolution is incorrect. But we can ignore
+      # this since if the same timestamp were to occur again (revolution of zero duration...) it
+      # would be ignored anyway, and any larger timestamp would correctly fall into the next
+      # sample.)
       up_to_time = max(up_to_time, revs[-1])
     for ts in revs:
       self._calc.next_timestamp(ts)
     stats = self._calc.get_stats_and_reset(up_to_time)
-    if not stats:  # no stats available yet
+    if not stats:  # no (new) stats available yet
       return K.WIND_KEY, None
     sample = {K.WIND_STARTUP_TIME_KEY: self._startup_time,
               K.WIND_UP_TO_TIME_KEY: up_to_time,
