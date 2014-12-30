@@ -3,18 +3,17 @@ import unittest
 
 import common
 import huawei_status
+import K
 import wind_sensor
 import wind_stats
 from wind_stats import WindKey
 
-import C  # TODO: Break dependency of K on C
-import K
 
 SEC = 1000
 MIN = 60 * SEC
 TS_0 = 1000000000000
-
 FAKE_TIMESTAMP = 1234567890123L
+
 
 class Test(unittest.TestCase):
 
