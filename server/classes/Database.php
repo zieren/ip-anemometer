@@ -68,8 +68,6 @@ class Database {
   public function createTables() {
     if ($this->query(
             'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)')
-        && $this->query(  // TODO: Remove precision mode table.
-            'CREATE TABLE IF NOT EXISTS wind (ts BIGINT PRIMARY KEY)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS wind_a (start_ts BIGINT PRIMARY KEY, '.
             'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)')
@@ -78,7 +76,8 @@ class Database {
         && $this->query(
             'CREATE TABLE IF NOT EXISTS coverage (startup BIGINT PRIMARY KEY, upto BIGINT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, status INT, strength INT)')
+            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype TINYINT, '.
+            'strength TINYINT, upload BIGINT, download BIGINT)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '.
             'stratum INT, fails INT, ip VARCHAR(15))')
@@ -137,10 +136,11 @@ class Database {
       if ($q != '') {
         $q .= ',';
       }
-      $q .= '('.$v[TIMESTAMP_KEY].','.$v[LINK_STATUS_KEY].','.$v[LINK_STRENGTH_KEY].')';
+      $q .= '('.$v[TIMESTAMP_KEY].','.$v[LINK_NW_TYPE_KEY].','.$v[LINK_STRENGTH_KEY].
+          ','.$v[LINK_UPLOAD_KEY].','.$v[LINK_DOWNLOAD_KEY].')';
     }
 
-    $q = 'INSERT INTO link (ts, status, strength) VALUES '.$q;
+    $q = 'INSERT INTO link (ts, nwtype, strength, upload, download) VALUES '.$q;
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
       $this->logCritical('failed to insert link status: ' . $this->getError());
@@ -518,6 +518,37 @@ class Database {
       return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
     }
     $this->logCritical('failed to read signal strength: "'.$q.'" -> '.$this->getError());
+    return null;
+  }
+
+  public function readNetworkType($endTimestamp, $windowDuration) {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    $q = 'SELECT nwtype FROM link WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp;
+    $nwtypes = array();
+    if ($result = $this->query($q)) {
+      while ($row = $result->fetch_row()) {
+        // TODO: This should use friendly names, produced in huawei_status.py.
+        $nwtypes[$row[0]] = $nwtypes[$row[0]] + 1;
+      }
+      return $nwtypes;
+    }
+    $this->logCritical('failed to read network types: "'.$q.'" -> '.$this->getError());
+    return null;
+  }
+
+  public function readTransferVolume() {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    $q = 'SELECT upload, download FROM link ORDER BY ts DESC';
+    $nwtypes = array();
+    if ($result = $this->query($q)) {
+      if ($row = $result->fetch_row()) {
+        return array(
+            'upload' => intval($row[0]),
+            'download' => intval($row[1]));
+      }
+    }
+    $this->logCritical('failed to read transfer volume: "'.$q.'" -> '.$this->getError());
     return null;
   }
 

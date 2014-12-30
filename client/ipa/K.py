@@ -28,8 +28,10 @@ COMMAND_REBOOT = 'reboot'
 RESPONSE_STATUS = 'status'
 RESPONSE_STATUS_OK = 'ok'
 LINK_KEY = 'link'
-LINK_STATUS_KEY = 'status'
+LINK_NW_TYPE_KEY = 'nwtype'
 LINK_STRENGTH_KEY = 'strength'
+LINK_UPLOAD_KEY = 'upload'
+LINK_DOWNLOAD_KEY = 'download'
 
 
 # ----- Client constants -----

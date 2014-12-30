@@ -16,8 +16,7 @@ function computeStats() {
   if (!$timeSeriesPoints) {
     $timeSeriesPoints = REQ_TIME_SERIES_POINTS_DEFAULT;
   }
-  $tempMinutes = intval($_REQUEST[REQ_TEMP_MINUTES]);
-  $strengthMinutes = intval($_REQUEST[REQ_SIGNAL_STRENGTH_MINUTES]);
+  $systemMinutes = intval($_REQUEST[REQ_SYSTEM_MINUTES]);
 
   $db = new Database();
   // Apply settings.
@@ -33,13 +32,14 @@ function computeStats() {
   if (!$stats) {
     return NULL;  // TODO: Handle absent values per type, not globally.
   }
-  if ($tempMinutes) {
+  if ($systemMinutes) {
+    $systemMillis = minutesToMillis($systemMinutes);
     $stats[TEMP_KEY_TIME_SERIES] = $db->readTemperature(
-        $timestamp, minutesToMillis($tempMinutes), $timeSeriesPoints);
-  }
-  if ($strengthMinutes) {
+        $timestamp, $systemMillis, $timeSeriesPoints);
     $stats[LINK_STRENGTH_KEY_TIME_SERIES] = $db->readSignalStrength(
-        $timestamp, minutesToMillis($tempMinutes), $timeSeriesPoints);
+        $timestamp, minutesToMillis($systemMinutes), $timeSeriesPoints);
+    $stats[LINK_NW_TYPE_KEY_2] = $db->readNetworkType($timestamp, $systemMillis);
+    $stats[LINK_UL_DL_KEY] = $db->readTransferVolume();
   }
   return $stats;
 }

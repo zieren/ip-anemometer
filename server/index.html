@@ -30,6 +30,8 @@ ipaView.updateChart = function() {
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
   chart.drawTemperature(ipaView.clearElement(document.getElementById('temp')));
   chart.drawSignalStrength(ipaView.clearElement(document.getElementById('signalStrength')));
+  chart.drawNetworkType(ipaView.clearElement(document.getElementById('nwType')));
+  chart.drawTransferVolume(ipaView.clearElement(document.getElementById('transferVolume')));
 }
 
 ipaView.handleKeyPress = function(event) {
@@ -65,6 +67,8 @@ google.setOnLoadCallback(ipaView.updateChart);
 <h3>System status (last 24h)</h3>
 <div id="temp" class="chart"></div>
 <div id="signalStrength" class="chart"></div>
+<div id="transferVolume" class="chart"></div>
+<div id="nwType" class="chart"></div>
 <div id="expand" align="center">
   <button onclick="ipaView.expand()">Max Width</button>
 </div>

@@ -13,6 +13,8 @@ ipa.key.WIND_END_TS = 5;
 // TODO: Clean this mess up.
 ipa.key.TEMP_TIME_SERIES = 7;
 ipa.key.LINK_STRENGTH_TIME_SERIES = 8;
+ipa.key.LINK_NW_TYPE = 9;
+ipa.key.LINK_UL_DL = 10;
 // Additional stats only computed on the server. Keep these in sync with common.php.
 ipa.key.WIND_TIME_SERIES = 6;
 // The time series is a list of 3-tuples (timestamp, avg, max).
@@ -20,13 +22,14 @@ ipa.key.WIND_TIME_SERIES = 6;
 // Options and their defaults.
 ipa.Options = function() {
   this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
-  this.upToTimestampMillis = -1;  // Newest data to include. -1 means all up to now.
-  this.minutes = 60;  // Window size.
-  this.fractionalDigits = 1;  // For textual output.
-  this.timeSeriesPoints = 30;  // Number of points in time series. Increase for wider charts.
+  this.minutes = 60;  // Compute stats for the last x minutes...
+  this.upToTimestampMillis = -1;  // ... up to here. -1 means now.
+  this.fractionalDigits = 1;  // Textual output precision.
+  this.timeSeriesPoints = 30;
+      // Downsample time series to make charts readable. Increase for wider charts.
+  this.systemStatusMinutes = 24 * 60;
+      // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
-  this.temperatureMinutes= 24 * 60;  // Show temperature (0 to disable).
-  this.signalStrengthMinutes = 24 * 60;  // Show signal strength (0 to disable).
   this.dummy = false;  // Output inconsistent dummy data for testing.
 }
 
@@ -55,8 +58,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       this.options.url
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
-      + '&tm=' + this.options.temperatureMinutes
-      + '&sm=' + this.options.signalStrengthMinutes
+      + '&s=' + this.options.systemStatusMinutes
       + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
@@ -220,6 +222,36 @@ ipa.Chart.prototype.drawSignalStrength = function(element) {
   };
   var strengthChart = new google.visualization.LineChart(element);
   strengthChart.draw(strengthTable, options);
+}
+
+ipa.Chart.prototype.drawNetworkType = function(element) {
+  var nwTypeTable = new google.visualization.DataTable();
+  nwTypeTable.addColumn('string', 'Type');
+  nwTypeTable.addColumn('number', '%');
+  var nwTypes = this.stats[ipa.key.LINK_NW_TYPE];
+  for (var i in nwTypes) {
+    nwTypeTable.addRow([i, nwTypes[i]]);
+  }
+  var options = {
+    title: 'Network type'
+  };
+  var nwTypeChart = new google.visualization.PieChart(element);
+  nwTypeChart.draw(nwTypeTable, options);
+}
+
+ipa.Chart.prototype.drawTransferVolume = function(element) {
+  var volumeTable = new google.visualization.DataTable();
+  volumeTable.addColumn('string', 'Volume');
+  volumeTable.addColumn('number', 'MB');
+  var volumes = this.stats[ipa.key.LINK_UL_DL];
+  for (var i in volumes) {
+    volumeTable.addRow([i, volumes[i] / (1024 * 1024)]);  // in MB
+  }
+  var options = {
+    title: 'Transfer volume [MB]'
+  };
+  var volumeChart = new google.visualization.ColumnChart(element);
+  volumeChart.draw(volumeTable, options);
 }
 
 ipa.Chart.insertCells_ = function(tr) {

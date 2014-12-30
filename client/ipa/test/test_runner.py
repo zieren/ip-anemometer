@@ -1,16 +1,20 @@
+import types
 import unittest
 
+import common
 import huawei_status
 import wind_sensor
 import wind_stats
 from wind_stats import WindKey
 
-import C
-
+import C  # TODO: Break dependency of K on C
+import K
 
 SEC = 1000
 MIN = 60 * SEC
 TS_0 = 1000000000000
+
+FAKE_TIMESTAMP = 1234567890123L
 
 class Test(unittest.TestCase):
 
@@ -20,7 +24,7 @@ class Test(unittest.TestCase):
 
   def test_Revolutions(self):
     s = wind_sensor.Revolutions()
-    edges = C.WIND_EDGES_PER_REV()
+    edges = 4
 
     # Add N-1 edges.
     for i in range(edges - 1):
@@ -124,10 +128,19 @@ class Test(unittest.TestCase):
     self.assertEqual(stats[WindKey.START_TIMESTAMP], start_timestamp)
     self.assertEqual(stats[WindKey.END_TIMESTAMP], end_timestamp)
 
-
   def test_HuaweiStatus(self):
     huawei = huawei_status.HuaweiStatus()
-    status_xml = open('test/status-1.xml').read()
-    status = huawei._parse_status(status_xml)
-    self.assertEqual(status['status'], '901')
-    self.assertEqual(status['strength'], '97')
+    huawei._query_api = types.MethodType(huaweiFakeQueryApi, huawei)
+    common.timestamp = fakeCommonTimestamp
+    sample = huawei.get_sample()
+    self.assertEqual(sample, (K.LINK_KEY, {K.LINK_NW_TYPE_KEY: '7',
+                                           K.LINK_STRENGTH_KEY: '97',
+                                           K.LINK_UPLOAD_KEY: '1010629397',
+                                           K.LINK_DOWNLOAD_KEY: '414422886',
+                                           K.TIMESTAMP_KEY: FAKE_TIMESTAMP}))
+
+def huaweiFakeQueryApi(self, name):
+  return open('test/%s.xml' % name).read()
+
+def fakeCommonTimestamp():
+  return FAKE_TIMESTAMP
