@@ -18,14 +18,14 @@ class Revolutions:
     self._revs = []
 
   def get_and_reset(self):
-    """Returns the timestamps (in milliseconds) of all completed revolutions since the last call."""
+    """Return the timestamps (in milliseconds) of all completed revolutions since the last call."""
     with self._lock:
       revs = self._revs
       self._revs = []
     return revs
 
   def add_edge(self, pin_ignored):
-    """Counts one edge."""
+    """Count one edge."""
     with self._lock:
       self._edges = (self._edges + 1) % Revolutions._EDGES_PER_REV
       if self._edges == 0:
@@ -39,10 +39,8 @@ class Revolutions:
     self._revs.append(0)
 
   def calibration_add_edge_and_log(self, pin_ignored):
-    """
-    Like add_edge(), but also logs, on each full revolution, the current time and the revolution
-    duration. This allows calibration by comparing with a reference recording.
-    """
+    """Like add_edge(), but also log, on each full revolution, the current time and the revolution
+    duration. This allows calibration by comparing with a timestamped reference."""
     with self._lock:
       self.add_edge(pin_ignored)
       if self._edges == 0:
