@@ -59,8 +59,7 @@ class Uploader(threading.Thread):
         return
       start_time = time.time()
       self._poll_data_sources()
-      if self._upload():
-        self._queue = {}
+      self._upload()
       wait_seconds = C.UPLOAD_INTERVAL_SECONDS() - (time.time() - start_time)
 
   def get_sample(self):
@@ -75,9 +74,14 @@ class Uploader(threading.Thread):
     """Returns True if data was uploaded, False if (likely) not."""
     data_json = json.dumps(self._queue)
     data_bz2 = bz2.compress(data_json)
-    # TODO: Limit upload size as per config (e.g. 100kB for a GPRS link). When size is exceeded,
-    # purge queue in a suitable way (discard oldest half and retry? discard all?).
+    data_bz2_size = len(data_bz2)
     self._failed_uploads += 1  # assume failure; will reset to zero on success
+    if data_bz2_size > C.UPLOAD_MAX_SIZE_KB() * 1024:
+      self._queue = {}
+      self._log.critical('discarded upload buffer of size %d after %d failed uploads' %
+                         (data_bz2_size, self._failed_uploads))
+      return
+
     try:
       request = urllib2.Request(C.UPLOAD_URL() + 'rx.php', data_bz2,
           {'Content-Type': 'application/octet-stream'})
@@ -85,34 +89,35 @@ class Uploader(threading.Thread):
         auth_string = base64.encodestring('%s:%s' % (C.UPLOAD_USERNAME(),
                                                      C.UPLOAD_PASSWORD())).replace('\n', '')
         request.add_header('Authorization', 'Basic %s' % auth_string)
-      self._log.debug('connecting to server...')
+      self._log.debug('uploading %d bytes...' % data_bz2_size)
       response = urllib2.urlopen(request, timeout = C.TIMEOUT_HTTP_REQUEST_SECONDS())
       if response.getcode() != 200:
         self._log_error_or_suppress(Status.HTTP_CODE_NOT_OK,
-            'failed to post data: HTTP status code %d' % response.getcode())
-        return False
-      self._failed_uploads = 0
+            'failed to upload data: HTTP status code %d' % response.getcode())
+        return
     except Exception as e:
-      self._log_error_or_suppress(Status.EXCEPTION, 'failed to post data: %s' % e)
-      return False
+      self._log_error_or_suppress(Status.EXCEPTION, 'failed to upload data: %s' % str(e))
+      return
     response_content = response.read()
     try:
       response_dict = json.loads(response_content)
     except Exception as e:
-      # This might be the 3G stick's error/"no network" (or rather: "no javascript" :-) page.
+      # This might be the 3G stick's error/"no network" (or rather: "no javascript" :-) page, to
+      # which it redirects when offline.
       self._log_error_or_suppress(Status.INVALID_JSON,
           'failed to parse server response: %s\nserver response begins with: "%s"'
-          % (e, response_content[:1000]))  # TODO: Configurable?
-      return False
+          % (e, response_content[:10240]))  # return first 10kB of server response
+      return
     if response_dict.setdefault(
         K.RESPONSE_STATUS, K.RESPONSE_STATUS_UNKNOWN) != K.RESPONSE_STATUS_OK:
       self._log_error_or_suppress(Status.RESPONSE_STATUS_NOT_OK,
           'upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
-      return False
+      return
     self._last_status = Status.OK
-    self._log.debug('upload OK (%d bytes) - response: %s' % (len(data_bz2), response_content))
+    self._log.debug('upload OK; response: %s' % response_content)
     # Add commands to main command queue.
     for k, v in response_dict.items():
       if k != K.RESPONSE_STATUS:
         self._main_cq.put((k, v))
-    return True
+    self._queue = {}
+    self._failed_uploads = 0

@@ -26,8 +26,8 @@ def UPLOAD_PASSWORD():
   with _LOCK: return _CFG.get(_SECTION_UPLOAD, 'password')
 def UPLOAD_INTERVAL_SECONDS():
   with _LOCK: return _CFG.getfloat(_SECTION_UPLOAD, 'interval_seconds')
-def UPLOAD_MAX_QUEUE_SIZE():  # TODO: Change this to max_queue_size_kb
-  with _LOCK: return _CFG.getint(_SECTION_UPLOAD, 'max_queue_size')
+def UPLOAD_MAX_SIZE_KB():
+  with _LOCK: return _CFG.getint(_SECTION_UPLOAD, 'max_size_kb')
 
 _SECTION_TIMEOUTS = 'Timeouts'
 def TIMEOUT_SHUTDOWN_SECONDS():
