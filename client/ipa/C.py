@@ -14,8 +14,12 @@ _LOCK = threading.Lock()
 
 _SECTION_UPLOAD = 'Upload'
 def UPLOAD_URL():
-  with _LOCK: return _CFG.get(_SECTION_UPLOAD, 'url')
-  # TODO: This should be the base URL, w/o the rx.php filename.
+  """Ensures a trailing '/'."""
+  with _LOCK:
+    url = _CFG.get(_SECTION_UPLOAD, 'url')
+    if url[-1] != '/':
+      url += '/'
+    return url
 def UPLOAD_USERNAME():
   with _LOCK: return _CFG.get(_SECTION_UPLOAD, 'username')
 def UPLOAD_PASSWORD():

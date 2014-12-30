@@ -79,7 +79,7 @@ class Uploader(threading.Thread):
     # purge queue in a suitable way (discard oldest half and retry? discard all?).
     self._failed_uploads += 1  # assume failure; will reset to zero on success
     try:
-      request = urllib2.Request(C.UPLOAD_URL(), data_bz2,
+      request = urllib2.Request(C.UPLOAD_URL() + 'rx.php', data_bz2,
           {'Content-Type': 'application/octet-stream'})
       if C.UPLOAD_USERNAME() or C.UPLOAD_PASSWORD():
         auth_string = base64.encodestring('%s:%s' % (C.UPLOAD_USERNAME(),
