@@ -538,15 +538,16 @@ class Database {
   }
 
   public function readTransferVolume() {
-    $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT upload, download FROM link ORDER BY ts DESC';
-    $nwtypes = array();
     if ($result = $this->query($q)) {
       if ($row = $result->fetch_row()) {
-        return array(
-            'upload' => intval($row[0]),
-            'download' => intval($row[1]));
+        $upload = intval($row[0]);
+        $download = intval($row[1]);
+      } else {
+        $upload = 0;
+        $download = 0;
       }
+      return array('upload' => $upload, 'download' => $download);
     }
     $this->logCritical('failed to read transfer volume: "'.$q.'" -> '.$this->getError());
     return null;
