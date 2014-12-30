@@ -24,15 +24,16 @@
 #
 # TODO: Complete these instructions once there's a place to put the formula and parameters.
 
+import subprocess
+
 import C
 import common
-import K
-import subprocess
+import log
 from wind import Wind
 
 
 if __name__ == "__main__":
-  log = K.get_logger(K.LOG_NAME_CALIBRATION, K.LOG_FORMAT_CALIBRATION)
+  log = log.get_logger('wind_calibrate')
   log.info('--- wind_calibrate started, waiting for ntpd ---')
   if subprocess.call('../await_clock_sync.sh'):
     log.critical('--- failed to sync clock ---')

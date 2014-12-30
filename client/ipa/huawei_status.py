@@ -2,7 +2,7 @@ import subprocess
 import xml.dom.minidom
 
 import common
-import C  # TODO: Break dependency of K on C
+import log
 import K
 
 
@@ -16,7 +16,7 @@ class HuaweiStatus:
                                   'TotalDownload': K.LINK_DOWNLOAD_KEY}}
 
   def __init__(self):
-    self._log = K.get_logger(K.LOG_NAME_LINK)
+    self._log = log.get_logger('ipa.link')
 
   def get_sample(self):
     # TODO: It's a little awkward that we need to start a subprocess synchronously.

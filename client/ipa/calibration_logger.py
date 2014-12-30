@@ -2,16 +2,16 @@ import Queue
 import threading
 
 import common
-import K
+import log
 
 
 class LoggerWorker(threading.Thread):
   """Listens on a Queue and logs received messages asynchronously."""
 
-  def __init__(self, queue, log):
+  def __init__(self, queue, logger):
     threading.Thread.__init__(self)
     self._queue = queue
-    self._log = log
+    self._log = logger
 
   def run(self):
     while True:
@@ -29,9 +29,8 @@ class CalibrationLogger:
   """Uses a worker thread to not block the event handling thread calling log()."""
 
   def __init__(self):
-    log = K.get_logger(K.LOG_NAME_CALIBRATION, K.LOG_FORMAT_CALIBRATION)
     self._queue = Queue.Queue()
-    self._worker = LoggerWorker(self._queue, log)
+    self._worker = LoggerWorker(self._queue, log.get_logger('wind_calibrate'))
     self._worker.start()
 
   def log(self, timestamp_and_duration):

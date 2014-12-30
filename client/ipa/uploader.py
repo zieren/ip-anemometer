@@ -1,15 +1,18 @@
 import base64
 import bz2
+import json
 import threading
 import time
+import urllib2
 
 import C
 import K
-import urllib2
-import json
+import log
+
 
 class Status:
   OK, HTTP_CODE_NOT_OK, EXCEPTION, INVALID_JSON, INVALID_RESPONSE, RESPONSE_STATUS_NOT_OK = range(6)
+
 
 class Uploader(threading.Thread):
   """Periodically uploads accumulated measurements."""
@@ -17,7 +20,7 @@ class Uploader(threading.Thread):
   def __init__(self, command_queue, termination_event):
     """Commands received from the server will be put into the command_queue."""
     threading.Thread.__init__(self)
-    self._log = K.get_logger(K.LOG_NAME_UPLOADER)
+    self._log = log.get_logger('ipa.upload')
     self._main_cq = command_queue
     self._termination_event = termination_event
     self._queue = {}

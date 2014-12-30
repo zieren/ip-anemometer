@@ -4,14 +4,16 @@ import C
 import calibration_logger
 import common
 import K
+import log
 import wind_sensor
 import wind_stats
+
 
 class Wind:
   """Provides wind speed. Measurement will start immediately on creation."""
 
   def __init__(self, calibration_mode=False):
-    self._log = K.get_logger(K.LOG_NAME_WIND)
+    self._log = log.get_logger('ipa.wind')
     self._revolutions = wind_sensor.Revolutions()
     self._startup_time = common.timestamp()
     # TODO: Consider removing start timestamp and only use sample start/end timestamps.

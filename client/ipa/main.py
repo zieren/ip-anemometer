@@ -13,6 +13,7 @@ import C
 import common
 import huawei_status
 import K
+import log
 import metadata
 import temperature
 import uploader
@@ -23,7 +24,7 @@ class Anemometer:
   """Starts threads, processes the main command queue, and shuts down threads."""
 
   def __init__(self):
-    self._log = K.get_logger(K.LOG_NAME_MAIN)
+    self._log = log.get_logger('ipa.main')
     self._log.info(K.CLIENT_GREETING)
     # Create main command queue.
     self._main_cq = Queue.Queue()
@@ -41,8 +42,7 @@ class Anemometer:
 
 
   def _shutdown(self):
-    """Attempts to shut down all threads gracefully."""
-
+    """Attempt to shut down all threads gracefully."""
     # Terminate the uploader:
     self._termination_event.set()
     # Cleanup GPIO:
@@ -55,8 +55,7 @@ class Anemometer:
 
 
   def _process_commands(self):
-    """Listens on the command queue and processes commands."""
-
+    """Listen on the command queue and processes commands."""
     while True:
       command = self._main_cq.get()
       # TODO: This (and other "processing command" events) will easily clutter the log.
@@ -81,4 +80,5 @@ class Anemometer:
 
 
 if __name__ == "__main__":
+  # TODO: Catch exceptions and log them.
   Anemometer().run()
