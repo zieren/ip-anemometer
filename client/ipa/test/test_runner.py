@@ -19,7 +19,7 @@ class Test(unittest.TestCase):
 
   def test_Meta(self):
     # Tests rely on this.
-    self.assertGreater(MIN, wind_stats._NO_WIND_DURATION)
+    self.assertGreater(MIN, wind_stats._MAX_ROTATION)
 
   def test_Revolutions(self):
     s = wind_sensor.Revolutions()
@@ -45,13 +45,13 @@ class Test(unittest.TestCase):
     # Nothing for a minute -> all zero.
     ts = TS_0 + MIN
     start_ts = TS_0
-    end_ts = ts - wind_stats._NO_WIND_DURATION
+    end_ts = ts - wind_stats._MAX_ROTATION
     self.expectStats(calc.get_stats_and_reset(ts),
                      0, 0, end_ts, {0: 1.0}, start_ts, end_ts)
     # Another minute -> all zero.
     ts += MIN
     start_ts = end_ts
-    end_ts = ts - wind_stats._NO_WIND_DURATION
+    end_ts = ts - wind_stats._MAX_ROTATION
     self.expectStats(calc.get_stats_and_reset(ts),
                      0, 0, end_ts, {0: 1.0}, start_ts, end_ts)
     # 10 one-second revolutions in a minute.
@@ -60,7 +60,7 @@ class Test(unittest.TestCase):
     max_ts = ts + 10 * SEC  # first at ts + 0 was inf long, all others are identical
     ts += MIN
     start_ts = end_ts
-    end_ts = ts - wind_stats._NO_WIND_DURATION
+    end_ts = ts - wind_stats._MAX_ROTATION
     kmh_1 = wind_stats.compute_kmh(SEC)
     avg_kmh = kmh_1 / 6.0
     self.expectStats(calc.get_stats_and_reset(ts),
@@ -72,11 +72,11 @@ class Test(unittest.TestCase):
     ts += MIN
     start_ts = end_ts
     end_ts = ts - SEC
-    # Covers wind_stats._NO_WIND_DURATION from last window with 0 km/h and up to ts - SEC.
-    total_duration = float(wind_stats._NO_WIND_DURATION + 59 * SEC)
+    # Covers wind_stats._MAX_ROTATION from last window with 0 km/h and up to ts - SEC.
+    total_duration = float(wind_stats._MAX_ROTATION + 59 * SEC)
     avg_kmh = kmh_1 * 59 * SEC / total_duration
     histogram = {int(kmh_1): 59 * SEC / total_duration,
-                 0: wind_stats._NO_WIND_DURATION / total_duration}
+                 0: wind_stats._MAX_ROTATION / total_duration}
     self.expectStats(calc.get_stats_and_reset(ts),
                      avg_kmh, kmh_1, max_ts, histogram, start_ts, end_ts)
     # A minute of continuous half-second revolutions.
@@ -98,7 +98,7 @@ class Test(unittest.TestCase):
 
   def test_WindStatsCalculator_noRevsFastUpdate(self):
     calc = wind_stats.WindStatsCalculator(TS_0)
-    ts = TS_0 + wind_stats._NO_WIND_DURATION - 1000L
+    ts = TS_0 + wind_stats._MAX_ROTATION - 1000L
     self.assertEqual(calc.get_stats_and_reset(ts), None)
 
   def test_WindStatsCalculator_firstTimestampEqualsCreationTimestamp(self):

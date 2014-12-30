@@ -1,7 +1,11 @@
+import C
 import common
 
 
-_NO_WIND_DURATION = 10000L  # Revolutions longer than 10 seconds are considered 0 km/h.
+# Remember config values to avoid locking call.
+_HSF = C.WIND_HSF()
+_LSF = C.WIND_LSF()
+_MAX_ROTATION = C.WIND_MAX_ROTATION()
 
 
 class WindKey:
@@ -12,8 +16,7 @@ class WindKey:
 
 
 class WindStatsCalculator:
-  """Calculates wind stats from a sequence of timestamps representing revolutions. This should match
-  WindStatsCalculator on the server."""
+  """Calculates wind stats from a sequence of timestamps representing revolutions."""
 
   def __init__(self, start_timestamp):
     """start_timestamp: Startup of the wind sensor."""
@@ -46,11 +49,11 @@ class WindStatsCalculator:
     # Update maximum.
     if kmh >= self._max_kmh:
       self._max_kmh = kmh
-      # If the gap between timestamps t_1 and t_2 exceeds _NO_WIND_DURATION we'll record the
-      # resulting 0 km/h with t_2 even though t_2 may be an arbitrary amount of time after t_1 and
-      # the 0 km/h measurement is valid for ]t_1, t_2]. So the timestamp may be "delayed" for the
-      # 0 km/h case. But we only need it for self._max_timestamp so this is not an issue. In fact we
-      # _want_ the newest timestamp for the maximum.
+      # If the gap between timestamps t_1 and t_2 exceeds _MAX_ROTATION we'll record the resulting
+      # 0 km/h with t_2 even though t_2 may be an arbitrary amount of time after t_1 and the 0 km/h
+      # measurement is valid for ]t_1, t_2]. So the timestamp may be "delayed" for the 0 km/h case.
+      # But we only need it for self._max_timestamp so this is not an issue. In fact we _want_ the
+      # newest timestamp for the maximum.
       self._max_timestamp = timestamp
     # Update average.
     self._avg_kmh += kmh * duration
@@ -59,13 +62,13 @@ class WindStatsCalculator:
     """Return statistics in a dict keyed by WindKey. Statistics begin at the start_timestamp for the
     first call, and at the end timestamp returned in the previous call for all subsequent calls.
     They end at the last revolution timestamp before end_timestamp. If no revolutions occured,
-    padding with 0 km/h is done to cover at least up to (end_timestamp - 2 * _NO_WIND_DURATION + 1).
-    The end timestamp is returned in the result."""
+    padding with 0 km/h is done to cover at least up to (end_timestamp - 2 * _MAX_ROTATION
+    + 1). The end timestamp is returned in the result."""
 
     # self._previous_timestamp needs to advance even if no revolutions occur. So we add "virtual"
     # timestamps that yield 0 km/h.
-    if end_timestamp - self._previous_timestamp >= 2 * _NO_WIND_DURATION:
-      self.next_timestamp(end_timestamp - _NO_WIND_DURATION)
+    if end_timestamp - self._previous_timestamp >= 2 * _MAX_ROTATION:
+      self.next_timestamp(end_timestamp - _MAX_ROTATION)
 
     end_timestamp = self._previous_timestamp
     total_duration = end_timestamp - self._start_timestamp
@@ -90,8 +93,7 @@ class WindStatsCalculator:
 
 def compute_kmh(duration):
   """Convert revolution duration to windspeed in km/h."""
-  if duration >= _NO_WIND_DURATION:
+  if duration >= _MAX_ROTATION:
     return 0.0
-  # TODO: Extract magic values (including _NO_WIND_DURATION).
   rps = common.duration_to_rps(duration)  # rotations per second
-  return (1.761 / (1.0 + rps) + 3.013 * rps)
+  return (_LSF / (1.0 + rps) + _HSF * rps)

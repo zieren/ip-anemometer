@@ -42,6 +42,12 @@ def WIND_INPUT_PIN():
   with _LOCK: return _CFG.getint(_SECTION_WIND, 'input_pin')
 def WIND_EDGES_PER_REV():
   with _LOCK: return _CFG.getint(_SECTION_WIND, 'edges_per_revolution')
+def WIND_HSF():
+  with _LOCK: return _CFG.getfloat(_SECTION_WIND, 'high_speed_factor')
+def WIND_LSF():
+  with _LOCK: return _CFG.getfloat(_SECTION_WIND, 'low_speed_factor')
+def WIND_MAX_ROTATION():
+  with _LOCK: return long(_CFG.getfloat(_SECTION_WIND, 'max_rotation_seconds') * 1000)
 
 _SECTION_LOGGING = 'Logging'
 def LOGGING_LEVEL():
