@@ -31,8 +31,8 @@ LINK_DOWNLOAD_KEY = 'download'
 
 # ----- Client constants -----
 
+CLIENT_GREETING = 'IP anemometer client 0.0.4 - (c) Jörg Zieren - http://zieren.de - GNU GPL v3'
 CONFIG_FILENAME = 'ipa.cfg'
 RESPONSE_STATUS_UNKNOWN = 'N/A'
-CLIENT_GREETING = 'IP anemometer client 0.0.4 - (c) Jörg Zieren - http://zieren.de - GNU GPL v3'
 RETURN_VALUE_SHUTDOWN = 100
 RETURN_VALUE_REBOOT = 101
