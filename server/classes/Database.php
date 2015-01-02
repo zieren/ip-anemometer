@@ -76,7 +76,7 @@ class Database {
         && $this->query(
             'CREATE TABLE IF NOT EXISTS coverage (startup BIGINT PRIMARY KEY, upto BIGINT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype TINYINT, '.
+            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '.
             'strength TINYINT, upload BIGINT, download BIGINT)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '.
@@ -136,7 +136,7 @@ class Database {
       if ($q != '') {
         $q .= ',';
       }
-      $q .= '('.$v[TIMESTAMP_KEY].','.$v[LINK_NW_TYPE_KEY].','.$v[LINK_STRENGTH_KEY].
+      $q .= '('.$v[TIMESTAMP_KEY].',"'.$v[LINK_NW_TYPE_KEY].'",'.$v[LINK_STRENGTH_KEY].
           ','.$v[LINK_UPLOAD_KEY].','.$v[LINK_DOWNLOAD_KEY].')';
     }
 
