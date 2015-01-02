@@ -76,7 +76,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
   if (!isAsync) {
     // TODO: Handle request error.
     if (request.responseText === ipa.constants.RESPONSE_NO_STATS) {
-      this.stats = null;
+      this.stats = null;  // TODO: Handle this below.
     } else {
       this.stats = JSON.parse(request.responseText);
     }
