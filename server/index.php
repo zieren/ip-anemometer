@@ -102,11 +102,6 @@ echo
 <h2>Temperature</h2>';
 $db->echoTemp();
 
-echo
-'<hr />
-<h2>Database Status</h2>';
-$db->echoStats();
-
 echo '
 <hr /><h2>Settings</h2>';
 $db->echoSettings();
