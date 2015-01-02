@@ -23,7 +23,7 @@ class Database {
   /** Connects to the database, or exits on error. */
   public function __construct() {
     $this->log = new Katzgrau\KLogger\Logger(LOG_DIR);
-    $this->allTables = array('coverage', 'wind', 'wind_a', 'temp', 'meta', 'settings');
+    $this->allTables = array('temp', 'wind_a', 'hist', 'coverage', 'link', 'meta', 'settings');
     $this->mysqli = new mysqli('localhost', DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
       $this->logCritical('failed to connect to MySQL: ('.$mysqli->connect_errno.') '
@@ -551,46 +551,6 @@ class Database {
     }
     $this->logCritical('failed to read transfer volume: "'.$q.'" -> '.$this->getError());
     return null;
-  }
-
-  /** Print a table with database statistics (for debugging). */
-  public function echoStats() {
-    // Order of $sortKeys and $limits must match $allTables.
-    $sortKeys = array('startup', 'ts', 'start_ts', 'ts', 'ts');
-    $limits = array(5, 1, 1, 1, 1);
-    // List of column names that store timestamps in millis.
-    $timestampColumns = array('ts', 'cts', 'start_ts', 'end_ts', 'startup', 'upto');
-    for ($i = 0; $i < count($sortKeys); ++$i) {
-      $table = $this->allTables[$i];
-      $sortKey = $sortKeys[$i];
-      $q1 = 'SELECT * FROM '.$table.' ORDER BY '.$sortKey.' DESC LIMIT '.$limits[$i];
-      $q2 = 'SELECT COUNT(*) FROM '.$table;
-      if (($resultRecent = $this->query($q1)) && ($resultCount = $this->query($q2))) {
-        $rowCount = $resultCount->fetch_row();
-        echo '<p><table border="1"><tr><td>' . $table . '</td>';
-        $count = 0;
-        while ($row = $resultRecent->fetch_assoc()) {
-          if ($count == 0) {
-            foreach ($row as $k => $v) {
-              echo '<td>' . $k . '</td>';
-            }
-            echo '<td>total</td>';
-          }
-          echo '</tr><tr><td>N-'.$count.'</td>';
-          if (isset($row)) {
-            foreach ($row as $k => $v) {
-              echo '<td>'.(in_array($k, $timestampColumns) ? formatTimestamp($v) : $v).'</td>';
-            }
-          }
-          echo '<td>' . $rowCount[0] . '</td>';
-          $count++;
-        }
-      } else {
-        echo '<b>' . $table . '</b>: ERROR: ' . $this->getError();
-      }
-      echo '</tr>';
-      echo '</table></p>';
-    }
   }
 
   public function echoSettings() {
