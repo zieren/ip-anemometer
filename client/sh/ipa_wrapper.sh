@@ -90,7 +90,7 @@ while true; do
   set_time_barrier
   log "starting main program"
   cd current
-  sudo python main.py
+  sudo python main.py $MD5
   RETVAL=$?
   cd ..
   log "main program returned exit code $RETVAL"
