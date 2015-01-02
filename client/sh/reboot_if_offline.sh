@@ -1,27 +1,23 @@
 #!/bin/bash
 
-LOGFILE=online.log
+# Reboot if we are not online after some time. This is useful because
+# occasionally the Huawei 3G stick does not show up as eth1 (possibly a flaky
+# USB implementation on the Pi).
+
+cd "$(dirname "$0")"
+source lib.sh
+
 # Ping an IP because the Huawei stick DNS-redirects to its own UI.
-PING_IP=8.8.8.8
-INTERVAL=30s
+PING_IP=8.8.8.8  # Google public DNS server
+SLEEP_TIME=5m  # time to sleep before checking, in case we run @reboot
 
-function formatDate() {
-  date "+%Y%m%d-%H%M%S"
-}
-
-echo "$(formatDate) starting" >> $LOGFILE
-FAILURES=
-while true; do
-  sleep $INTERVAL
-  ping -c 3 -q $PING_IP &> /dev/null
-  if [ "$?" != "0" ]; then
-    FAILURES="x$FAILURES"
-    echo "$(formatDate) offline" >> $LOGFILE
-    ./huawei_status.sh &>> $LOGFILE
-
-    if [ "$FAILURES" == "xxx" ]; then
-      echo "rebooting..." >> $LOGFILE
-      reboot
-    fi
-  fi
-done
+sleep $SLEEP_TIME
+log "slept $SLEEP_TIME, now running ping (note: clock may not be synced yet)"
+ping -c 3 -q $PING_IP &> /dev/null
+if [ "$?" != "0" ]; then
+  log "offline - rebooting"
+  # This uses the Huawei API. For other sticks it will fail.
+  log "$(curl -s -S http://hi.link/api/monitoring/status)"
+  log "$(ifconfig)"
+  reboot
+fi
