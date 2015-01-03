@@ -6,7 +6,6 @@ import huawei_status
 import K
 import wind_sensor
 import wind_stats
-from wind_stats import WindKey
 
 
 SEC = 1000
@@ -120,12 +119,12 @@ class Test(unittest.TestCase):
 
   def expectStats(self, stats, avg_kmh, max_kmh, max_timestamp, histogram, start_timestamp,
                   end_timestamp):
-    self.assertAlmostEqual(stats[WindKey.AVG_KMH], avg_kmh)
-    self.assertEqual(stats[WindKey.MAX_KMH], max_kmh)
-    self.assertEqual(stats[WindKey.MAX_TIMESTAMP], max_timestamp)
-    self.assertEqual(stats[WindKey.HISTOGRAM], histogram)
-    self.assertEqual(stats[WindKey.START_TIMESTAMP], start_timestamp)
-    self.assertEqual(stats[WindKey.END_TIMESTAMP], end_timestamp)
+    self.assertAlmostEqual(stats['avg'], avg_kmh)
+    self.assertEqual(stats['max'], max_kmh)
+    self.assertEqual(stats['max_ts'], max_timestamp)
+    self.assertEqual(stats['hist'], histogram)
+    self.assertEqual(stats['start_ts'], start_timestamp)
+    self.assertEqual(stats['end_ts'], end_timestamp)
 
   def test_HuaweiStatus(self):
     huawei = huawei_status.HuaweiStatus()

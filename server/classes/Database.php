@@ -176,15 +176,15 @@ class Database {
 
   private function insertWindSpeed($stats) {
     // Insert histogram data first because we need the id-s in the hist table.
-    $histogram = $stats[WIND_KEY_HIST];
+    $histogram = $stats['hist'];
     $histId = $this->insertHistogram($histogram);
     if (!$histId) {
       return;  // error already logged
     }
     $buckets = count($histogram);
     $q = 'INSERT INTO wind_a (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
-        .$stats[WIND_KEY_START_TS].','.$stats[WIND_KEY_END_TS].','.$stats[WIND_KEY_AVG].','
-        .$stats[WIND_KEY_MAX].','.$stats[WIND_KEY_MAX_TS].','.$histId.','.$buckets.')';
+        .$stats['start_ts'].','.$stats['end_ts'].','.$stats['avg'].','
+        .$stats['max'].','.$stats['max_ts'].','.$histId.','.$buckets.')';
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
       $this->logCritical('failed to insert wind measurements: '.$this->getError());
@@ -266,7 +266,9 @@ class Database {
    * @param int $windowDuration Length of the window to consider, in millis.
    * @param int $outputLength Maximum number of samples in time series (will be downsampled if
    *    required).
-   * @return array An array indexed by WIND_KEY_*.
+   * @return array An array containing some scalar and the following non-scalar stats:
+   *    'hist': An array of int(km/h) -> percentage.
+   *    'time_series': A list of 3-tuples (timestamp, avg, max).
    */
   public function computeWindStats($maxEndTimestamp, $windowDuration, $outputLength) {
     $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
@@ -297,7 +299,7 @@ class Database {
           abs($actualWindowDuration + $sampleDuration - $windowDuration)) {
         break;
       }
-      $timeSeries[] = array(  // order as per WIND_KEY_SAMPLE_*
+      $timeSeries[] = array(  // order as per WIND_SAMPLE_*
           intval($sample['start_ts']),
           intval($sample['end_ts']),
           floatval($sample['avg']),
@@ -345,13 +347,13 @@ class Database {
     ksort($histogram);
 
     return array(
-        WIND_KEY_AVG => $avgKmh,  // already float
-        WIND_KEY_MAX => floatval($maxKmh),
-        WIND_KEY_MAX_TS => intval($maxTimestamp),
-        WIND_KEY_HIST => $histogram,
-        WIND_KEY_START_TS => intval($actualStartTimestamp),
-        WIND_KEY_END_TS => intval($actualEndTimestamp),
-        WIND_KEY_TIME_SERIES => Database::downsampleWind($timeSeries, $outputLength)
+        'avg' => $avgKmh,  // already float
+        'max' => floatval($maxKmh),
+        'max_ts' => intval($maxTimestamp),
+        'hist' => $histogram,
+        'start_ts' => intval($actualStartTimestamp),
+        'end_ts' => intval($actualEndTimestamp),
+        'time_series' => Database::downsampleWind($timeSeries, $outputLength)
     );
   }
 
@@ -366,15 +368,15 @@ class Database {
     if ($inputLength <= $outputLength || $inputLength <= 1) {  // nothing to downsample
       foreach ($input as $sample) {
         $output[] = array(
-            Database::center($sample[WIND_KEY_SAMPLE_START_TS], $sample[WIND_KEY_SAMPLE_END_TS]),
-            $sample[WIND_KEY_SAMPLE_AVG],
-            $sample[WIND_KEY_SAMPLE_MAX],
+            Database::center($sample[WIND_SAMPLE_START_TS], $sample[WIND_SAMPLE_END_TS]),
+            $sample[WIND_SAMPLE_AVG],
+            $sample[WIND_SAMPLE_MAX],
         );
       }
       return $output;
     }
-    $startTs = $input[$inputLength - 1][WIND_KEY_SAMPLE_START_TS];
-    $endTs = $input[0][WIND_KEY_SAMPLE_END_TS];
+    $startTs = $input[$inputLength - 1][WIND_SAMPLE_START_TS];
+    $endTs = $input[0][WIND_SAMPLE_END_TS];
     $wi = 0;  // window index
     $windowStart = $startTs;
     $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, $wi);
@@ -383,11 +385,11 @@ class Database {
     $i = $inputLength - 1;  // order is by decreasing timestamp
     while ($i >= 0) {
       // Shortcuts.
-      $inputStart = $input[$i][WIND_KEY_SAMPLE_START_TS];
-      $inputEnd = $input[$i][WIND_KEY_SAMPLE_END_TS];
+      $inputStart = $input[$i][WIND_SAMPLE_START_TS];
+      $inputEnd = $input[$i][WIND_SAMPLE_END_TS];
       $inputCenter = Database::center($inputStart, $inputEnd);
-      $inputAvg = $input[$i][WIND_KEY_SAMPLE_AVG];
-      $inputMax = $input[$i][WIND_KEY_SAMPLE_MAX];
+      $inputAvg = $input[$i][WIND_SAMPLE_AVG];
+      $inputMax = $input[$i][WIND_SAMPLE_MAX];
       while (true) {
         $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
 //         echo '<p>i='.$i.',is='.($inputStart%1000000).',ie='.($inputEnd%1000000)
@@ -402,18 +404,18 @@ class Database {
         $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, ++$wi);
       }
       $windowDuration += $overlap;
-      $window[WIND_KEY_SAMPLE_AVG] += $inputAvg * $overlap;
+      $window[WIND_SAMPLE_AVG] += $inputAvg * $overlap;
       // Consider the maximum if the window includes the center of the current sample.
       if ($windowStart <= $inputCenter && $inputCenter < $windowEnd) {
-        $window[WIND_KEY_SAMPLE_MAX] = max($window[WIND_KEY_SAMPLE_MAX], $inputMax);
+        $window[WIND_SAMPLE_MAX] = max($window[WIND_SAMPLE_MAX], $inputMax);
       }
       // If the current input reaches into the next window, or is the last input, output the sample
       // and proceed to the next window.
       if ($inputEnd > $windowEnd || $i == 0) {
         $output[] = array(
         	Database::center($windowStart, $windowEnd),
-            $window[WIND_KEY_SAMPLE_AVG] / $windowDuration,
-            $window[WIND_KEY_SAMPLE_MAX]
+            $window[WIND_SAMPLE_AVG] / $windowDuration,
+            $window[WIND_SAMPLE_MAX]
         );
         if ($i == 0) {
           break;
@@ -438,7 +440,7 @@ class Database {
   }
 
   private static function newWindow($windowStart, $windowEnd) {
-    return array($windowStart, $windowEnd, 0, -1);  // number of elements as in WIND_KEY_SAMPLE_*
+    return array($windowStart, $windowEnd, 0, -1);  // number of elements as in WIND_SAMPLE_*
   }
 
   private static function downsampleTimeSeries($input, $outputLength) {

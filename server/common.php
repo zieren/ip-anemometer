@@ -36,14 +36,6 @@ define('LINK_STRENGTH_KEY', 'strength');
 define('LINK_UPLOAD_KEY', 'upload');
 define('LINK_DOWNLOAD_KEY', 'download');
 
-// Wind stats keys. NOTE: Keep these in sync with wind_stats.py and ipa.js.
-define('WIND_KEY_AVG', 0);
-define('WIND_KEY_MAX', 1);
-define('WIND_KEY_MAX_TS', 2);
-define('WIND_KEY_HIST', 3);
-define('WIND_KEY_START_TS', 4);
-define('WIND_KEY_END_TS', 5);
-
 // TODO: Clean this mess up.
 define('TEMP_KEY_TIME_SERIES', 7);
 define('LINK_STRENGTH_KEY_TIME_SERIES', 8);
@@ -51,15 +43,11 @@ define('LINK_NW_TYPE_KEY_2', 9);
 define('LINK_UL_DL_KEY', 10);
 define('NOT_AVAILABLE', 'n/a');
 
-// Additional stats only computed on the server. Keep these in sync with ipa.js.
-define('WIND_KEY_TIME_SERIES', 6);
-// The time series is a list of 3-tuples (timestamp, avg, max).
-
-// Internal keys (time series before downsampling).
-define('WIND_KEY_SAMPLE_START_TS', 0);
-define('WIND_KEY_SAMPLE_END_TS', 1);
-define('WIND_KEY_SAMPLE_AVG', 2);
-define('WIND_KEY_SAMPLE_MAX', 3);
+// Internal use: Indexes in time series samples (before downsampling).
+define('WIND_SAMPLE_START_TS', 0);
+define('WIND_SAMPLE_END_TS', 1);
+define('WIND_SAMPLE_AVG', 2);
+define('WIND_SAMPLE_MAX', 3);
 
 // Keys for server settings.
 define('LOG_LEVEL_KEY', 'logLevel');

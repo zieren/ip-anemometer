@@ -8,13 +8,6 @@ _LSF = C.WIND_LSF()
 _MAX_ROTATION = C.WIND_MAX_ROTATION()
 
 
-class WindKey:
-  """Keys in the stats dict."""
-  (AVG_KMH, MAX_KMH, MAX_TIMESTAMP, HISTOGRAM, START_TIMESTAMP, END_TIMESTAMP) = range(6)
-  # NOTE: Keep these in sync with common.php and ipa.js.
-  # TODO: Should these be string literals for easier access on the server?
-
-
 class WindStatsCalculator:
   """Calculates wind stats from a sequence of timestamps representing revolutions."""
 
@@ -59,11 +52,11 @@ class WindStatsCalculator:
     self._avg_kmh += kmh * duration
 
   def get_stats_and_reset(self, end_timestamp):
-    """Return statistics in a dict keyed by WindKey. Statistics begin at the start_timestamp for the
-    first call, and at the end timestamp returned in the previous call for all subsequent calls.
-    They end at the last revolution timestamp before end_timestamp. If no revolutions occured,
-    padding with 0 km/h is done to cover at least up to (end_timestamp - 2 * _MAX_ROTATION
-    + 1). The end timestamp is returned in the result."""
+    """Return statistics dict. Statistics begin at the start_timestamp for the first call, and at
+    the end timestamp returned in the previous call for all subsequent calls. They end at the last
+    revolution timestamp before end_timestamp. If no revolutions occured, padding with 0 km/h is
+    done to cover at least up to (end_timestamp - 2 * _MAX_ROTATION + 1). The end timestamp is
+    returned in the result."""
 
     # self._previous_timestamp needs to advance even if no revolutions occur. So we add "virtual"
     # timestamps that yield 0 km/h.
@@ -80,12 +73,12 @@ class WindStatsCalculator:
     # Convert histogram to relative values.
     for k, v in self._histogram.iteritems():
       self._histogram[k] = v / total_duration
-    stats = {WindKey.AVG_KMH: self._avg_kmh,
-             WindKey.MAX_KMH: self._max_kmh,
-             WindKey.MAX_TIMESTAMP: self._max_timestamp,
-             WindKey.HISTOGRAM: self._histogram,
-             WindKey.START_TIMESTAMP: self._start_timestamp,
-             WindKey.END_TIMESTAMP: end_timestamp}
+    stats = {'avg': self._avg_kmh,
+             'max': self._max_kmh,
+             'max_ts': self._max_timestamp,
+             'hist': self._histogram,
+             'start_ts': self._start_timestamp,
+             'end_ts': end_timestamp}
     self._start_timestamp = end_timestamp  # start next window
     self._reset()
     return stats

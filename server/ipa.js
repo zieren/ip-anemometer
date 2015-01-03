@@ -4,20 +4,11 @@ var ipa = {};
 
 // NOTE: Keep keys in sync with wind_stats.py and common.php.
 ipa.key = {};
-ipa.key.WIND_AVG = 0;
-ipa.key.WIND_MAX = 1;
-ipa.key.WIND_MAX_TS = 2;
-ipa.key.WIND_HIST = 3;
-ipa.key.WIND_START_TS = 4;
-ipa.key.WIND_END_TS = 5;
 // TODO: Clean this mess up.
 ipa.key.TEMP_TIME_SERIES = 7;
 ipa.key.LINK_STRENGTH_TIME_SERIES = 8;
 ipa.key.LINK_NW_TYPE = 9;
 ipa.key.LINK_UL_DL = 10;
-// Additional stats only computed on the server. Keep these in sync with common.php.
-ipa.key.WIND_TIME_SERIES = 6;
-// The time series is a list of 3-tuples (timestamp, avg, max).
 
 // Options and their defaults.
 ipa.Options = function() {
@@ -87,25 +78,25 @@ ipa.Chart.prototype.drawSummary = function(element) {
   var table = document.createElement('table');
   table.className = 'summary';
   ipa.Chart.insertCells_(table.insertRow())('avg',
-      this.stats[ipa.key.WIND_AVG].toFixed(this.options.fractionalDigits) + ' km/h');
+      this.stats['avg'].toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'avg';
   table.firstChild.lastChild.children[1].className = 'avgValue';
   ipa.Chart.insertCells_(table.insertRow())('max',
-      this.stats[ipa.key.WIND_MAX].toFixed(this.options.fractionalDigits) + ' km/h');
+      this.stats['max'].toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'max';
   table.firstChild.lastChild.children[1].className = 'maxValue';
   if (this.options.showTimeOfMax) {
     ipa.Chart.insertCells_(table.insertRow())('max@',
-        ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_MAX_TS]));
+        ipa.Chart.formatTimestamp_(this.stats['max_ts']));
     table.firstChild.lastChild.children[0].className = 'maxts';
     table.firstChild.lastChild.children[1].className = 'maxtsValue';
   }
   ipa.Chart.insertCells_(table.insertRow())('from',
-      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_START_TS]));
+      ipa.Chart.formatTimestamp_(this.stats['start_ts']));
   table.firstChild.lastChild.children[0].className = 'from';
   table.firstChild.lastChild.children[1].className = 'fromValue';
   ipa.Chart.insertCells_(table.insertRow())('to',
-      ipa.Chart.formatTimestamp_(this.stats[ipa.key.WIND_END_TS]));
+      ipa.Chart.formatTimestamp_(this.stats['end_ts']));
   table.firstChild.lastChild.children[0].className = 'to';
   table.firstChild.lastChild.children[1].className = 'toValue';
   element.appendChild(table);
@@ -116,7 +107,7 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   timeSeriesTable.addColumn('datetime', 't');
   timeSeriesTable.addColumn('number', 'avg');
   timeSeriesTable.addColumn('number', 'max');
-  var timeSeries = this.stats[ipa.key.WIND_TIME_SERIES];
+  var timeSeries = this.stats['time_series'];
   for (var i = 0; i < timeSeries.length; ++i) {
     var row = timeSeries[i];
     row[0] = new Date(row[0]);  // convert timestamp to Date object
@@ -139,7 +130,7 @@ ipa.Chart.prototype.drawHistogram = function(element) {
   histogramDataTable.addColumn('number', 'km/h');
   histogramDataTable.addColumn('number', '%');
   histogramDataTable.addColumn('number', '%>=');
-  var histogram = this.stats[ipa.key.WIND_HIST];
+  var histogram = this.stats['hist'];
   var totalPercent = 100;
   for (var kmh in histogram) {
     var percent = histogram[kmh] * 100;
@@ -167,7 +158,7 @@ ipa.Chart.prototype.drawHistogram = function(element) {
 }
 
 ipa.Chart.prototype.drawTextHistogram = function(element) {
-  var histogram = this.stats[ipa.key.WIND_HIST];
+  var histogram = this.stats['hist'];
   table = document.createElement('table');
   var trSpeed = ipa.Chart.insertCells_(table.insertRow());
   var trPercent = ipa.Chart.insertCells_(table.insertRow());

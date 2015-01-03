@@ -49,11 +49,11 @@ function computeStats() {
 function createDummyStats() {
   $timestamp = timestamp() - 30 * 1000;
 
-  $stats[WIND_KEY_AVG] = max(0, rand(-20, 150)) / 10;
-  $stats[WIND_KEY_MAX] = $stats[WIND_KEY_AVG] * rand(10, 30) / 10;
-  $stats[WIND_KEY_MAX_TS] = $timestamp - 3 * 60 * 1000;
-  $stats[WIND_KEY_START_TS] = $timestamp - 10 * 60 * 1000;
-  $stats[WIND_KEY_END_TS] = $timestamp;
+  $stats['avg'] = max(0, rand(-20, 150)) / 10;
+  $stats['max'] = $stats['avg'] * rand(10, 30) / 10;
+  $stats['max_ts'] = $timestamp - 3 * 60 * 1000;
+  $stats['start_ts'] = $timestamp - 10 * 60 * 1000;
+  $stats['end_ts'] = $timestamp;
   $hist = array();
   $sum = 0;
   $numBins = max(1, rand(-5, 30));
@@ -69,15 +69,15 @@ function createDummyStats() {
   foreach ($hist as $kmh => $x) {
     $hist[$kmh] = $x / $sum;
   }
-  $stats[WIND_KEY_HIST] = $hist;
+  $stats['hist'] = $hist;
 
-  $stats[WIND_KEY_TIME_SERIES] = array();
+  $stats['time_series'] = array();
   for ($i = 0; $i < 10; ++$i) {
-    $avg = rand(0, $stats[WIND_KEY_MAX] * 10) / 10;
-    $stats[WIND_KEY_TIME_SERIES][] = array(
+    $avg = rand(0, $stats['max'] * 10) / 10;
+    $stats['time_series'][] = array(
       $timestamp - (10 + $i) * 60 * 1000,
       $avg,
-      rand($avg * 10, $stats[WIND_KEY_MAX] * 10) / 10);
+      rand($avg * 10, $stats['max'] * 10) / 10);
   }
 
   return $stats;
