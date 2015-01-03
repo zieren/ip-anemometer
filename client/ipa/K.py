@@ -20,11 +20,6 @@ UPLOAD_POST_KEY = 'bz2'
 COMMAND_EXIT = 'exit'
 RESPONSE_STATUS = 'status'
 RESPONSE_STATUS_OK = 'ok'
-LINK_KEY = 'link'
-LINK_NW_TYPE_KEY = 'nwtype'
-LINK_STRENGTH_KEY = 'strength'
-LINK_UPLOAD_KEY = 'upload'
-LINK_DOWNLOAD_KEY = 'download'
 NOT_AVAILABLE = 'n/a'
 
 

@@ -4,17 +4,16 @@ import traceback
 
 import common
 import log
-import K
 
 
 class HuaweiStatus:
   """Provides status of the Huawei 3G stick, such as signal strength."""
 
   # Values to read from the Huawei stick: Huawei API name -> Huawei key -> our key
-  _QUERY = {'status': {'CurrentNetworkType': K.LINK_NW_TYPE_KEY,
-                       'SignalStrength': K.LINK_STRENGTH_KEY},
-            'traffic-statistics': {'TotalUpload': K.LINK_UPLOAD_KEY,
-                                   'TotalDownload': K.LINK_DOWNLOAD_KEY}}
+  _QUERY = {'status': {'CurrentNetworkType': 'nwtype',
+                       'SignalStrength': 'strength'},
+            'traffic-statistics': {'TotalUpload': 'upload',
+                                   'TotalDownload': 'download'}}
 
   # Codes used by the Huawei stick to indicate network types.
   _NW_TYPES = {3: '2G', 4: '3G', 7: '3G+'}
@@ -25,15 +24,14 @@ class HuaweiStatus:
   def get_sample(self):
     # TODO: It's a little awkward that we need to start a subprocess synchronously.
     sample = self._query_all_apis()
-    if not sample:
-      return K.LINK_KEY, None
-    # Map numeric network type to string.
-    sample[K.LINK_NW_TYPE_KEY] = HuaweiStatus._NW_TYPES.get(
-        sample[K.LINK_NW_TYPE_KEY], sample[K.LINK_NW_TYPE_KEY])
-    sample[K.TIMESTAMP_KEY] = common.timestamp()
-    return K.LINK_KEY, sample
+    if sample:
+      # Map numeric network type to string.
+      sample['nwtype'] = HuaweiStatus._NW_TYPES.get(sample['nwtype'], sample['nwtype'])
+      sample['ts'] = common.timestamp()
+    return 'link', sample
 
   def _query_all_apis(self):
+    '''Query APIs and return values as per _QUERY. Returns None on failure.'''
     sample = {}
     try:
       for api_name, names in HuaweiStatus._QUERY.iteritems():

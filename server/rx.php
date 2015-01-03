@@ -52,8 +52,8 @@ function handleRequest($logger) {
       $db->insertTemperature($data[TEMP_KEY]);
     }
 
-    if (isset($data[LINK_KEY])) {
-      $db->insertLinkStatus($data[LINK_KEY]);
+    if (isset($data['link'])) {
+      $db->insertLinkStatus($data['link']);
     }
 
     $response[RESPONSE_STATUS] = RESPONSE_STATUS_OK;

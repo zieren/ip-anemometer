@@ -30,17 +30,14 @@ define('UPLOAD_POST_KEY', 'bz2');
 define('COMMAND_EXIT', 'exit');
 define('RESPONSE_STATUS', 'status');
 define('RESPONSE_STATUS_OK', 'ok');
-define('LINK_KEY', 'link');
-define('LINK_NW_TYPE_KEY', 'nwtype');
-define('LINK_STRENGTH_KEY', 'strength');
-define('LINK_UPLOAD_KEY', 'upload');
-define('LINK_DOWNLOAD_KEY', 'download');
 
 // TODO: Clean this mess up.
 define('TEMP_KEY_TIME_SERIES', 7);
+
 define('LINK_STRENGTH_KEY_TIME_SERIES', 8);
 define('LINK_NW_TYPE_KEY_2', 9);
 define('LINK_UL_DL_KEY', 10);
+
 define('NOT_AVAILABLE', 'n/a');
 
 // Internal use: Indexes in time series samples (before downsampling).

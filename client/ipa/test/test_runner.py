@@ -3,7 +3,6 @@ import unittest
 
 import common
 import huawei_status
-import K
 import wind_sensor
 import wind_stats
 
@@ -131,11 +130,11 @@ class Test(unittest.TestCase):
     huawei._query_api = types.MethodType(huawei_fake_query_api, huawei)
     common.timestamp = fake_common_timestamp
     sample = huawei.get_sample()
-    self.assertEqual(sample, (K.LINK_KEY, {K.LINK_NW_TYPE_KEY: '3G+',
-                                           K.LINK_STRENGTH_KEY: 97,
-                                           K.LINK_UPLOAD_KEY: 1010629397,
-                                           K.LINK_DOWNLOAD_KEY: 414422886,
-                                           K.TIMESTAMP_KEY: FAKE_TIMESTAMP}))
+    self.assertEqual(sample, ('link', {'nwtype': '3G+',
+                                       'strength': 97,
+                                       'upload': 1010629397,
+                                       'download': 414422886,
+                                       'ts': FAKE_TIMESTAMP}))
 
 def huawei_fake_query_api(self, name):
   return open('test/%s.xml' % name).read()

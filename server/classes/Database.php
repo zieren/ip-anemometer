@@ -137,8 +137,8 @@ class Database {
       if ($q != '') {
         $q .= ',';
       }
-      $q .= '('.$v[TIMESTAMP_KEY].',"'.$v[LINK_NW_TYPE_KEY].'",'.$v[LINK_STRENGTH_KEY].
-          ','.$v[LINK_UPLOAD_KEY].','.$v[LINK_DOWNLOAD_KEY].')';
+      $q .= '('.$v['ts'].',"'.$v['nwtype'].'",'.$v['strength'].
+          ','.$v['upload'].','.$v['download'].')';
     }
 
     $q = 'INSERT INTO link (ts, nwtype, strength, upload, download) VALUES '.$q;
