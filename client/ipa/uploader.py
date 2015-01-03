@@ -86,10 +86,10 @@ class Uploader(threading.Thread):
       self._log.debug('uploading %d bytes...' % data_bz2_size)
       response = urllib2.urlopen(request, timeout = C.TIMEOUT_HTTP_REQUEST_SECONDS())
       if response.getcode() != 200:
-        self.self._log.error('failed to upload data: HTTP status code %d' % response.getcode())
+        self._log.error('failed to upload data: HTTP status code %d' % response.getcode())
         return
     except Exception:
-      self.self._log.error('failed to upload data: %s' % traceback.format_exc())
+      self._log.error('failed to upload data: %s' % traceback.format_exc())
       return
     response_content = response.read()
     try:
@@ -97,12 +97,12 @@ class Uploader(threading.Thread):
     except Exception:
       # This might be the 3G stick's error/"no network" (or rather: "no javascript" :-) page, to
       # which it redirects when offline.
-      self.self._log.error(
+      self._log.error(
           'failed to parse server response: %sserver response begins with: "%s"'
           % (traceback.format_exc(), response_content[:10240]))  # return first 10kB
       return
     if response_dict.setdefault(K.RESPONSE_STATUS, K.NOT_AVAILABLE) != K.RESPONSE_STATUS_OK:
-      self.self._log.error('upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
+      self._log.error('upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
       return
     self._log.debug('upload OK; response: %s' % response_content)
     # Add commands to main command queue.
