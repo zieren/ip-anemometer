@@ -22,6 +22,7 @@ class Anemometer:
   def __init__(self):
     self._log = log.get_logger('ipa.main')
     self._log.info(K.CLIENT_GREETING)
+    self._log.info('client md5: %s' % common.client_md5())
     # Create main command queue.
     self._main_cq = Queue.Queue()
     # Create thread termination Event. All threads listen on this whenever they wait, and exit when

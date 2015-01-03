@@ -1,6 +1,13 @@
 import datetime
 import threading
+import sys
 import time
+
+import K
+
+
+def client_md5():
+  return sys.argv[1] if len(sys.argv) > 1 else K.NOT_AVAILABLE
 
 
 def join_all_threads(timeout_seconds):
