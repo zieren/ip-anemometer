@@ -1,4 +1,4 @@
-# TODO: Module should be named ipa.logging.
+# TODO: Module should be named ipa.logging (and probably s/logger/log/ for instances).
 
 import logging.handlers
 import os

@@ -48,15 +48,18 @@ class Uploader(threading.Thread):
         self._queue[type_key] = sample
 
   def run(self):
-    self._log.info('starting (upload interval: %ds)' % C.UPLOAD_INTERVAL_SECONDS())
-    wait_seconds = C.UPLOAD_INTERVAL_SECONDS()
-    while True:
-      if self._termination_event.wait(wait_seconds):  # returns immediately if <= 0
-        return
-      start_time = time.time()
-      self._poll_data_sources()
-      self._upload()
-      wait_seconds = C.UPLOAD_INTERVAL_SECONDS() - (time.time() - start_time)
+    try:
+      self._log.info('starting (upload interval: %ds)' % C.UPLOAD_INTERVAL_SECONDS())
+      wait_seconds = C.UPLOAD_INTERVAL_SECONDS()
+      while True:
+        if self._termination_event.wait(wait_seconds):  # returns immediately if <= 0
+          return
+        start_time = time.time()
+        self._poll_data_sources()
+        self._upload()
+        wait_seconds = C.UPLOAD_INTERVAL_SECONDS() - (time.time() - start_time)
+    except:
+      self._log.critical(traceback.format_exc())
 
   def get_sample(self):
     return K.UPLOAD_KEY, {K.FAILED_UPLOADS_KEY: self._failed_uploads}

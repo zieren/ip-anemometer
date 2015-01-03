@@ -1,5 +1,6 @@
 import Queue
 import threading
+import traceback
 
 import common
 import log
@@ -14,16 +15,18 @@ class LoggerWorker(threading.Thread):
     self._log = logger
 
   def run(self):
-    while True:
-      timestamp_and_duration = self._queue.get()
-      if timestamp_and_duration == None:
-        return
-      timestamp = timestamp_and_duration[0]
-      rps = common.duration_to_rps(timestamp_and_duration[1])
-      # \t for transfer to spreadsheet
-      message = '%s\t%.3f' % (common.timestamp_to_string(timestamp), rps)
-      self._log.info(message)
-
+    try:
+      while True:
+        timestamp_and_duration = self._queue.get()
+        if timestamp_and_duration == None:
+          return
+        timestamp = timestamp_and_duration[0]
+        rps = common.duration_to_rps(timestamp_and_duration[1])
+        # \t for transfer to spreadsheet
+        message = '%s\t%.3f' % (common.timestamp_to_string(timestamp), rps)
+        self._log.info(message)
+    except:
+      self._log.critical(traceback.format_exc())
 
 class CalibrationLogger:
   """Uses a worker thread to not block the event handling thread calling log()."""

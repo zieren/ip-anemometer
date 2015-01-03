@@ -36,7 +36,6 @@ class Anemometer:
     self._uploader.add_data_source(metadata.Metadata(), False)
     self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
 
-
   def _shutdown(self):
     """Attempt to shut down all threads gracefully."""
     # Terminate the uploader:
@@ -49,7 +48,6 @@ class Anemometer:
     else:
       self._log.info('all threads shutdown successfully')
 
-
   def _process_commands(self):
     """Listen on the command queue and processes commands."""
     while True:
@@ -61,15 +59,13 @@ class Anemometer:
       else:
         self._log.warning('unknown command - ignored: "%s" : "%s"' % command)
 
-
   def run(self):
     try:
       self._uploader.start()
       self._process_commands()
     except:
-        self._log.critical(traceback.format_exc())
+      self._log.critical(traceback.format_exc())
 
 
 if __name__ == "__main__":
-  # TODO: Catch exceptions (in threads) and log them.
   Anemometer().run()

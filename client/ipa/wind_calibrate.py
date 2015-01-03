@@ -25,6 +25,7 @@
 # TODO: Complete these instructions once there's a place to put the formula and parameters.
 
 import subprocess
+import traceback
 
 import C
 import common
@@ -33,15 +34,18 @@ from wind import Wind
 
 
 if __name__ == "__main__":
-  log = log.get_logger('wind_calibrate')
-  log.info('--- wind_calibrate started, waiting for ntpd ---')
-  if subprocess.call('../await_clock_sync.sh'):
-    log.critical('--- failed to sync clock ---')
-  else:
-    log.info('--- clock in sync ---')
+  logger = log.get_logger('wind_calibrate')
+  try:
+    logger.info('--- wind_calibrate started, waiting for ntpd ---')
+    if subprocess.call('../await_clock_sync.sh'):
+      logger.critical('--- failed to sync clock ---')
+    else:
+      logger.info('--- clock in sync ---')
 
-  wind = Wind(calibration_mode=True)
-  raw_input('Press ENTER to quit...\n')  # just in case there's a kb and a screen
-  wind.terminate()
-  threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
-  print '--- exiting - threads left: %d ---' % threads_left
+    wind = Wind(calibration_mode=True)
+    raw_input('Press ENTER to quit...\n')  # just in case there's a kb and a screen
+    wind.terminate()
+    threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
+    print '--- exiting - threads left: %d ---' % threads_left
+  except:
+    logger.critical(traceback.format_exc())
