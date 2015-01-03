@@ -3,6 +3,7 @@
 import Queue
 import sys
 import threading
+import traceback
 
 import C
 import common
@@ -62,10 +63,13 @@ class Anemometer:
 
 
   def run(self):
-    self._uploader.start()
-    self._process_commands()
+    try:
+      self._uploader.start()
+      self._process_commands()
+    except:
+        self._log.critical(traceback.format_exc())
 
 
 if __name__ == "__main__":
-  # TODO: Catch exceptions and log them.
+  # TODO: Catch exceptions (in threads) and log them.
   Anemometer().run()

@@ -1,5 +1,6 @@
 import subprocess
 import xml.dom.minidom
+import traceback
 
 import common
 import log
@@ -41,8 +42,8 @@ class HuaweiStatus:
           # All values are integers.
           sample[key] = int(self._get_value(dom, name))
       return sample
-    except Exception as e:  # Catch all errors including parsing.
-      self._log.error('failed to get Huawei 3G stick status: %s' % str(e))
+    except:  # Catch all errors including parsing.
+      self._log.error('failed to get Huawei 3G stick status: %s' % traceback.format_exc())
       return None
 
   def _query_api(self, name):

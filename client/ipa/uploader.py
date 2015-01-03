@@ -3,15 +3,12 @@ import bz2
 import json
 import threading
 import time
+import traceback
 import urllib2
 
 import C
 import K
 import log
-
-
-class _Status:
-  OK, HTTP_CODE_NOT_OK, EXCEPTION, INVALID_JSON, INVALID_RESPONSE, RESPONSE_STATUS_NOT_OK = range(6)
 
 
 class Uploader(threading.Thread):
@@ -24,7 +21,6 @@ class Uploader(threading.Thread):
     self._main_cq = command_queue
     self._termination_event = termination_event
     self._queue = {}
-    self._last_status = _Status.OK
     # To judge the quality of the uplink, the client transmits the number of failed upload attempts
     # in the metadata. Only counts connection errors, not server errors.
     self._failed_uploads = 0
@@ -65,11 +61,6 @@ class Uploader(threading.Thread):
   def get_sample(self):
     return K.UPLOAD_KEY, {K.FAILED_UPLOADS_KEY: self._failed_uploads}
 
-  def _log_error_or_suppress(self, status, message):
-    if not C.LOGGING_SUPPRESS_REPEATED_ERRORS() or self._last_status != status:
-      self._log.error(message)
-    self._last_status = status
-
   def _upload(self):
     """Returns True if data was uploaded, False if (likely) not."""
     data_json = json.dumps(self._queue)
@@ -92,27 +83,24 @@ class Uploader(threading.Thread):
       self._log.debug('uploading %d bytes...' % data_bz2_size)
       response = urllib2.urlopen(request, timeout = C.TIMEOUT_HTTP_REQUEST_SECONDS())
       if response.getcode() != 200:
-        self._log_error_or_suppress(_Status.HTTP_CODE_NOT_OK,
-            'failed to upload data: HTTP status code %d' % response.getcode())
+        self.self._log.error('failed to upload data: HTTP status code %d' % response.getcode())
         return
-    except Exception as e:
-      self._log_error_or_suppress(_Status.EXCEPTION, 'failed to upload data: %s' % str(e))
+    except:
+      self.self._log.error('failed to upload data: %s' % traceback.format_exc())
       return
     response_content = response.read()
     try:
       response_dict = json.loads(response_content)
-    except Exception as e:
+    except:
       # This might be the 3G stick's error/"no network" (or rather: "no javascript" :-) page, to
       # which it redirects when offline.
-      self._log_error_or_suppress(_Status.INVALID_JSON,
-          'failed to parse server response: %s\nserver response begins with: "%s"'
-          % (e, response_content[:10240]))  # return first 10kB of server response
+      self.self._log.error(
+          'failed to parse server response: %sserver response begins with: "%s"'
+          % (traceback.format_exc(), response_content[:10240]))  # return first 10kB
       return
-    if response_dict.get(K.RESPONSE_STATUS, K.NOT_AVAILABLE) != K.RESPONSE_STATUS_OK:
-      self._log_error_or_suppress(_Status.RESPONSE_STATUS_NOT_OK,
-          'upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
+    if response_dict.setdefault(K.RESPONSE_STATUS, K.NOT_AVAILABLE) != K.RESPONSE_STATUS_OK:
+      self.self._log.error('upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
       return
-    self._last_status = _Status.OK
     self._log.debug('upload OK; response: %s' % response_content)
     # Add commands to main command queue.
     for k, v in response_dict.items():

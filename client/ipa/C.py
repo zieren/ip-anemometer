@@ -52,9 +52,7 @@ def WIND_MAX_ROTATION():
 _SECTION_LOGGING = 'Logging'
 def LOGGING_LEVEL():
   with _LOCK: return _CFG.get(_SECTION_LOGGING, 'level')
-def LOGGING_SUPPRESS_REPEATED_ERRORS():
-  with _LOCK: return _CFG.getboolean(_SECTION_LOGGING, 'suppress_repeated_errors')
-def LOGGING_MAX_BYTES():
-  with _LOCK: return _CFG.getint(_SECTION_LOGGING, 'max_bytes')
+def LOGGING_MAX_FILE_SIZE_KB():
+  with _LOCK: return _CFG.getint(_SECTION_LOGGING, 'max_file_size_kb')
 def LOGGING_BACKUP_COUNT():
   with _LOCK: return _CFG.getint(_SECTION_LOGGING, 'backup_count')

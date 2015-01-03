@@ -42,7 +42,7 @@ def _get_toplevel_logger(name):
   # - It doesn't limit file size.
   file_handler = logging.handlers.RotatingFileHandler(
       _LOG_DIR + name + _LOG_EXT,
-      maxBytes = C.LOGGING_MAX_BYTES(),
+      maxBytes = C.LOGGING_MAX_FILE_SIZE_KB() * 1024,
       backupCount = C.LOGGING_BACKUP_COUNT())
   log_format = _LOG_FORMATS[name]  # format must be defined
   file_handler.setFormatter(logging.Formatter(log_format))
