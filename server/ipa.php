@@ -29,6 +29,7 @@ function computeStats() {
 
   $stats = $db->computeWindStats(
       $timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
+  // TODO: Handle stale data.
   if (!$stats) {
     return NULL;  // TODO: Handle absent values per type, not globally.
   }
