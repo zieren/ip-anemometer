@@ -12,7 +12,8 @@ PING_IP=8.8.8.8  # Google public DNS server
 SLEEP_TIME=5m  # time to sleep before checking, in case we run @reboot
 
 sleep $SLEEP_TIME
-log "slept $SLEEP_TIME, now running ping (note: clock may not be synced yet)"
+STRATUM=$(ntpq -c "rv 0 stratum" | sed -r s/.*=//)
+log "slept $SLEEP_TIME, stratum=$STRATUM, now running ping"
 ping -c 3 -q $PING_IP &> /dev/null
 if [ "$?" != "0" ]; then
   log "offline - rebooting"
