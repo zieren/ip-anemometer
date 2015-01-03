@@ -33,12 +33,15 @@ function handleRequest($logger) {
     $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
     $db->insertMetadata($meta , $_SERVER['REMOTE_ADDR']);
 
+    $logger->debug('client md5: '.$meta[CLIENT_MD5].' - server has: '.$settings[CLIENT_MD5]);
+
     $response = array();
 
     // The client does not set CLIENT_MD5 when it's started directly (and not via the wrapper).
     if (isset($meta[CLIENT_MD5]) && $meta[CLIENT_MD5] != NOT_AVAILABLE
         && isset($settings[CLIENT_MD5]) && $meta[CLIENT_MD5] != $settings[CLIENT_MD5]) {
-      $response[COMMAND_EXIT] = 0;  // retval 0 will update & restart the client
+      $logger->notice('updating client '.$meta[CLIENT_MD5].' to '.$settings[CLIENT_MD5]);
+      $response[COMMAND_EXIT] = 0;  // retval 0 will exit -> update -> restart the client
     }
 
     if (isset($data[WIND_KEY])) {
