@@ -35,6 +35,7 @@ function handleRequest($logger) {
 
     $response = array();
 
+    // The client does not set CLIENT_MD5 when it's started directly (and not via the wrapper).
     if (isset($meta[CLIENT_MD5]) && $meta[CLIENT_MD5] != NOT_AVAILABLE
         && isset($settings[CLIENT_MD5]) && $meta[CLIENT_MD5] != $settings[CLIENT_MD5]) {
       $response[COMMAND_EXIT] = 0;  // retval 0 will update & restart the client
