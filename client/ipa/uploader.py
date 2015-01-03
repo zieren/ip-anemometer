@@ -10,7 +10,7 @@ import K
 import log
 
 
-class Status:
+class _Status:
   OK, HTTP_CODE_NOT_OK, EXCEPTION, INVALID_JSON, INVALID_RESPONSE, RESPONSE_STATUS_NOT_OK = range(6)
 
 
@@ -24,7 +24,7 @@ class Uploader(threading.Thread):
     self._main_cq = command_queue
     self._termination_event = termination_event
     self._queue = {}
-    self._last_status = Status.OK
+    self._last_status = _Status.OK
     # To judge the quality of the uplink, the client transmits the number of failed upload attempts
     # in the metadata. Only counts connection errors, not server errors.
     self._failed_uploads = 0
@@ -92,11 +92,11 @@ class Uploader(threading.Thread):
       self._log.debug('uploading %d bytes...' % data_bz2_size)
       response = urllib2.urlopen(request, timeout = C.TIMEOUT_HTTP_REQUEST_SECONDS())
       if response.getcode() != 200:
-        self._log_error_or_suppress(Status.HTTP_CODE_NOT_OK,
+        self._log_error_or_suppress(_Status.HTTP_CODE_NOT_OK,
             'failed to upload data: HTTP status code %d' % response.getcode())
         return
     except Exception as e:
-      self._log_error_or_suppress(Status.EXCEPTION, 'failed to upload data: %s' % str(e))
+      self._log_error_or_suppress(_Status.EXCEPTION, 'failed to upload data: %s' % str(e))
       return
     response_content = response.read()
     try:
@@ -104,15 +104,15 @@ class Uploader(threading.Thread):
     except Exception as e:
       # This might be the 3G stick's error/"no network" (or rather: "no javascript" :-) page, to
       # which it redirects when offline.
-      self._log_error_or_suppress(Status.INVALID_JSON,
+      self._log_error_or_suppress(_Status.INVALID_JSON,
           'failed to parse server response: %s\nserver response begins with: "%s"'
           % (e, response_content[:10240]))  # return first 10kB of server response
       return
     if response_dict.get(K.RESPONSE_STATUS, K.NOT_AVAILABLE) != K.RESPONSE_STATUS_OK:
-      self._log_error_or_suppress(Status.RESPONSE_STATUS_NOT_OK,
+      self._log_error_or_suppress(_Status.RESPONSE_STATUS_NOT_OK,
           'upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
       return
-    self._last_status = Status.OK
+    self._last_status = _Status.OK
     self._log.debug('upload OK; response: %s' % response_content)
     # Add commands to main command queue.
     for k, v in response_dict.items():
