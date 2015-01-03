@@ -64,7 +64,7 @@ class Anemometer:
     try:
       self._uploader.start()
       self._process_commands()
-    except:
+    except Exception:
       self._log.critical(traceback.format_exc())
 
 

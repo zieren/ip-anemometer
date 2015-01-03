@@ -25,7 +25,7 @@ class LoggerWorker(threading.Thread):
         # \t for transfer to spreadsheet
         message = '%s\t%.3f' % (common.timestamp_to_string(timestamp), rps)
         self._log.info(message)
-    except:
+    except Exception:
       self._log.critical(traceback.format_exc())
 
 class CalibrationLogger:

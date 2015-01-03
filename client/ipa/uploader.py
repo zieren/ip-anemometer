@@ -58,7 +58,7 @@ class Uploader(threading.Thread):
         self._poll_data_sources()
         self._upload()
         wait_seconds = C.UPLOAD_INTERVAL_SECONDS() - (time.time() - start_time)
-    except:
+    except Exception:
       self._log.critical(traceback.format_exc())
 
   def get_sample(self):
@@ -88,13 +88,13 @@ class Uploader(threading.Thread):
       if response.getcode() != 200:
         self.self._log.error('failed to upload data: HTTP status code %d' % response.getcode())
         return
-    except:
+    except Exception:
       self.self._log.error('failed to upload data: %s' % traceback.format_exc())
       return
     response_content = response.read()
     try:
       response_dict = json.loads(response_content)
-    except:
+    except Exception:
       # This might be the 3G stick's error/"no network" (or rather: "no javascript" :-) page, to
       # which it redirects when offline.
       self.self._log.error(

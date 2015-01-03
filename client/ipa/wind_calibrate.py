@@ -47,5 +47,5 @@ if __name__ == "__main__":
     wind.terminate()
     threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
     print '--- exiting - threads left: %d ---' % threads_left
-  except:
+  except Exception:
     logger.critical(traceback.format_exc())
