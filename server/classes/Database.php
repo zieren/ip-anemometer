@@ -23,7 +23,7 @@ class Database {
   /** Connects to the database, or exits on error. */
   public function __construct() {
     $this->log = new Katzgrau\KLogger\Logger(LOG_DIR);
-    $this->allTables = array('temp', 'wind_a', 'hist', 'coverage', 'link', 'meta', 'settings');
+    $this->allTables = array('temp', 'wind', 'hist', 'coverage', 'link', 'meta', 'settings');
     $this->mysqli = new mysqli('localhost', DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
       $this->logCritical('failed to connect to MySQL: ('.$mysqli->connect_errno.') '
@@ -69,7 +69,7 @@ class Database {
     if ($this->query(
             'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS wind_a (start_ts BIGINT PRIMARY KEY, '.
+            'CREATE TABLE IF NOT EXISTS wind (start_ts BIGINT PRIMARY KEY, '.
             'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
@@ -141,7 +141,7 @@ class Database {
           ','.$v['upload'].','.$v['download'].')';
     }
 
-    $q = 'INSERT INTO link (ts, nwtype, strength, upload, download) VALUES '.$q;
+    $q = 'REPLACE INTO link (ts, nwtype, strength, upload, download) VALUES '.$q;
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
       $this->logCritical('failed to insert link status: ' . $this->getError());
@@ -182,7 +182,7 @@ class Database {
       return;  // error already logged
     }
     $buckets = count($histogram);
-    $q = 'INSERT INTO wind_a (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
+    $q = 'REPLACE INTO wind (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
         .$stats['start_ts'].','.$stats['end_ts'].','.$stats['avg'].','
         .$stats['max'].','.$stats['max_ts'].','.$histId.','.$buckets.')';
     $this->log->debug('QUERY: '.$q);
@@ -272,7 +272,7 @@ class Database {
    */
   public function computeWindStats($maxEndTimestamp, $windowDuration, $outputLength) {
     $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
-    $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind_a WHERE '
+    $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind WHERE '
         .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
         .' AND end_ts <= '.$maxEndTimestamp
         .' ORDER BY start_ts DESC';
