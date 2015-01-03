@@ -58,19 +58,11 @@ class Anemometer:
     """Listen on the command queue and processes commands."""
     while True:
       command = self._main_cq.get()
-      # TODO: This (and other "processing command" events) will easily clutter the log.
       self._log.info('processing command: "%s": "%s"' % command)
-      if command[0] == K.COMMAND_RESTART:
+      if command[0] == K.COMMAND_EXIT:
         self._shutdown()
-        sys.exit(0)  # restarting is the default on successful termination
-      elif command[0] == K.COMMAND_SHUTDOWN:
-        self._shutdown()
-        sys.exit(K.RETURN_VALUE_SHUTDOWN)
-      elif command[0] == K.COMMAND_REBOOT:
-        self._shutdown()
-        sys.exit(K.RETURN_VALUE_REBOOT)
+        sys.exit(int(command[1]))
       else:
-        # TODO: Avoid flooding logs with this?
         self._log.warning('unknown command - ignored: "%s" : "%s"' % command)
 
 

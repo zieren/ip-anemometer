@@ -21,13 +21,13 @@ define('WIND_STARTUP_TIME_KEY', 'wind_startup');
 define('WIND_UP_TO_TIME_KEY', 'wind_up_to');
 define('WIND_AGGREGATE_STATS_KEY', 'wind_stats');
 define('UPLOAD_KEY', 'upload');
-define('CLIENT_MD5_KEY', 'md5');
+define('CLIENT_MD5', 'md5');
 define('STRATUM_KEY', 'stratum');
 define('STARTUP_TIME_KEY', 'startup');
 define('FAILED_UPLOADS_KEY', 'ulfs');
 define('CLIENT_TIMESTAMP_KEY', 'cts');
 define('UPLOAD_POST_KEY', 'bz2');
-define('COMMAND_RESTART', 'restart');
+define('COMMAND_EXIT', 'exit');
 define('RESPONSE_STATUS', 'status');
 define('RESPONSE_STATUS_OK', 'ok');
 define('LINK_KEY', 'link');
@@ -49,6 +49,7 @@ define('TEMP_KEY_TIME_SERIES', 7);
 define('LINK_STRENGTH_KEY_TIME_SERIES', 8);
 define('LINK_NW_TYPE_KEY_2', 9);
 define('LINK_UL_DL_KEY', 10);
+define('NOT_AVAILABLE', 'n/a');
 
 // Additional stats only computed on the server. Keep these in sync with ipa.js.
 define('WIND_KEY_TIME_SERIES', 6);

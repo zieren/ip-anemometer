@@ -82,6 +82,7 @@ class Database {
             'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '.
             'stratum INT, fails INT, ip VARCHAR(15))')
         && $this->query(
+            // TODO: Rename settings to config
             'CREATE TABLE IF NOT EXISTS settings (k VARCHAR(256) PRIMARY KEY, v TEXT)')) {
       $this->log->notice('tables created');
     } else {

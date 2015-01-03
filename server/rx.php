@@ -28,11 +28,17 @@ function handleRequest($logger) {
 
     // Metadata is required in each request.
     $meta = $data[META_KEY];
-    // TODO: Should probably discard metadata records client-side. Same for failed uploads.
     // TODO: Create a separate table for connection quality, and store failed uploads, signal
     // quality (eventually) etc. there.
     $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
     $db->insertMetadata($meta , $_SERVER['REMOTE_ADDR']);
+
+    $response = array();
+
+    if (isset($meta[CLIENT_MD5]) && $meta[CLIENT_MD5] != NOT_AVAILABLE
+        && isset($settings[CLIENT_MD5]) && $meta[CLIENT_MD5] != $settings[CLIENT_MD5]) {
+      $response[COMMAND_EXIT] = 0;  // retval 0 will update & restart the client
+    }
 
     if (isset($data[WIND_KEY])) {
       $db->insertWind($data[WIND_KEY]);
@@ -46,7 +52,7 @@ function handleRequest($logger) {
       $db->insertLinkStatus($data[LINK_KEY]);
     }
 
-    $response = array(RESPONSE_STATUS => RESPONSE_STATUS_OK);
+    $response[RESPONSE_STATUS] = RESPONSE_STATUS_OK;
     // TODO: Add support for reboot, shutdown etc.
 
     return $response;

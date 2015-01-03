@@ -98,11 +98,11 @@ while true; do
     0)  # no error - restart
       continue
       ;;
-    100)  # shutdown (see K.py)
+    100)  # shutdown
       log "shutting down"
       sudo shutdown -h now
       ;;
-    101)  # reboot (see K.py)
+    101)  # reboot
       log "rebooting"
       sudo reboot
       ;;

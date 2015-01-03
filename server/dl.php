@@ -9,6 +9,7 @@ if (!file_exists(CLIENT_UPDATE_FILENAME)) {
   exit;
 }
 
+// TODO: Get MD5 from database instead.
 $contents = file_get_contents(CLIENT_UPDATE_FILENAME);
 $md5 = md5($contents);
 if ($md5 === $_GET['md5']) {

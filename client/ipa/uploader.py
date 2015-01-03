@@ -108,8 +108,7 @@ class Uploader(threading.Thread):
           'failed to parse server response: %s\nserver response begins with: "%s"'
           % (e, response_content[:10240]))  # return first 10kB of server response
       return
-    if response_dict.setdefault(
-        K.RESPONSE_STATUS, K.RESPONSE_STATUS_UNKNOWN) != K.RESPONSE_STATUS_OK:
+    if response_dict.get(K.RESPONSE_STATUS, K.NOT_AVAILABLE) != K.RESPONSE_STATUS_OK:
       self._log_error_or_suppress(Status.RESPONSE_STATUS_NOT_OK,
           'upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
       return

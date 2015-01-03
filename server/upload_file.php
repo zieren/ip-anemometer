@@ -8,8 +8,7 @@ require_once 'common.php';
 
 $allowedExts = array('zip');
 $allowedTypes = array('application/x-zip-compressed', 'application/zip');
-$temp = explode('.', $_FILES['file']['name']);
-$extension = end($temp);
+$extension = strtolower(end(explode('.', $_FILES['file']['name'])));
 
 echo '<p>';
 if (!in_array($_FILES['file']['type'], $allowedTypes)) {
@@ -24,6 +23,10 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   echo 'File: '.$_FILES['file']['name'].'<br>';
   echo 'Type: '.$_FILES['file']['type'].'<br>';
   echo 'Size: '.$_FILES['file']['size'].'<br>';
+  $md5 = md5_file($_FILES['file']['tmp_name']);
+  $db = new Database();
+  $db->updateSetting(CLIENT_MD5, $md5);
+  echo 'MD5: '.$md5.'<br>';
   move_uploaded_file($_FILES['file']['tmp_name'], CLIENT_UPDATE_FILENAME);
   echo 'Done.<br>';
 }
