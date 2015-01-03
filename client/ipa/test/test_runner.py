@@ -132,10 +132,10 @@ class Test(unittest.TestCase):
     huawei._query_api = types.MethodType(huaweiFakeQueryApi, huawei)
     common.timestamp = fakeCommonTimestamp
     sample = huawei.get_sample()
-    self.assertEqual(sample, (K.LINK_KEY, {K.LINK_NW_TYPE_KEY: '7',
-                                           K.LINK_STRENGTH_KEY: '97',
-                                           K.LINK_UPLOAD_KEY: '1010629397',
-                                           K.LINK_DOWNLOAD_KEY: '414422886',
+    self.assertEqual(sample, (K.LINK_KEY, {K.LINK_NW_TYPE_KEY: '3G+',
+                                           K.LINK_STRENGTH_KEY: 97,
+                                           K.LINK_UPLOAD_KEY: 1010629397,
+                                           K.LINK_DOWNLOAD_KEY: 414422886,
                                            K.TIMESTAMP_KEY: FAKE_TIMESTAMP}))
 
 def huaweiFakeQueryApi(self, name):
