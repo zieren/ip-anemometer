@@ -7,8 +7,6 @@ require_once 'common.php';
 
 function handleRequest($logger) {
   $db = new Database();
-  $settings = $db->getAppSettings();
-  $db->setLogLevel(getLogLevel($settings[LOG_LEVEL_KEY]));
 
   $response = array();
   $contentBz2 = file_get_contents('php://input');
@@ -33,6 +31,7 @@ function handleRequest($logger) {
     $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
     $db->insertMetadata($meta , $_SERVER['REMOTE_ADDR']);
 
+    $settings = $db->getAppSettings();
     $logger->debug('client md5: '.$meta[CLIENT_MD5].' - server has: '.$settings[CLIENT_MD5]);
 
     $response = array();
@@ -63,7 +62,7 @@ function handleRequest($logger) {
   }
 }
 
-$logger = new Katzgrau\KLogger\Logger(LOG_DIR, getLogLevel($settings[LOG_LEVEL_KEY]));
+$logger = Logger::Instance();
 $response = handleRequest($logger);
 $jsonResponse = json_encode($response);
 echo $jsonResponse;

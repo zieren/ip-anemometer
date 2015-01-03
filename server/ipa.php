@@ -1,34 +1,21 @@
 <?php
 require_once 'common.php';
 
+function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
+  $v = isset($_REQUEST[$name]) ? intval($_REQUEST[$name]) : $default;
+  return max($min, min($v, $max));
+}
+
 function computeStats() {
   // TODO: These defaults should match the ones in ipa.js.
-  $windowMinutes = intval($_REQUEST[REQ_WINDOW_MINUTES]);
-  if (!$windowMinutes) {  // omitted or zero
-    $windowMinutes = REQ_WINDOW_MINUTES_DEFAULT;
-  }
-  $windowMinutes = min($windowMinutes, REQ_WINDOW_MINUTES_MAX);
-  $timestamp = intval($_REQUEST[REQ_TIMESTAMP]);
-  if (!$timestamp) {
-    $timestamp = timestamp();
-  }
-  $timeSeriesPoints = intval($_REQUEST[REQ_TIME_SERIES_POINTS]);
-  if (!$timeSeriesPoints) {
-    $timeSeriesPoints = REQ_TIME_SERIES_POINTS_DEFAULT;
-  }
-  $systemMinutes = intval($_REQUEST[REQ_SYSTEM_MINUTES]);
+  $windowMinutes = getIntParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
+  $timestamp = getIntParam('ts', timestamp(), 0);
+  $timeSeriesPoints = getIntParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, 1);
+  $systemMinutes = getIntParam('s', REQ_SYSTEM_MINUTES, 0);
 
   $db = new Database();
-  // Apply settings.
-  // TODO: Factor this out.
-  $settings = $db->getAppSettings();
-  $logger = new Katzgrau\KLogger\Logger(LOG_DIR, getLogLevel($settings[LOG_LEVEL_KEY]));
-  if (isset($settings[LOG_LEVEL_KEY])) {
-    $db->setLogLevel(getLogLevel($settings[LOG_LEVEL_KEY]));
-  }
 
-  $stats = $db->computeWindStats(
-      $timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
+  $stats = $db->computeWindStats($timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
   // TODO: Handle stale data.
   if (!$stats) {
     return NULL;  // TODO: Handle absent values per type, not globally.
@@ -45,49 +32,7 @@ function computeStats() {
   return $stats;
 }
 
-/** Create inconsistent random dummy stats for testing. */
-function createDummyStats() {
-  $timestamp = timestamp() - 30 * 1000;
-
-  $stats['avg'] = max(0, rand(-20, 150)) / 10;
-  $stats['max'] = $stats['avg'] * rand(10, 30) / 10;
-  $stats['max_ts'] = $timestamp - 3 * 60 * 1000;
-  $stats['start_ts'] = $timestamp - 10 * 60 * 1000;
-  $stats['end_ts'] = $timestamp;
-  $hist = array();
-  $sum = 0;
-  $numBins = max(1, rand(-5, 30));
-  $skipBin = rand(0, $numBins * 1.2);
-  for ($i = 0; $i < $numBins; ++$i) {
-    if ($i == $skipBin) {
-      continue;
-    }
-    $x = rand(0, 1000);
-    $hist[$i] = $x;
-    $sum += $x;
-  }
-  foreach ($hist as $kmh => $x) {
-    $hist[$kmh] = $x / $sum;
-  }
-  $stats['hist'] = $hist;
-
-  $stats['time_series'] = array();
-  for ($i = 0; $i < 10; ++$i) {
-    $avg = rand(0, $stats['max'] * 10) / 10;
-    $stats['time_series'][] = array(
-      $timestamp - (10 + $i) * 60 * 1000,
-      $avg,
-      rand($avg * 10, $stats['max'] * 10) / 10);
-  }
-
-  return $stats;
-}
-
-if ($_REQUEST[REQ_DUMMY]) {
-  $stats = createDummyStats();
-} else {
-  $stats = computeStats();
-}
+$stats = computeStats();
 
 if ($stats) {
   echo json_encode($stats);

@@ -59,7 +59,7 @@ class Wind:
       return K.WIND_KEY, None
     sample = {K.WIND_STARTUP_TIME_KEY: self._startup_time,
               K.WIND_UP_TO_TIME_KEY: up_to_time,
-              K.WIND_AGGREGATE_STATS_KEY: stats}
+              'stats': stats}
     return K.WIND_KEY, sample
 
   def terminate(self):

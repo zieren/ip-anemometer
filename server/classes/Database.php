@@ -22,20 +22,16 @@ class Database {
 
   /** Connects to the database, or exits on error. */
   public function __construct() {
-    $this->log = new Katzgrau\KLogger\Logger(LOG_DIR);
+    $this->log = Logger::Instance();
     $this->allTables = array('temp', 'wind', 'hist', 'coverage', 'link', 'meta', 'settings');
-    $this->mysqli = new mysqli('localhost', DB_USER, DB_PASS, DB_NAME);
+    $this->mysqli = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
       $this->logCritical('failed to connect to MySQL: ('.$mysqli->connect_errno.') '
           .$this->mysqli->connect_error);
       exit(1);
     }
     assert($this->mysqli->select_db(DB_NAME));
-  }
-
-  /** Set log level for internal KLogger. */
-  public function setLogLevel($level) {
-    $this->log->setLogLevelThreshold($level);
+    // TODO: Read config and set log level.
   }
 
   /** Log to file and stdout. */
@@ -157,7 +153,7 @@ class Database {
    */
   public function insertWind($samples) {
     foreach ($samples as $sample) {
-      $stats = $sample[WIND_AGGREGATE_STATS_KEY];
+      $stats = $sample['stats'];
       if ($stats) {
         $this->insertWindSpeed($stats);
       }
@@ -233,6 +229,7 @@ class Database {
     if (!$this->query($q)) {
       $this->logCritical('failed to update setting ('.$key.'='.$value.'): '.$this->getError());
     }
+    unset($this->appSettings);
   }
 
   /** Deletes the specified setting. */
@@ -241,6 +238,7 @@ class Database {
     if (!$this->query($q)) {
       $this->logCritical('failed to clear setting ('.$key.'): '.$this->getError());
     }
+    unset($this->appSettings);
   }
 
   /** Returns application settings. Lazily initialized. */

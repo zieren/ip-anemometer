@@ -24,13 +24,6 @@ if (isset($_POST[$CREATE]) && $_POST[$CONFIRM]) {
   }
 }
 
-// Apply settings.
-$settings = $db->getAppSettings();
-$logger = new Katzgrau\KLogger\Logger(LOG_DIR, getLogLevel($settings[LOG_LEVEL_KEY]));
-if (isset($settings[LOG_LEVEL_KEY])) {
-  $db->setLogLevel(getLogLevel($settings[LOG_LEVEL_KEY]));
-}
-
 if (isset($_POST[$DROP]) && $_POST[$CONFIRM]) {
   if ($error = $db->dropTables()) {
     echo '<p><b>drop tables failed: '.$error.'</b></p>';

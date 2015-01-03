@@ -19,14 +19,12 @@ define('TEMP_KEY', 'temp');
 define('WIND_KEY', 'wind');
 define('WIND_STARTUP_TIME_KEY', 'wind_startup');
 define('WIND_UP_TO_TIME_KEY', 'wind_up_to');
-define('WIND_AGGREGATE_STATS_KEY', 'wind_stats');
 define('UPLOAD_KEY', 'upload');
 define('CLIENT_MD5', 'md5');
 define('STRATUM_KEY', 'stratum');
 define('STARTUP_TIME_KEY', 'startup');
 define('FAILED_UPLOADS_KEY', 'ulfs');
 define('CLIENT_TIMESTAMP_KEY', 'cts');
-define('UPLOAD_POST_KEY', 'bz2');
 define('COMMAND_EXIT', 'exit');
 define('RESPONSE_STATUS', 'status');
 define('RESPONSE_STATUS_OK', 'ok');
@@ -47,46 +45,23 @@ define('WIND_SAMPLE_AVG', 2);
 define('WIND_SAMPLE_MAX', 3);
 
 // Keys for server settings.
-define('LOG_LEVEL_KEY', 'logLevel');
+define('LOG_LEVEL_KEY', 'log_level');
 
 // Internal constants.
 define('CLIENT_UPDATE_FILENAME', 'client/ipa-update.zip');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
+// Maximum amount of time the desired window size is shifted back to compensate for upload
+// latency. TODO: This (and possibly other values) should be configurable.
+define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
+define('LOG_DIR', 'logs/.');
+define('CLIENT_UPDATE_MAX_SIZE', 1024 * 1024);  // 1MB
 
 // Request/response constants. Keep these in sync with ipa.js.
-define('REQ_WINDOW_MINUTES', 'm');
-define('REQ_TIMESTAMP', 'ts');
-define('REQ_TIME_SERIES_POINTS', 'p');
-define('REQ_TEMP_MINUTES', 'tm');
-define('REQ_SYSTEM_MINUTES', 's');
-define('REQ_DUMMY', 'dummy');
 define('RESPONSE_NO_STATS', 'n/a');
 // Defaults and limits for request arguments.
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);
-
-use Psr\Log\LogLevel;
-$LOG_LEVELS = array(
-  'emergency' => LogLevel::EMERGENCY,
-  'alert' => LogLevel::ALERT,
-  'critical' => LogLevel::CRITICAL,
-  'error' => LogLevel::ERROR,
-  'warning' => LogLevel::WARNING,
-  'notice' => LogLevel::NOTICE,
-  'info' => LogLevel::INFO,
-  'debug' => LogLevel::DEBUG
-);
-
-// TODO: Should this warn about invalid levels?
-/** Returns the specified log level as a Psr\Log\LogLevel. */
-function getLogLevel($level) {
-  global $LOG_LEVELS;
-  if (isset($LOG_LEVELS[$level])) {
-    return $LOG_LEVELS[$level];
-  }
-  return LogLevel::DEBUG;  // default or invalid
-}
 
 /** Returns the current path, e.g. for "http://foo.bar/baz/qux.php" -> "http://foo.bar/baz/". */
 function getCurentPagePathURL() {
