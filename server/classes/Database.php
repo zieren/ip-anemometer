@@ -34,6 +34,18 @@ class Database {
     // TODO: Read config and set log level.
   }
 
+  public function beginTransaction() {
+    $this->query('START TRANSACTION');
+  }
+
+  public function commit() {
+    $this->query('COMMIT');
+  }
+
+  public function rollback() {
+    $this->query('ROLLBACK');
+  }
+
   /** Log to file and stdout. */
   private function logError($message) {
     $this->log->error($message);
@@ -62,21 +74,22 @@ class Database {
    * @return null on success, error text on failure.
    */
   public function createTables() {
-    if ($this->query(
+    if ($this->query('SET storage_engine=INNODB')
+        && $this->query(
             'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS wind (start_ts BIGINT PRIMARY KEY, '.
-            'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)')
+            'CREATE TABLE IF NOT EXISTS wind (start_ts BIGINT PRIMARY KEY, '
+            .'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
         && $this->query(
             'CREATE TABLE IF NOT EXISTS coverage (startup BIGINT PRIMARY KEY, upto BIGINT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '.
-            'strength TINYINT, upload BIGINT, download BIGINT)')
+            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '
+            .'strength TINYINT, upload BIGINT, download BIGINT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '.
-            'stratum INT, fails INT, ip VARCHAR(15))')
+            'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '
+            .'stratum INT, fails INT, ip VARCHAR(15))')
         && $this->query(
             // TODO: Rename settings to config
             'CREATE TABLE IF NOT EXISTS settings (k VARCHAR(256) PRIMARY KEY, v TEXT)')) {
@@ -189,6 +202,7 @@ class Database {
 
   /** Returns the first (lowest) AUTO_INCREMENT ID generated, or NULL on error. */
   public function insertHistogram($histogram) {
+    ksort($histogram);  // not required, but makes the table easier to read (for humans)
     $q = '';
     foreach ($histogram as $v => $p) {  // v=speed, p=percent
       if ($q != '') {
@@ -245,7 +259,7 @@ class Database {
   public function getAppSettings() {
     if (!isset($this->appSettings)) {
       $this->appSettings = array();
-      if ($result = $this->query('SELECT * FROM settings')) {
+      if ($result = $this->query('SELECT k, v FROM settings')) {
         while ($row = $result->fetch_assoc()) {
           $this->appSettings[$row['k']] = $row['v'];
         }
@@ -301,7 +315,7 @@ class Database {
           intval($sample['start_ts']),
           intval($sample['end_ts']),
           floatval($sample['avg']),
-          floatval($sample['max'])
+          floatval($sample['max'])  // TODO: Use max_ts for the max time series.
       );
       $selectedSamples[] = $sample;
       // Update times and IDs.
@@ -327,7 +341,8 @@ class Database {
     $avgKmh /= $actualWindowDuration;
 
     // Compute histogram.
-    $q = 'SELECT * from hist WHERE id >= '.$minHistId.' AND id <= '.$maxHistId.' ORDER BY id DESC';
+    $q = 'SELECT id, v, p from hist WHERE id >= '.$minHistId.' AND id <= '.$maxHistId
+        .' ORDER BY id DESC';
     $result = $this->checkQuery($q);
     $histogram = array();
     $i = 0;
@@ -336,6 +351,15 @@ class Database {
       if ($bucket['id'] < $selectedSamples[$i]['hist_id']) {  // belongs to next (older) sample
         ++$i;
         $sampleDuration = Database::getSampleDuration($selectedSamples[$i]);
+      }
+      if ($bucket['id'] >= $selectedSamples[$i]['hist_id'] + $selectedSamples[$i]['buckets']) {
+        // Without transaction this can happen if inserting the histogram succeeded but writing the
+        // wind data failed. But even with transaction the server's "status: ok" reply might not
+        // reach the client, so the client will resend the same data, which will overwrite the
+        // previous data in all tables except hist, where it will add new rows.
+        // In both cases there will be "orphaned" entries in the hist table that do not belong to
+        // any row in the wind table. Skip them here.
+        continue;
       }
       $histogram[$bucket['v']] += $bucket['p'] * $sampleDuration;
     }

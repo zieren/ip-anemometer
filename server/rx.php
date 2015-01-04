@@ -29,6 +29,9 @@ function handleRequest($logger) {
     // TODO: Create a separate table for connection quality, and store failed uploads, signal
     // quality (eventually) etc. there.
     $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
+    $db->beginTransaction();
+    // TODO: Throw exceptions and rollback on failure. However, this doesn't prevent: "ok" reply to
+    // client is lost, client resends all data, all rows are overwritten except in hist table.
     $db->insertMetadata($meta , $_SERVER['REMOTE_ADDR']);
 
     $settings = $db->getAppSettings();
@@ -54,6 +57,8 @@ function handleRequest($logger) {
     if (isset($data['link'])) {
       $db->insertLinkStatus($data['link']);
     }
+
+    $db->commit();
 
     $response[RESPONSE_STATUS] = RESPONSE_STATUS_OK;
     // TODO: Add support for reboot, shutdown etc.
