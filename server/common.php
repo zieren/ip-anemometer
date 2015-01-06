@@ -93,7 +93,7 @@ function durationToRps($duration) {
 }
 
 function timestamp() {
-  return time() * 1000;
+  return intval(round(microtime(true) * 1000));
 }
 
 function minutesToMillis($minutes) {
