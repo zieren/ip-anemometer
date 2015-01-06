@@ -56,7 +56,9 @@ class WindStatsCalculator:
     the end timestamp returned in the previous call for all subsequent calls. They end at the last
     revolution timestamp before end_timestamp. If no revolutions occured, padding with 0 km/h is
     done to cover at least up to (end_timestamp - 2 * _MAX_ROTATION + 1). The end timestamp is
-    returned in the result."""
+    returned in the result.
+
+    If no stats are available yet (e.g. two calls in "rapid" succession), None is returned."""
 
     # self._previous_timestamp needs to advance even if no revolutions occur. So we add "virtual"
     # timestamps that yield 0 km/h.
