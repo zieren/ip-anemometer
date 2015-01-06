@@ -24,15 +24,20 @@ function handleRequest($logger) {
       return $response;
     }
 
+    $db->beginTransaction();
+
     // Metadata is required in each request.
     $meta = $data[META_KEY];
-    // TODO: Create a separate table for connection quality, and store failed uploads, signal
-    // quality (eventually) etc. there.
+
+    $meta['upto'] = 0;  // means n/a
+    if (isset($data[WIND_KEY])) {
+      $meta['upto'] = $db->insertWind($data[WIND_KEY]);
+    }
+
     $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
-    $db->beginTransaction();
     // TODO: Throw exceptions and rollback on failure. However, this doesn't prevent: "ok" reply to
     // client is lost, client resends all data, all rows are overwritten except in hist table.
-    $db->insertMetadata($meta , $_SERVER['REMOTE_ADDR']);
+    $db->insertMetadata($meta);
 
     $settings = $db->getAppSettings();
     $logger->debug('client md5: '.$meta[CLIENT_MD5].' - server has: '.$settings[CLIENT_MD5]);
@@ -44,10 +49,6 @@ function handleRequest($logger) {
         && isset($settings[CLIENT_MD5]) && $meta[CLIENT_MD5] != $settings[CLIENT_MD5]) {
       $logger->notice('updating client '.$meta[CLIENT_MD5].' to '.$settings[CLIENT_MD5]);
       $response[COMMAND_EXIT] = 0;  // retval 0 will exit -> update -> restart the client
-    }
-
-    if (isset($data[WIND_KEY])) {
-      $db->insertWind($data[WIND_KEY]);
     }
 
     if (isset($data[TEMP_KEY])) {

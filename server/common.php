@@ -17,8 +17,6 @@ define('TIMESTAMP_KEY', 'ts');
 define('META_KEY', 'meta');
 define('TEMP_KEY', 'temp');
 define('WIND_KEY', 'wind');
-define('WIND_STARTUP_TIME_KEY', 'wind_startup');
-define('WIND_UP_TO_TIME_KEY', 'wind_up_to');
 define('UPLOAD_KEY', 'upload');
 define('CLIENT_MD5', 'md5');
 define('STRATUM_KEY', 'stratum');

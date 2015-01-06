@@ -23,7 +23,7 @@ class Database {
   /** Connects to the database, or exits on error. */
   public function __construct() {
     $this->log = Logger::Instance();
-    $this->allTables = array('temp', 'wind', 'hist', 'coverage', 'link', 'meta', 'settings');
+    $this->allTables = array('temp', 'wind', 'hist', 'link', 'meta', 'settings');
     $this->mysqli = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
       $this->logCritical('failed to connect to MySQL: ('.$mysqli->connect_errno.') '
@@ -83,12 +83,10 @@ class Database {
         && $this->query(
             'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS coverage (startup BIGINT PRIMARY KEY, upto BIGINT)')
-        && $this->query(
             'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '
             .'strength TINYINT, upload BIGINT, download BIGINT)')
         && $this->query(
-            'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, cts BIGINT, '
+            'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, upto BIGINT, cts BIGINT, '
             .'stratum INT, fails INT, ip VARCHAR(15))')
         && $this->query(
             // TODO: Rename settings to config
@@ -158,46 +156,34 @@ class Database {
   }
 
   /**
-   * Insert wind and coverage data.
+   * Insert wind data.
    *
    * @param array $samples Samples provided by the client. Each is the result of one
-   *     Wind.get_sample() call on the client. Actual wind speed data may be absent, but coverage
-   *     data must be present.
+   *     Wind.get_sample() call on the client.
+   *
+   * @return integer The latest end timestamp (for latency computation). 0 indicates no data.
    */
   public function insertWind($samples) {
-    foreach ($samples as $sample) {
-      $stats = $sample['stats'];
-      if ($stats) {
-        $this->insertWindSpeed($stats);
+    foreach ($samples as $stats) {
+      // Insert histogram data first because we need the id-s in the hist table.
+      $histogram = $stats['hist'];
+      $histId = $this->insertHistogram($histogram);
+      if (!$histId) {
+        return;  // error already logged
+      }
+      $buckets = count($histogram);
+      $q = 'REPLACE INTO wind (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
+          .$stats['start_ts'].','.$stats['end_ts'].','.$stats['avg'].','
+          .$stats['max'].','.$stats['max_ts'].','.$histId.','.$buckets.')';
+      $this->log->debug('QUERY: '.$q);
+      if (!$this->query($q)) {
+        $this->logCritical('failed to insert wind measurements: '.$this->getError());
+        return;
       }
     }
 
-    // Insert coverage. We're only interested in the most recent timestamps and ignore those of
-    // previous failed upload attempts (if any).
-    $latestSample = $samples[count($samples) - 1];
-    $startupTimestamp = $latestSample[WIND_STARTUP_TIME_KEY];
-    $upToTimestamp = $latestSample[WIND_UP_TO_TIME_KEY];
-    $q = 'REPLACE INTO coverage (startup, upto) VALUES ('.$startupTimestamp.','.$upToTimestamp.')';
-    if (!$this->query($q)) {
-      $this->logCritical('failed to insert coverage timestamps: '.$this->getError());
-    }
-  }
-
-  private function insertWindSpeed($stats) {
-    // Insert histogram data first because we need the id-s in the hist table.
-    $histogram = $stats['hist'];
-    $histId = $this->insertHistogram($histogram);
-    if (!$histId) {
-      return;  // error already logged
-    }
-    $buckets = count($histogram);
-    $q = 'REPLACE INTO wind (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
-        .$stats['start_ts'].','.$stats['end_ts'].','.$stats['avg'].','
-        .$stats['max'].','.$stats['max_ts'].','.$histId.','.$buckets.')';
-    $this->log->debug('QUERY: '.$q);
-    if (!$this->query($q)) {
-      $this->logCritical('failed to insert wind measurements: '.$this->getError());
-    }
+    $c = count($samples);
+    return $c > 0 ? $samples[$c - 1]['end_ts'] : 0;
   }
 
   /** Returns the first (lowest) AUTO_INCREMENT ID generated, or NULL on error. */
@@ -227,10 +213,10 @@ class Database {
     return $row[0];
   }
 
-  public function insertMetadata($meta, $ip) {
-    $q = 'REPLACE INTO meta (ts, cts, stratum, fails, ip) VALUES ('.timestamp().','.
-        $meta[CLIENT_TIMESTAMP_KEY].','.$meta[STRATUM_KEY].','.$meta[FAILED_UPLOADS_KEY].',"'
-        .$ip.'")';
+  public function insertMetadata($meta) {
+    $q = 'REPLACE INTO meta (ts, upto, cts, stratum, fails, ip) VALUES ('.timestamp().','
+        .$meta['upto'].','.$meta[CLIENT_TIMESTAMP_KEY].','.$meta[STRATUM_KEY].','
+        .$meta[FAILED_UPLOADS_KEY].',"'.$_SERVER['REMOTE_ADDR'].'")';
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
       $this->logCritical('failed to insert metadata: ' . $this->getError());
@@ -548,8 +534,7 @@ class Database {
 
   public function readNetworkType($endTimestamp, $windowDuration) {
     $startTimestamp = $endTimestamp - $windowDuration;
-    $q = 'SELECT nwtype FROM link WHERE ts >= '.$startTimestamp
-        .' AND ts <= '.$endTimestamp;
+    $q = 'SELECT nwtype FROM link WHERE ts >= '.$startTimestamp.' AND ts <= '.$endTimestamp;
     $nwtypes = array();
     if ($result = $this->query($q)) {
       while ($row = $result->fetch_row()) {
@@ -575,6 +560,38 @@ class Database {
       return array('upload' => $upload, 'download' => $download);
     }
     $this->logCritical('failed to read transfer volume: "'.$q.'" -> '.$this->getError());
+    return null;
+  }
+
+  public function readLag($endTimestamp, $windowDuration) {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    // TODO: Filter rows with bad stratum (possibly require that the previous row is already good).
+    $q = 'SELECT ts, stratum, upto FROM meta WHERE ts >= '
+        .$startTimestamp.' AND ts <= '.$endTimestamp;
+    $lag = array();
+    $previousUpto = 0;
+    if ($result = $this->query($q)) {
+      while ($row = $result->fetch_assoc()) {
+        $upto = $row['upto'];
+        if (!$upto) {  // gaps occur when no wind sample was present in the upload
+          continue;
+        }
+        $ts = $row['ts'];
+        // Synthesize one record just (1ms) prior to the upload to indicate the maximum lag.
+        if ($previousUpto) {
+          $lag[$ts - 1] = $ts - $previousUpto;
+        }
+        $lag[$ts] = $ts - $upto;
+        $previousUpto = $upto;
+      }
+      // Add the current lag (which might be significant).
+      if ($previousUpto) {
+        $ts = timestamp();
+        $lag[$ts] = $ts - $previousUpto;
+      }
+      return $lag;
+    }
+    $this->logCritical('failed to read lag: "'.$q.'" -> '.$this->getError());
     return null;
   }
 

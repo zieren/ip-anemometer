@@ -28,6 +28,7 @@ function computeStats() {
         $timestamp, minutesToMillis($systemMinutes), $timeSeriesPoints);
     $stats[LINK_NW_TYPE_KEY_2] = $db->readNetworkType($timestamp, $systemMillis);
     $stats[LINK_UL_DL_KEY] = $db->readTransferVolume();
+    $stats['lag'] = $db->readLag($timestamp, $systemMillis);
   }
   return $stats;
 }

@@ -32,6 +32,7 @@ ipaView.updateChart = function() {
   chart.drawSignalStrength(ipaView.clearElement(document.getElementById('signalStrength')));
   chart.drawNetworkType(ipaView.clearElement(document.getElementById('nwType')));
   chart.drawTransferVolume(ipaView.clearElement(document.getElementById('transferVolume')));
+  chart.drawLag(ipaView.clearElement(document.getElementById('lag')));
 }
 
 ipaView.handleKeyPress = function(event) {
@@ -69,6 +70,7 @@ google.setOnLoadCallback(ipaView.updateChart);
 <div id="signalStrength" class="chart"></div>
 <div id="transferVolume" class="chart"></div>
 <div id="nwType" class="chart"></div>
+<div id="lag" class="chart"></div>
 <div id="expand" align="center">
   <button onclick="ipaView.expand()">Max Width</button>
 </div>

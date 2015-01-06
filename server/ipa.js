@@ -245,6 +245,23 @@ ipa.Chart.prototype.drawTransferVolume = function(element) {
   volumeChart.draw(volumeTable, options);
 }
 
+ipa.Chart.prototype.drawLag = function(element) {
+  var lagTable = new google.visualization.DataTable();
+  lagTable.addColumn('datetime');
+  lagTable.addColumn('number');
+  var lags = this.stats['lag'];
+  for (var ts in lags) {
+    lagTable.addRow([new Date(parseInt(ts)), lags[ts] / (1000 * 60)]);  // lag in minutes
+  }
+  var options = {
+    title: 'Lag [m]',
+    hAxis: {format: 'HH:mm'},
+    legend: 'none'
+  };
+  var lagChart = new google.visualization.LineChart(element);
+  lagChart.draw(lagTable, options);
+}
+
 ipa.Chart.insertCells_ = function(tr) {
   return function(var_args) {
     for (var i = 0; i < arguments.length; ++i) {
