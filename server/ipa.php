@@ -25,10 +25,10 @@ function computeStats() {
     $stats[TEMP_KEY_TIME_SERIES] = $db->readTemperature(
         $timestamp, $systemMillis, $timeSeriesPoints);
     $stats[LINK_STRENGTH_KEY_TIME_SERIES] = $db->readSignalStrength(
-        $timestamp, minutesToMillis($systemMinutes), $timeSeriesPoints);
+        $timestamp, $systemMillis, $timeSeriesPoints);
     $stats[LINK_NW_TYPE_KEY_2] = $db->readNetworkType($timestamp, $systemMillis);
     $stats[LINK_UL_DL_KEY] = $db->readTransferVolume();
-    $stats['lag'] = $db->readLag($timestamp, $systemMillis);
+    $stats['lag'] = $db->readLag($timestamp, $systemMillis, $timeSeriesPoints);
   }
   return $stats;
 }

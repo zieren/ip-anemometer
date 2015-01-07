@@ -2,7 +2,12 @@
 require_once 'common.php';
 require_once 'config.php';
 
-// TODO: Extract magic literals.
+// TODO: Better separation of DB and business logic.
+
+abstract class DownsampleMode {
+  const AVERAGE = 1;
+  const MIN_MAX = 2;
+}
 
 /**
  * General notes:
@@ -421,7 +426,7 @@ class Database {
       // and proceed to the next window.
       if ($inputEnd > $windowEnd || $i == 0) {
         $output[] = array(
-        	Database::center($windowStart, $windowEnd),
+            Database::center($windowStart, $windowEnd),
             $window[WIND_SAMPLE_AVG] / $windowDuration,
             $window[WIND_SAMPLE_MAX]
         );
@@ -451,30 +456,32 @@ class Database {
     return array($windowStart, $windowEnd, 0, -1);  // number of elements as in WIND_SAMPLE_*
   }
 
-  private static function downsampleTimeSeries($input, $outputLength) {
+  private static function downsampleTimeSeries($input, $outputLength,
+      $mode = DownsampleMode::AVERAGE) {
     $inputLength = count($input);
     if ($inputLength <= $outputLength || $inputLength <= 1) {  // nothing to downsample
       return $input;
     }
-    $output = array();
-    $startTs = $input[0][0];
-    $endTs = $input[$inputLength - 1][0];
+    reset($input);
+    $startTs = key($input);
+    end($input);
+    $endTs = key($input);
     $bucketIndex = 0;
     $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, $bucketIndex);
     $values = array();
     $timestamps = array();
-    for ($i = 0; $i < $inputLength; ++$i) {
-      $ts = $input[$i][0];
-      $value = $input[$i][1];
+    $output = array();
+    foreach ($input as $ts => $value) {
       if ($ts < $nextBucket) {
         $values[] = $value;
         $timestamps[] = $ts;
       }
       if ($ts >= $nextBucket || $i + 1 == $inputLength) {
         if ($values) {
-          $output[] = array(
-            intval(Database::average($timestamps)),
-            floatval(Database::average($values)));
+          $output[intval(Database::average($timestamps) + 0.5)] =
+              $mode == DownsampleMode::AVERAGE
+              ? Database::average($values)
+              : Database::minMax($values);  // DownsampleMode::MIN_MAX
         }
       }
       if ($ts >= $nextBucket) {
@@ -493,6 +500,7 @@ class Database {
     return intval((($endTs - $startTs) / $outputLength) * ($bucketIndex + 1) + $startTs);
   }
 
+  /** Returns the average of the specified array in a numerically stable way. */
   private static function average($values) {
     $average = 0;
     $n = count($values);
@@ -502,6 +510,10 @@ class Database {
     return $average;
   }
 
+  private static function minMax($values) {
+    return array(min($values), max($values));
+  }
+
   public function readTemperature($endTimestamp, $windowDuration, $timeSeriesPoints) {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, t FROM temp WHERE ts >= '.$startTimestamp
@@ -509,7 +521,7 @@ class Database {
     $temp = array();
     if ($result = $this->query($q)) {
       while ($row = $result->fetch_row()) {
-        $temp[] = array(intval($row[0]), floatval($row[1]));
+        $temp[intval($row[0])] = floatval($row[1]);
       }
       return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
     }
@@ -524,7 +536,7 @@ class Database {
     $strength = array();
     if ($result = $this->query($q)) {
       while ($row = $result->fetch_row()) {
-        $strength[] = array(intval($row[0]), intval($row[1]));
+        $strength[intval($row[0])] = intval($row[1]);
       }
       return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
     }
@@ -538,7 +550,6 @@ class Database {
     $nwtypes = array();
     if ($result = $this->query($q)) {
       while ($row = $result->fetch_row()) {
-        // TODO: This should use friendly names, produced in huawei_status.py.
         $nwtypes[$row[0]] = $nwtypes[$row[0]] + 1;
       }
       return $nwtypes;
@@ -563,7 +574,7 @@ class Database {
     return null;
   }
 
-  public function readLag($endTimestamp, $windowDuration) {
+  public function readLag($endTimestamp, $windowDuration, $timeSeriesPoints) {
     $startTimestamp = $endTimestamp - $windowDuration;
     // TODO: Filter rows with bad stratum (possibly require that the previous row is already good).
     $q = 'SELECT ts, stratum, upto FROM meta WHERE ts >= '
@@ -589,7 +600,7 @@ class Database {
         $ts = timestamp();
         $lag[$ts] = $ts - $previousUpto;
       }
-      return $lag;
+      return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
     }
     $this->logCritical('failed to read lag: "'.$q.'" -> '.$this->getError());
     return null;

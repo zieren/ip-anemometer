@@ -181,11 +181,9 @@ ipa.Chart.prototype.drawTemperature = function(element) {
   var temperatureTable = new google.visualization.DataTable();
   temperatureTable.addColumn('datetime');
   temperatureTable.addColumn('number');
-  var timeSeries = this.stats[ipa.key.TEMP_TIME_SERIES];
-  for (var i = 0; i < timeSeries.length; ++i) {
-    var row = timeSeries[i];
-    row[0] = new Date(row[0]);  // convert timestamp to Date object
-    temperatureTable.addRow(row);
+  var temperature = this.stats[ipa.key.TEMP_TIME_SERIES];
+  for (var ts in temperature) {
+    temperatureTable.addRow([new Date(parseInt(ts)), temperature[ts]]);
   }
   var options = {
     title: 'CPU temperature [°C]',
@@ -200,11 +198,9 @@ ipa.Chart.prototype.drawSignalStrength = function(element) {
   var strengthTable = new google.visualization.DataTable();
   strengthTable.addColumn('datetime');
   strengthTable.addColumn('number');
-  var timeSeries = this.stats[ipa.key.LINK_STRENGTH_TIME_SERIES];
-  for (var i = 0; i < timeSeries.length; ++i) {
-    var row = timeSeries[i];
-    row[0] = new Date(row[0]);  // convert timestamp to Date object
-    strengthTable.addRow(row);
+  var signalStrength = this.stats[ipa.key.LINK_STRENGTH_TIME_SERIES];
+  for (var ts in signalStrength) {
+    strengthTable.addRow([new Date(parseInt(ts)), signalStrength[ts]]);
   }
   var options = {
     title: 'Signal strength [%]',
@@ -239,7 +235,8 @@ ipa.Chart.prototype.drawTransferVolume = function(element) {
     volumeTable.addRow([i, volumes[i] / (1024 * 1024)]);  // in MB
   }
   var options = {
-    title: 'Transfer volume [MB]'
+    title: 'Transfer volume [MB]',
+    legend: 'none'
   };
   var volumeChart = new google.visualization.ColumnChart(element);
   volumeChart.draw(volumeTable, options);
@@ -248,15 +245,18 @@ ipa.Chart.prototype.drawTransferVolume = function(element) {
 ipa.Chart.prototype.drawLag = function(element) {
   var lagTable = new google.visualization.DataTable();
   lagTable.addColumn('datetime');
-  lagTable.addColumn('number');
-  var lags = this.stats['lag'];
-  for (var ts in lags) {
-    lagTable.addRow([new Date(parseInt(ts)), lags[ts] / (1000 * 60)]);  // lag in minutes
+  lagTable.addColumn('number', 'min');
+  lagTable.addColumn('number', 'max');
+  var lag = this.stats['lag'];
+  for (var ts in lag) {
+    var minLag = lag[ts][0] / (1000 * 60);  // lag in minutes
+    var maxLag = lag[ts][1] / (1000 * 60);
+    lagTable.addRow([new Date(parseInt(ts)), minLag, maxLag]);
   }
   var options = {
-    title: 'Lag [m]',
+    title: 'Upload lag [m]',
     hAxis: {format: 'HH:mm'},
-    legend: 'none'
+    legend: {position: 'top'}
   };
   var lagChart = new google.visualization.LineChart(element);
   lagChart.draw(lagTable, options);
