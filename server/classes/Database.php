@@ -578,7 +578,7 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration;
     // TODO: Filter rows with bad stratum (possibly require that the previous row is already good).
     $q = 'SELECT ts, stratum, upto FROM meta WHERE ts >= '
-        .$startTimestamp.' AND ts <= '.$endTimestamp;
+        .$startTimestamp.' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $lag = array();
     $previousUpto = 0;
     if ($result = $this->query($q)) {
