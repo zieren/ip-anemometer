@@ -244,22 +244,42 @@ ipa.Chart.prototype.drawTransferVolume = function(element) {
 
 ipa.Chart.prototype.drawLag = function(element) {
   var lagTable = new google.visualization.DataTable();
+  var lag = this.stats['lag'];
+  var options = {
+      title: 'Upload lag [m]',
+      hAxis: {format: 'HH:mm'}
+  };
+  for (var ts in lag) {  // just to get the first property
+    if (lag[ts] instanceof Array) {  // min and max in an array
+      this.prepareLagChartMinMax(lag, lagTable, options);
+    } else {  // single value
+      this.prepareLagChartSingleValue(lag, lagTable, options);
+    }
+    break;
+  }
+  var lagChart = new google.visualization.LineChart(element);
+  lagChart.draw(lagTable, options);
+}
+
+ipa.Chart.prototype.prepareLagChartMinMax = function(lag, lagTable, options) {
   lagTable.addColumn('datetime');
   lagTable.addColumn('number', 'min');
   lagTable.addColumn('number', 'max');
-  var lag = this.stats['lag'];
   for (var ts in lag) {
     var minLag = lag[ts][0] / (1000 * 60);  // lag in minutes
     var maxLag = lag[ts][1] / (1000 * 60);
     lagTable.addRow([new Date(parseInt(ts)), minLag, maxLag]);
   }
-  var options = {
-    title: 'Upload lag [m]',
-    hAxis: {format: 'HH:mm'},
-    legend: {position: 'top'}
-  };
-  var lagChart = new google.visualization.LineChart(element);
-  lagChart.draw(lagTable, options);
+  options.legend = {position: 'top'};
+}
+
+ipa.Chart.prototype.prepareLagChartSingleValue = function(lag, lagTable, options) {
+  lagTable.addColumn('datetime');
+  lagTable.addColumn('number');
+  for (var ts in lag) {
+    lagTable.addRow([new Date(parseInt(ts)), lag[ts] / (1000 * 60)]);  // lag in minutes
+  }
+  options.legend = 'none';
 }
 
 ipa.Chart.insertCells_ = function(tr) {
