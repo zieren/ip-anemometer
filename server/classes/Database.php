@@ -467,40 +467,49 @@ class Database {
     end($input);
     $endTs = key($input);
     $bucketIndex = 0;
-    $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, $bucketIndex);
+    $bucketEndTs = Database::getBucketEndTs($startTs, $endTs, $outputLength, $bucketIndex);
     $values = array();
     $timestamps = array();
     $output = array();
     foreach ($input as $ts => $value) {
-      if ($ts < $nextBucket) {
+      // Still in current bucket?
+      if ($ts < $bucketEndTs) {
         $values[] = $value;
         $timestamps[] = $ts;
       }
-      if ($ts >= $nextBucket || $i + 1 == $inputLength) {
+      // Output the bucket when it's finished or at the end of the iteration.
+      if ($ts >= $bucketEndTs || $ts === $endTs) {
         if ($values) {
           $output[intval(Database::average($timestamps) + 0.5)] =
-              $mode == DownsampleMode::AVERAGE
+              $mode === DownsampleMode::AVERAGE
               ? Database::average($values)
               : Database::minMax($values);  // DownsampleMode::MIN_MAX
         }
       }
-      if ($ts >= $nextBucket) {
+      // Start a new bucket?
+      if ($ts >= $bucketEndTs) {
         $values = array($value);
         $timestamps = array($ts);
-        $nextBucket = Database::getNextBucket($startTs, $endTs, $outputLength, ++$bucketIndex);
+        while ($ts >= $bucketEndTs) {  // skip empty buckets, if any
+          $bucketEndTs = Database::getBucketEndTs($startTs, $endTs, $outputLength, ++$bucketIndex);
+        }
       }
     }
     return $output;
   }
 
-  private static function getNextBucket($startTs, $endTs, $outputLength, $bucketIndex) {
+  /**
+   * Return the end timestamp (exclusive) of the current bucket, or PHP_INT_MAX if the current
+   * bucket is the last bucket.
+   */
+  private static function getBucketEndTs($startTs, $endTs, $outputLength, $bucketIndex) {
     if ($bucketIndex + 1 == $outputLength) {
       return PHP_INT_MAX;  // last bucket catches all
     }
     return intval((($endTs - $startTs) / $outputLength) * ($bucketIndex + 1) + $startTs);
   }
 
-  /** Returns the average of the specified array in a numerically stable way. */
+  /** Compute the average of the specified array in a numerically stable way. */
   private static function average($values) {
     $average = 0;
     $n = count($values);
