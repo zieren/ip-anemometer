@@ -31,10 +31,11 @@ class Wind:
     # Initialize GPIO.
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(C.WIND_INPUT_PIN(), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    # Up to (at least) GPIO 0.5.7 edge detection is partly broken. FALLING and RISING behave like
-    # BOTH. I.e. BOTH is the only mode that works as expected, so we use BOTH even though that makes
-    # computation of revolution time more complicated. (Unfortunately the callback isn't passed the
-    # value that triggered it, so we can't just skip edges we don't want.)
+    # Up to (at least) GPIO 0.5.9 edge detection is partly broken. RISING always behaves like BOTH,
+    # FALLING sometimes behaves like BOTH. So since BOTH is the only mode that works as expected, we
+    # use BOTH even though that makes computation of revolution time more complicated.
+    # (Unfortunately the callback isn't passed the value that triggered it, so we can't just skip
+    # edges we don't want.)
     # Bug report: https://sourceforge.net/p/raspberry-gpio-python/tickets/79/
     GPIO.add_event_detect(C.WIND_INPUT_PIN(), GPIO.BOTH,
                           callback=callback, bouncetime=C.WIND_DEBOUNCE_MILLIS())
