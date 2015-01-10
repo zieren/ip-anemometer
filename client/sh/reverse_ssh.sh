@@ -28,6 +28,7 @@ SERVER_ALIVE_COUNT_MAX=2
 
 while true; do
   log "connecting..."
+  # TODO: Consider removing logging here, or at least suppress the above and the "retval: 255" msg.
   sshpass -p "$PASSWORD" \
   ssh -o "ServerAliveInterval=$SERVER_ALIVE_INTERVAL" \
       -o "ServerAliveCountMax=$SERVER_ALIVE_COUNT_MAX" \
