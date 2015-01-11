@@ -3,14 +3,31 @@
  * TODO: Split this file up.
  */
 
-require_once('config.php');
-
-assert_options(ASSERT_BAIL, true);
+require_once 'config.php';
 
 function autoloader($class) {
   include 'classes/' . str_replace('\\', '/', $class) . '.php';
 }
 spl_autoload_register('autoloader');
+
+// Logger must be initialized before used in ipaFatalErrorHandler; see
+// http://stackoverflow.com/questions/4242534/php-shutdown-cant-write-files
+define('LOG_DIR', 'logs');
+Logger::Instance();
+
+function ipaErrorHandler($errno, $errstr, $errfile, $errline, $errcontext) {
+  Logger::Instance()->critical('Error '.$errno.': '.$errstr.' -- '.$errfile.':'.$errline);
+  return false;  // continue with built-in error handling
+}
+set_error_handler('ipaErrorHandler');
+
+function ipaFatalErrorHandler() {
+  $error = error_get_last();
+  if ($error && $error['type'] === E_ERROR) {
+    Logger::Instance()->critical('Error: '.json_encode($error));
+  }
+}
+register_shutdown_function('ipaFatalErrorHandler');
 
 define('NOT_AVAILABLE', 'n/a');
 
@@ -29,11 +46,8 @@ define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human r
 // Maximum amount of time the desired window size is shifted back to compensate for upload
 // latency. TODO: This (and possibly other values) should be configurable.
 define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
-define('LOG_DIR', 'logs/.');
 define('CLIENT_UPDATE_MAX_SIZE', 1024 * 1024);  // 1MB
 
-// Request/response constants. Keep these in sync with ipa.js.
-define('RESPONSE_NO_STATS', 'n/a');
 // Defaults and limits for request arguments.
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);

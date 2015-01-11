@@ -30,11 +30,10 @@ function computeStats() {
   return $stats;
 }
 
-$stats = computeStats();
-
-if ($stats) {
-  echo json_encode($stats);
-} else {
-  echo RESPONSE_NO_STATS;
+try {
+  $stats = computeStats();
+} catch (Exception $e) {
+  http_response_code(500);
 }
+echo json_encode($stats);
 ?>

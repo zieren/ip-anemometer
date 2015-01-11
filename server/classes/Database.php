@@ -16,26 +16,16 @@ abstract class DownsampleMode {
  * server's response).
  */
 class Database {
-  /** Our KLogger instance. */
-  private $log = null;
-
-  /** Connection to the database. */
-  private $mysqli = null;
-
-  /** All tables. */
-  private $allTables = null;
-
   /** Connects to the database, or exits on error. */
   public function __construct() {
     $this->log = Logger::Instance();
-    $this->allTables = array('temp', 'wind', 'hist', 'link', 'meta', 'settings');
     $this->mysqli = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
-      $this->logCritical('failed to connect to MySQL: ('.$mysqli->connect_errno.') '
-          .$this->mysqli->connect_error);
-      exit(1);
+      $this->throwMySqlErrorException('__construct()');
     }
-    assert($this->mysqli->select_db(DB_NAME));
+    if (!$this->mysqli->select_db(DB_NAME)) {
+      $this->throwMySqlErrorException('select_db('.DB_NAME.')');
+    }
     // TODO: Read config and set log level.
   }
 
@@ -51,72 +41,30 @@ class Database {
     $this->query('ROLLBACK');
   }
 
-  /** Log to file and stdout. */
-  private function logError($message) {
-    $this->log->error($message);
-    echo '<p>ERROR: ' . $message . '</p>';
-  }
-
-  /** Log to file and stdout. */
-  private function logCritical($message) {
-    $this->log->critical($message);
-    echo '<p>CRITICAL: ' . $message . '</p>';
-  }
-
-  /** Run the specified query. */
-  private function query($query) {
-    return $this->mysqli->query($query);
-  }
-
-  /** @return The connection's 'error' field. */
-  private function getError() {
-    return $this->mysqli->error;
-  }
-
-  /**
-   * Create all tables, if not exists.
-   *
-   * @return null on success, error text on failure.
-   */
   public function createTables() {
-    if ($this->query('SET storage_engine=INNODB')
-        && $this->query(
-            'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)')
-        && $this->query(
-            'CREATE TABLE IF NOT EXISTS wind (start_ts BIGINT PRIMARY KEY, '
-            .'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)')
-        && $this->query(
-            'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)')
-        && $this->query(
-            'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '
-            .'strength TINYINT, upload BIGINT, download BIGINT)')
-        && $this->query(
-            'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, upto BIGINT, cts BIGINT, '
-            .'stratum INT, fails INT, ip VARCHAR(15))')
-        && $this->query(
-            // TODO: Rename settings to config
-            'CREATE TABLE IF NOT EXISTS settings (k VARCHAR(256) PRIMARY KEY, v TEXT)')) {
-      $this->log->notice('tables created');
-    } else {
-      $this->logError('failed to create tables: ' . $this->getError());
-      return $this->getError();
-    }
-    return null;
+    $this->query('SET storage_engine=INNODB');
+    $this->query(
+        'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)');
+    $this->query(
+        'CREATE TABLE IF NOT EXISTS wind (start_ts BIGINT PRIMARY KEY, '
+        .'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)');
+    $this->query(
+        'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)');
+    $this->query(
+        'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '
+        .'strength TINYINT, upload BIGINT, download BIGINT)');
+    $this->query(
+        'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, upto BIGINT, cts BIGINT, '
+        .'stratum INT, fails INT, ip VARCHAR(15))');
+    $this->query(
+        // TODO: Rename settings to config
+        'CREATE TABLE IF NOT EXISTS settings (k VARCHAR(256) PRIMARY KEY, v TEXT)');
+    $this->log->notice('tables created');
   }
 
-  /**
-   * Drop all tables, if exists.
-   *
-   * @return null on success, error text on failure.
-   */
   public function dropTables() {
-    if ($this->query('DROP TABLE IF EXISTS ' . join(',', $this->allTables))) {
-      $this->log->notice('tables dropped');
-    } else {
-      $this->logError('Failed to drop tables: ' . $this->getError());
-      return $this->getError();
-    }
-    return null;
+    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, settings');
+    $this->log->notice('tables dropped');
   }
 
   public function insertTemperature($temp) {
@@ -133,10 +81,7 @@ class Database {
     }
 
     $q = 'REPLACE INTO temp (ts, t) VALUES '.$q;
-    $this->log->debug('QUERY: '.$q);
-    if (!$this->query($q)) {
-      $this->logCritical('failed to insert temperature measurements: '.$this->getError());
-    }
+    $this->query($q);
   }
 
   public function insertLinkStatus($linkStatus) {
@@ -154,10 +99,7 @@ class Database {
     }
 
     $q = 'REPLACE INTO link (ts, nwtype, strength, upload, download) VALUES '.$q;
-    $this->log->debug('QUERY: '.$q);
-    if (!$this->query($q)) {
-      $this->logCritical('failed to insert link status: ' . $this->getError());
-    }
+    $this->query($q);
   }
 
   /**
@@ -170,21 +112,14 @@ class Database {
    */
   public function insertWind($samples) {
     foreach ($samples as $stats) {
-      // Insert histogram data first because we need the id-s in the hist table.
+      // Insert histogram data first because we need the IDs in the hist table.
       $histogram = $stats['hist'];
       $histId = $this->insertHistogram($histogram);
-      if (!$histId) {
-        return;  // error already logged
-      }
       $buckets = count($histogram);
       $q = 'REPLACE INTO wind (start_ts, end_ts, avg, max, max_ts, hist_id, buckets) VALUES ('
           .$stats['start_ts'].','.$stats['end_ts'].','.$stats['avg'].','
           .$stats['max'].','.$stats['max_ts'].','.$histId.','.$buckets.')';
-      $this->log->debug('QUERY: '.$q);
-      if (!$this->query($q)) {
-        $this->logCritical('failed to insert wind measurements: '.$this->getError());
-        return;
-      }
+      $this->query($q);
     }
 
     $c = count($samples);
@@ -202,19 +137,12 @@ class Database {
       $q .= '('.$v.','.$p.')';
     }
     $q = 'INSERT INTO hist (v, p) VALUES '.$q;
-    $this->log->debug('QUERY: '.$q);
-    $result = $this->query($q);
-    if (!$result) {
-      $this->logCritical('failed to insert histogram: '.$this->getError());
-      return null;
-    }
+    $this->query($q);
 
-    $result = $this->query('SELECT LAST_INSERT_ID()');
-    if (!$result) {
-      $this->logCritical('failed to obtain LAST_INSERT_ID: '.$this->getError());
-      return null;
+    $row = $this->query('SELECT LAST_INSERT_ID()')->fetch_row();
+    if (!$row[0]) {
+      $this->throwException('SELECT LAST_INSERT_ID() -- returned no result');
     }
-    $row = $result->fetch_row();
     return $row[0];
   }
 
@@ -222,27 +150,20 @@ class Database {
     $q = 'REPLACE INTO meta (ts, upto, cts, stratum, fails, ip) VALUES ('.timestamp().','
         .$meta['upto'].','.$meta['cts'].','.$meta['stratum'].','
         .$meta['fails'].',"'.$_SERVER['REMOTE_ADDR'].'")';
-    $this->log->debug('QUERY: '.$q);
-    if (!$this->query($q)) {
-      $this->logCritical('failed to insert metadata: ' . $this->getError());
-    }
+    $this->query($q);
   }
 
   /** Updates the specified setting. */
   public function updateSetting($key, $value) {
     $q = 'REPLACE INTO settings (k, v) VALUES ("'.$key.'", "'.$value.'")';
-    if (!$this->query($q)) {
-      $this->logCritical('failed to update setting ('.$key.'='.$value.'): '.$this->getError());
-    }
+    $this->query($q);
     unset($this->appSettings);
   }
 
   /** Deletes the specified setting. */
   public function clearSetting($key) {
     $q = 'DELETE FROM settings WHERE k="'.$key.'"';
-    if (!$this->query($q)) {
-      $this->logCritical('failed to clear setting ('.$key.'): '.$this->getError());
-    }
+    $this->query($q);
     unset($this->appSettings);
   }
 
@@ -250,12 +171,9 @@ class Database {
   public function getAppSettings() {
     if (!isset($this->appSettings)) {
       $this->appSettings = array();
-      if ($result = $this->query('SELECT k, v FROM settings')) {
-        while ($row = $result->fetch_assoc()) {
-          $this->appSettings[$row['k']] = $row['v'];
-        }
-      } else {
-        $this->logCritical('failed to read settings: '.$this->getError());
+      $result = $this->query('SELECT k, v FROM settings');
+      while ($row = $result->fetch_assoc()) {
+        $this->appSettings[$row['k']] = $row['v'];
       }
     }
     return $this->appSettings;
@@ -279,8 +197,7 @@ class Database {
         .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
         .' AND end_ts <= '.$maxEndTimestamp
         .' ORDER BY start_ts DESC';
-    $result = $this->checkQuery($q);
-    if (!$result) return null;
+    $result = $this->query($q, null);
 
     // Read samples in reverse chronological order until the desired duration is best approximated.
     // At the same time, compute running stats except histogram.
@@ -327,14 +244,14 @@ class Database {
       $avgKmh += $sample['avg'] * $sampleDuration;
     }
     if (count($selectedSamples) == 0) {
-      return null;
+      return null;  // indicates that no data is available for the selected time period
     }
     $avgKmh /= $actualWindowDuration;
 
     // Compute histogram.
     $q = 'SELECT id, v, p from hist WHERE id >= '.$minHistId.' AND id <= '.$maxHistId
         .' ORDER BY id DESC';
-    $result = $this->checkQuery($q);
+    $result = $this->query($q, null);
     $histogram = array();
     $i = 0;
     $sampleDuration = Database::getSampleDuration($selectedSamples[0]);
@@ -527,15 +444,12 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, t FROM temp WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $result = $this->query($q, null);
     $temp = array();
-    if ($result = $this->query($q)) {
-      while ($row = $result->fetch_row()) {
-        $temp[intval($row[0])] = floatval($row[1]);
-      }
-      return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
+    while ($row = $result->fetch_row()) {
+      $temp[intval($row[0])] = floatval($row[1]);
     }
-    $this->logCritical('failed to read temperature: "'.$q.'" -> '.$this->getError());
-    return null;
+    return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
   }
 
   public function readSignalStrength($endTimestamp, $windowDuration, $timeSeriesPoints) {
@@ -543,44 +457,35 @@ class Database {
     $q = 'SELECT ts, strength FROM link WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $strength = array();
-    if ($result = $this->query($q)) {
-      while ($row = $result->fetch_row()) {
-        $strength[intval($row[0])] = intval($row[1]);
-      }
-      return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
+    $result = $this->query($q, null);
+    while ($row = $result->fetch_row()) {
+      $strength[intval($row[0])] = intval($row[1]);
     }
-    $this->logCritical('failed to read signal strength: "'.$q.'" -> '.$this->getError());
-    return null;
+    return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
   }
 
   public function readNetworkType($endTimestamp, $windowDuration) {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT nwtype FROM link WHERE ts >= '.$startTimestamp.' AND ts <= '.$endTimestamp;
     $nwtypes = array();
-    if ($result = $this->query($q)) {
-      while ($row = $result->fetch_row()) {
-        $nwtypes[$row[0]] += 1;
-      }
-      return $nwtypes;
+    $result = $this->query($q, null);
+    while ($row = $result->fetch_row()) {
+      $nwtypes[$row[0]] += 1;
     }
-    $this->logCritical('failed to read network types: "'.$q.'" -> '.$this->getError());
-    return null;
+    return $nwtypes;
   }
 
   public function readTransferVolume() {
-    $q = 'SELECT upload, download FROM link ORDER BY ts DESC';
-    if ($result = $this->query($q)) {
-      if ($row = $result->fetch_row()) {
-        $upload = intval($row[0]);
-        $download = intval($row[1]);
-      } else {
-        $upload = 0;
-        $download = 0;
-      }
-      return array('upload' => $upload, 'download' => $download);
+    $q = 'SELECT upload, download FROM link ORDER BY ts DESC LIMIT 1';
+    $result = $this->query($q, null);
+    if ($row = $result->fetch_row()) {
+      $upload = intval($row[0]);
+      $download = intval($row[1]);
+    } else {
+      $upload = 0;
+      $download = 0;
     }
-    $this->logCritical('failed to read transfer volume: "'.$q.'" -> '.$this->getError());
-    return null;
+    return array('upload' => $upload, 'download' => $download);
   }
 
   public function readLag($endTimestamp, $windowDuration, $timeSeriesPoints) {
@@ -590,77 +495,55 @@ class Database {
         .$startTimestamp.' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $lag = array();
     $previousUpto = 0;
-    if ($result = $this->query($q)) {
-      while ($row = $result->fetch_assoc()) {
-        $upto = $row['upto'];
-        if (!$upto) {  // gaps occur when no wind sample was present in the upload
-          continue;
-        }
-        $ts = $row['ts'];
-        // Synthesize one record just (1ms) prior to the upload to indicate the maximum lag.
-        if ($previousUpto) {
-          $lag[$ts - 1] = $ts - $previousUpto;
-        }
-        $lag[$ts] = $ts - $upto;
-        $previousUpto = $upto;
+    $result = $this->query($q, null);
+    while ($row = $result->fetch_assoc()) {
+      $upto = $row['upto'];
+      if (!$upto) {  // gaps (value 0) occur when no wind sample was present in the upload
+        continue;
       }
-      // Add the current lag (which might be significant).
+      $ts = $row['ts'];
+      // Synthesize one record just (1ms) prior to the upload to indicate the maximum lag.
       if ($previousUpto) {
-        $ts = timestamp();
-        $lag[$ts] = $ts - $previousUpto;
+        $lag[$ts - 1] = $ts - $previousUpto;
       }
-      return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
+      $lag[$ts] = $ts - $upto;
+      $previousUpto = $upto;
     }
-    $this->logCritical('failed to read lag: "'.$q.'" -> '.$this->getError());
-    return null;
+    // Add the current lag (which might be significant).
+    if ($previousUpto) {
+      $ts = timestamp();
+      $lag[$ts] = $ts - $previousUpto;
+    }
+    return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
   }
 
   public function echoSettings() {
-    echo '<p><table border="1">';
+    echo '<p><table>';
     foreach ($this->getAppSettings() as $k => $v) {
       echo '<tr><td>'.$k.'</td><td>'.$v.'</td></tr>';
     }
     echo '</table></p>';
   }
 
-  // TODO: Remove testing methods.
-  public function echoTemp() {
-    if (!($result = $this->query('SELECT * FROM temp ORDER BY ts DESC LIMIT 3'))) {
-      echo $this->getError();
-      return;
+  /**
+   * Runs the specified query, throwing an Exception on failure. Logs the query unconditionally with
+   * the specified level (specify null to disable logging). */
+  private function query($query, $logLevel = 'debug') {
+    $this->log->log($logLevel, 'Query: '.$query);
+    if ($result = $this->mysqli->query($query)) {
+      return $result;
     }
-    echo '<table border="1">';
-    while ($row = $result->fetch_assoc()) {
-      echo '<tr><td>' . formatTimestamp($row['ts']) . '</td><td>' . $row['t'] . '</td></tr>';
-    }
-    echo '</table>';
+    $this->throwMySqlErrorException($query);
   }
 
-  public function echoMeta() {
-    if (!($result = $this->query('SELECT * FROM meta ORDER BY ts DESC LIMIT 5'))) {
-      echo $this->getError();
-      return;
-    }
-    echo '<table border="1">';
-    while ($row = $result->fetch_assoc()) {
-      echo '<tr><td>'.$row['ts'].'</td><td>'.$row['cts'].'</td><td>'.$row['ip'].'</td><td>'
-          .$row['stratum'].'</td></tr>';
-    }
-    echo '</table>';
+  private function throwMySqlErrorException($query) {
+    $message = 'MySQL error '.$this->mysqli->errno.': '.$this->mysqli->error.' -- Query: '.$query;
+    $this->throwException($message);
   }
 
-  // TODO: Use this.
-  private function checkQuery($query, $message = null) {
-    $result = $this->query($query);
-    if (!$result) {
-      if ($message) {
-        $extendedMessage = $message.' -- ';
-      }
-      $extendedMessage .= 'Error: '.$this->getError().' -- Query: '.$query;
-      $this->log->critical($extendedMessage);
-      // TODO: exit($extendedMessage);
-    }
-    return $result;
+  private function throwException($message) {
+    $this->log->critical($message);
+    throw new Exception($message);
   }
 }
 ?>

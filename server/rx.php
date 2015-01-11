@@ -4,52 +4,45 @@ require_once 'common.php';
 // TODO: Return response (which might be an update) even when DB queries fail. DB queries should
 // still be more robust.
 
-function handleRequest($logger) {
-  $db = new Database();
-
-  $response = array();
+function handleRequest() {
+  $logger = Logger::Instance();
   $contentBz2 = file_get_contents('php://input');
-  if (strlen($contentBz2) > 0) {  // note that bzip2 never outputs ""
-    $dataJson = bzdecompress($contentBz2);
-    if (!is_string($dataJson)) {
-      $logger->alert('bzip2 decompression failed: '.$dataJson);
-      $response['status'] = 'bzip2 decompression failed';
-      return $response;
-    }
-    $data = json_decode($dataJson, true);
-    if ($data === NULL) {
-      $logger->alert('json decoding failed');  // don't log potentially large $dataJson
-      $response['status'] = 'json decoding failed';
-      return $response;
-    }
+  if (!$contentBz2) {  // note that bzip2 never outputs ""
+    return array('status' => 'no data received');
+  }
+  $data = json_decode(bzdecompress($contentBz2), true);
+  if (!$data) {
+    $logger->critical('json decoding or bzip2 decompression failed');
+    return array('status' => 'invalid json or bzip2');
+  }
 
+  $db = new Database();  // TODO: Handle failure.
+  $settings = $db->getAppSettings();
+  $response = array();
+  try {
     $db->beginTransaction();
+    $meta = $data['meta'];  // Metadata is required in each request.
+    $logger->debug('client md5: '.$meta['md5'].' - server has: '.$settings['md5']);
 
-    // Metadata is required in each request.
-    $meta = $data['meta'];
+    // First check whether a client update is available. Note that on startup the client always
+    // downloads the latest version, so this applies only to updates while the client is running.
+    // When the client is started directly (i.e. not via the wrapper) it sets its md5 to
+    // NOT_AVAILABLE. We don't want to exit in that case.
+    if (isset($meta['md5']) && $meta['md5'] != NOT_AVAILABLE
+        && isset($settings['md5']) && $meta['md5'] != $settings['md5']) {
+      $logger->notice('updating client '.$meta['md5'].' to '.$settings['md5']);
+      $response['exit'] = 0;  // retval 0 will exit -> update -> restart the client
+      // We trigger the client update also if our status is not OK, since that is often caused by an
+      // outdated client version. Updating would drop the data that the old client was trying to
+      // upload, but since this event should be rare we accept that.
+    }
 
     $meta['upto'] = 0;  // means n/a
     if (isset($data['wind'])) {
       $meta['upto'] = $db->insertWind($data['wind']);
     }
-
     $meta['fails'] = $data['upload']['fails'];
-    // TODO: Throw exceptions and rollback on failure. However, this doesn't prevent: "ok" reply to
-    // client is lost, client resends all data, all rows are overwritten except in hist table.
     $db->insertMetadata($meta);
-
-    $settings = $db->getAppSettings();
-    $logger->debug('client md5: '.$meta['md5'].' - server has: '.$settings['md5']);
-
-    $response = array();
-
-    // The client does not set the md5 when it's started directly (i.e. not via the wrapper). We
-    // don't want to exit in that case.
-    if (isset($meta['md5']) && $meta['md5'] != NOT_AVAILABLE
-        && isset($settings['md5']) && $meta['md5'] != $settings['md5']) {
-      $logger->notice('updating client '.$meta['md5'].' to '.$settings['md5']);
-      $response['exit'] = 0;  // retval 0 will exit -> update -> restart the client
-    }
 
     if (isset($data['temp'])) {
       $db->insertTemperature($data['temp']);
@@ -63,15 +56,15 @@ function handleRequest($logger) {
 
     $response['status'] = 'ok';
     // TODO: Add support for reboot, shutdown etc.
-
-    return $response;
+  } catch (Exception $e) {
+    $db->rollback();
+    $logger->critical('Exception in rx.php: '.$e);
+    $response['status'] = 'failure';
   }
+  return $response;
 }
 
-$logger = Logger::Instance();
-$response = handleRequest($logger);
-$jsonResponse = json_encode($response);
+$jsonResponse = json_encode(handleRequest());
 echo $jsonResponse;
-$logger->debug('RESPONSE: '.$jsonResponse);
-
+Logger::Instance()->debug('RESPONSE: '.$jsonResponse);
 ?>

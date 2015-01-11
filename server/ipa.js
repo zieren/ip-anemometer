@@ -16,10 +16,6 @@ ipa.Options = function() {
   this.dummy = false;  // Output inconsistent dummy data for testing.
 }
 
-// Keep these in sync with common.php.
-ipa.constants = {};
-ipa.constants.RESPONSE_NO_STATS = 'n/a';
-
 ipa.Chart = function(options) {
   this.options = new ipa.Options();
   for (var i in options) {
@@ -56,12 +52,13 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
     }
   }
   request.send();
+  // TODO: Handle request error (500).
   if (!isAsync) {
-    // TODO: Handle request error.
-    if (request.responseText === ipa.constants.RESPONSE_NO_STATS) {
-      this.stats = null;  // TODO: Handle this below.
-    } else {
-      this.stats = JSON.parse(request.responseText);
+    this.stats = JSON.parse(request.responseText);
+    if (!this.stats.wind) {
+      alert('No wind data available.');
+      // TODO: Signal this to the client instead. Also allow the client to get the lag so it can
+      // show a message for stale data.
     }
   }
 }

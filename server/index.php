@@ -17,19 +17,9 @@ $db = new Database();
 
 // Create tables first, otherwise subsequent operation will fail.
 if (isset($_POST[$CREATE]) && $_POST[$CONFIRM]) {
-  if ($error = $db->createTables()) {
-    echo '<p><b>table creation failed: '.$error.'</b></p>';
-  } else {
-    echo '<p><b>tables created OK</b></p>';
-  }
-}
-
-if (isset($_POST[$DROP]) && $_POST[$CONFIRM]) {
-  if ($error = $db->dropTables()) {
-    echo '<p><b>drop tables failed: '.$error.'</b></p>';
-  } else {
-    echo '<p><b>tables dropped OK</b></p>';
-  }
+  $db->createTables();
+} else if (isset($_POST[$DROP]) && $_POST[$CONFIRM]) {
+  $db->dropTables();
 } else if (isset($_POST[$UPDATE_SETTING])) {
   // TODO: This should sanitize the user input.
   $db->updateSetting($_POST[$SETTING_KEY], $_POST[$SETTING_VALUE]);
