@@ -559,7 +559,7 @@ class Database {
     $nwtypes = array();
     if ($result = $this->query($q)) {
       while ($row = $result->fetch_row()) {
-        $nwtypes[$row[0]] = $nwtypes[$row[0]] + 1;
+        $nwtypes[$row[0]] += 1;
       }
       return $nwtypes;
     }
