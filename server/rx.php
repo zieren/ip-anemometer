@@ -27,11 +27,11 @@ function handleRequest($logger) {
     $db->beginTransaction();
 
     // Metadata is required in each request.
-    $meta = $data[META_KEY];
+    $meta = $data['meta'];
 
     $meta['upto'] = 0;  // means n/a
-    if (isset($data[WIND_KEY])) {
-      $meta['upto'] = $db->insertWind($data[WIND_KEY]);
+    if (isset($data['wind'])) {
+      $meta['upto'] = $db->insertWind($data['wind']);
     }
 
     $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
@@ -51,8 +51,8 @@ function handleRequest($logger) {
       $response[COMMAND_EXIT] = 0;  // retval 0 will exit -> update -> restart the client
     }
 
-    if (isset($data[TEMP_KEY])) {
-      $db->insertTemperature($data[TEMP_KEY]);
+    if (isset($data['temp'])) {
+      $db->insertTemperature($data['temp']);
     }
 
     if (isset($data['link'])) {

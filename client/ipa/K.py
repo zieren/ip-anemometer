@@ -3,15 +3,10 @@
 
 # ----- Client/server interaction. NOTE: These must match common.php -----
 
-TIMESTAMP_KEY = 'ts'
-META_KEY = 'meta'
-TEMP_KEY = 'temp'
-WIND_KEY = 'wind'
 UPLOAD_KEY = 'upload'
 CLIENT_MD5 = 'md5'
 STRATUM_KEY = 'stratum'
 STARTUP_TIME_KEY = 'startup'
-CLIENT_TIMESTAMP_KEY = 'cts'
 FAILED_UPLOADS_KEY = 'ulfs'
 COMMAND_EXIT = 'exit'
 RESPONSE_STATUS = 'status'

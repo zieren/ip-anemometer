@@ -55,7 +55,7 @@ class Wind:
       up_to_time = max(up_to_time, revs[-1])
     for ts in revs:
       self._calc.next_timestamp(ts)
-    return K.WIND_KEY, self._calc.get_stats_and_reset(up_to_time)
+    return 'wind', self._calc.get_stats_and_reset(up_to_time)
 
   def terminate(self):
     """Unregister the callback and, if self._calibration_mode, terminate the logger."""

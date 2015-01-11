@@ -10,7 +10,6 @@ class Metadata:
     self._md5 = common.client_md5()
 
   def get_sample(self):
-    return K.META_KEY, {# TODO: Avoid subprocess?
-                        K.STRATUM_KEY: raspisys.get_stratum(),
-                        K.CLIENT_MD5: self._md5,
-                        K.CLIENT_TIMESTAMP_KEY: common.timestamp()}
+    return 'meta', {K.STRATUM_KEY: raspisys.get_stratum(),  # TODO: Avoid subprocess?
+                    K.CLIENT_MD5: self._md5,
+                    'cts': common.timestamp()}

@@ -13,16 +13,11 @@ function autoloader($class) {
 spl_autoload_register('autoloader');
 
 // ----- Client/server interaction. NOTE: These must match K.py -----
-define('TIMESTAMP_KEY', 'ts');
-define('META_KEY', 'meta');
-define('TEMP_KEY', 'temp');
-define('WIND_KEY', 'wind');
 define('UPLOAD_KEY', 'upload');
 define('CLIENT_MD5', 'md5');
 define('STRATUM_KEY', 'stratum');
 define('STARTUP_TIME_KEY', 'startup');
 define('FAILED_UPLOADS_KEY', 'ulfs');
-define('CLIENT_TIMESTAMP_KEY', 'cts');
 define('COMMAND_EXIT', 'exit');
 define('RESPONSE_STATUS', 'status');
 define('RESPONSE_STATUS_OK', 'ok');
