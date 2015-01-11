@@ -80,11 +80,6 @@ printRecentWindStats(60);
 printRecentWindStats(30);
 printRecentWindStats(5);
 
-echo
-'<hr />
-<h2>Temperature</h2>';
-$db->echoTemp();
-
 echo '
 <hr /><h2>Settings</h2>';
 $db->echoSettings();
