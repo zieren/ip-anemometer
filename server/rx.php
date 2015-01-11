@@ -3,7 +3,6 @@ require_once 'common.php';
 
 // TODO: Return response (which might be an update) even when DB queries fail. DB queries should
 // still be more robust.
-// TODO: Extract magic literals.
 
 function handleRequest($logger) {
   $db = new Database();
