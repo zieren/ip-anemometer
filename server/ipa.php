@@ -15,20 +15,17 @@ function computeStats() {
 
   $db = new Database();
 
-  $stats = $db->computeWindStats($timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints);
   // TODO: Handle stale data.
-  if (!$stats) {
-    return NULL;  // TODO: Handle absent values per type, not globally.
-  }
+  $stats = array('wind' =>
+      $db->computeWindStats($timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints));
   if ($systemMinutes) {
     $systemMillis = minutesToMillis($systemMinutes);
-    $stats[TEMP_KEY_TIME_SERIES] = $db->readTemperature(
-        $timestamp, $systemMillis, $timeSeriesPoints);
-    $stats[LINK_STRENGTH_KEY_TIME_SERIES] = $db->readSignalStrength(
-        $timestamp, $systemMillis, $timeSeriesPoints);
-    $stats[LINK_NW_TYPE_KEY_2] = $db->readNetworkType($timestamp, $systemMillis);
-    $stats[LINK_UL_DL_KEY] = $db->readTransferVolume();
-    $stats['lag'] = $db->readLag($timestamp, $systemMillis, $timeSeriesPoints);
+    $stats['sys'] = array(
+        'temp_t' => $db->readTemperature($timestamp, $systemMillis, $timeSeriesPoints),
+        'strength_t' => $db->readSignalStrength($timestamp, $systemMillis, $timeSeriesPoints),
+        'nwtype' => $db->readNetworkType($timestamp, $systemMillis),
+        'traffic' => $db->readTransferVolume(),
+        'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
   }
   return $stats;
 }

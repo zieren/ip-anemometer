@@ -2,14 +2,6 @@ google.load('visualization', '1.0', {'packages': ['corechart']});
 
 var ipa = {};
 
-// NOTE: Keep keys in sync with wind_stats.py and common.php.
-ipa.key = {};
-// TODO: Clean this mess up.
-ipa.key.TEMP_TIME_SERIES = 7;
-ipa.key.LINK_STRENGTH_TIME_SERIES = 8;
-ipa.key.LINK_NW_TYPE = 9;
-ipa.key.LINK_UL_DL = 10;
-
 // Options and their defaults.
 ipa.Options = function() {
   this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
@@ -78,25 +70,25 @@ ipa.Chart.prototype.drawSummary = function(element) {
   var table = document.createElement('table');
   table.className = 'summary';
   ipa.Chart.insertCells_(table.insertRow())('avg',
-      this.stats['avg'].toFixed(this.options.fractionalDigits) + ' km/h');
+      this.stats.wind.avg.toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'avg';
   table.firstChild.lastChild.children[1].className = 'avgValue';
   ipa.Chart.insertCells_(table.insertRow())('max',
-      this.stats['max'].toFixed(this.options.fractionalDigits) + ' km/h');
+      this.stats.wind.max.toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'max';
   table.firstChild.lastChild.children[1].className = 'maxValue';
   if (this.options.showTimeOfMax) {
     ipa.Chart.insertCells_(table.insertRow())('max@',
-        ipa.Chart.formatTimestamp_(this.stats['max_ts']));
+        ipa.Chart.formatTimestamp_(this.stats.wind.max_ts));
     table.firstChild.lastChild.children[0].className = 'maxts';
     table.firstChild.lastChild.children[1].className = 'maxtsValue';
   }
   ipa.Chart.insertCells_(table.insertRow())('from',
-      ipa.Chart.formatTimestamp_(this.stats['start_ts']));
+      ipa.Chart.formatTimestamp_(this.stats.wind.start_ts));
   table.firstChild.lastChild.children[0].className = 'from';
   table.firstChild.lastChild.children[1].className = 'fromValue';
   ipa.Chart.insertCells_(table.insertRow())('to',
-      ipa.Chart.formatTimestamp_(this.stats['end_ts']));
+      ipa.Chart.formatTimestamp_(this.stats.wind.end_ts));
   table.firstChild.lastChild.children[0].className = 'to';
   table.firstChild.lastChild.children[1].className = 'toValue';
   element.appendChild(table);
@@ -107,7 +99,7 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   timeSeriesTable.addColumn('datetime', 't');
   timeSeriesTable.addColumn('number', 'avg');
   timeSeriesTable.addColumn('number', 'max');
-  var timeSeries = this.stats['time_series'];
+  var timeSeries = this.stats.wind.time_series;
   for (var i = 0; i < timeSeries.length; ++i) {
     var row = timeSeries[i];
     row[0] = new Date(row[0]);  // convert timestamp to Date object
@@ -130,7 +122,7 @@ ipa.Chart.prototype.drawHistogram = function(element) {
   histogramDataTable.addColumn('number', 'km/h');
   histogramDataTable.addColumn('number', '%');
   histogramDataTable.addColumn('number', '%>=');
-  var histogram = this.stats['hist'];
+  var histogram = this.stats.wind.hist;
   var totalPercent = 100;
   for (var kmh in histogram) {
     var percent = histogram[kmh] * 100;
@@ -158,7 +150,7 @@ ipa.Chart.prototype.drawHistogram = function(element) {
 }
 
 ipa.Chart.prototype.drawTextHistogram = function(element) {
-  var histogram = this.stats['hist'];
+  var histogram = this.stats.wind.hist;
   table = document.createElement('table');
   var trSpeed = ipa.Chart.insertCells_(table.insertRow());
   var trPercent = ipa.Chart.insertCells_(table.insertRow());
@@ -181,7 +173,7 @@ ipa.Chart.prototype.drawTemperature = function(element) {
   var temperatureTable = new google.visualization.DataTable();
   temperatureTable.addColumn('datetime');
   temperatureTable.addColumn('number');
-  var temperature = this.stats[ipa.key.TEMP_TIME_SERIES];
+  var temperature = this.stats.sys.temp_t;
   for (var ts in temperature) {
     temperatureTable.addRow([new Date(parseInt(ts)), temperature[ts]]);
   }
@@ -198,7 +190,7 @@ ipa.Chart.prototype.drawSignalStrength = function(element) {
   var strengthTable = new google.visualization.DataTable();
   strengthTable.addColumn('datetime');
   strengthTable.addColumn('number');
-  var signalStrength = this.stats[ipa.key.LINK_STRENGTH_TIME_SERIES];
+  var signalStrength = this.stats.sys.strength_t;
   for (var ts in signalStrength) {
     strengthTable.addRow([new Date(parseInt(ts)), signalStrength[ts]]);
   }
@@ -215,7 +207,7 @@ ipa.Chart.prototype.drawNetworkType = function(element) {
   var nwTypeTable = new google.visualization.DataTable();
   nwTypeTable.addColumn('string', 'Type');
   nwTypeTable.addColumn('number', '%');
-  var nwTypes = this.stats[ipa.key.LINK_NW_TYPE];
+  var nwTypes = this.stats.sys.nwtype;
   for (var i in nwTypes) {
     nwTypeTable.addRow([i, nwTypes[i]]);
   }
@@ -229,8 +221,8 @@ ipa.Chart.prototype.drawNetworkType = function(element) {
 ipa.Chart.prototype.drawTransferVolume = function(element) {
   var volumeTable = new google.visualization.DataTable();
   volumeTable.addColumn('string', 'Volume');
-  volumeTable.addColumn('number', 'MB');
-  var volumes = this.stats[ipa.key.LINK_UL_DL];
+  volumeTable.addColumn('number');
+  var volumes = this.stats.sys.traffic;
   for (var i in volumes) {
     volumeTable.addRow([i, volumes[i] / (1024 * 1024)]);  // in MB
   }
@@ -244,7 +236,7 @@ ipa.Chart.prototype.drawTransferVolume = function(element) {
 
 ipa.Chart.prototype.drawLag = function(element) {
   var lagTable = new google.visualization.DataTable();
-  var lag = this.stats['lag'];
+  var lag = this.stats.sys.lag;
   var options = {
       title: 'Upload lag [m]',
       hAxis: {format: 'HH:mm'}

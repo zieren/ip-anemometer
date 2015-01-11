@@ -12,13 +12,6 @@ function autoloader($class) {
 }
 spl_autoload_register('autoloader');
 
-// TODO: Clean this mess up.
-define('TEMP_KEY_TIME_SERIES', 7);
-
-define('LINK_STRENGTH_KEY_TIME_SERIES', 8);
-define('LINK_NW_TYPE_KEY_2', 9);
-define('LINK_UL_DL_KEY', 10);
-
 define('NOT_AVAILABLE', 'n/a');
 
 // Internal use: Indexes in time series samples (before downsampling).
