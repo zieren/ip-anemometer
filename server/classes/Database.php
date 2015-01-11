@@ -171,7 +171,7 @@ class Database {
   public function getAppSettings() {
     if (!isset($this->appSettings)) {
       $this->appSettings = array();
-      $result = $this->query('SELECT k, v FROM settings');
+      $result = $this->query('SELECT k, v FROM settings', null);
       while ($row = $result->fetch_assoc()) {
         $this->appSettings[$row['k']] = $row['v'];
       }
@@ -518,7 +518,7 @@ class Database {
   }
 
   public function echoSettings() {
-    echo '<p><table>';
+    echo '<p><table border="1">';
     foreach ($this->getAppSettings() as $k => $v) {
       echo '<tr><td>'.$k.'</td><td>'.$v.'</td></tr>';
     }
@@ -529,7 +529,9 @@ class Database {
    * Runs the specified query, throwing an Exception on failure. Logs the query unconditionally with
    * the specified level (specify null to disable logging). */
   private function query($query, $logLevel = 'debug') {
-    $this->log->log($logLevel, 'Query: '.$query);
+    if ($logLevel) {
+      $this->log->log($logLevel, 'Query: '.$query);
+    }
     if ($result = $this->mysqli->query($query)) {
       return $result;
     }
