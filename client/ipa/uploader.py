@@ -103,11 +103,12 @@ class Uploader(threading.Thread):
       return
     if response_dict.setdefault('status', K.NOT_AVAILABLE) != 'ok':
       self._log.error('upload failed; status: %s' % response_dict['status'])
-      return
-    self._log.debug('upload OK; response: %s' % response_content)
-    # Add commands to main command queue.
+    else:
+      self._log.debug('upload OK; response: %s' % response_content)
+      self._queue = {}
+      self._failed_uploads = 0
+    # Add commands to main command queue. This also happens on failure; an outdated client might be
+    # causing the failure in the first place.
     del response_dict['status']
     for k, v in response_dict.items():
       self._main_cq.put((k, v))
-    self._queue = {}
-    self._failed_uploads = 0
