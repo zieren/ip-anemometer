@@ -52,6 +52,7 @@ define('CLIENT_UPDATE_MAX_SIZE', 1024 * 1024);  // 1MB
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);
+define('REQ_SYSTEM_MINUTES', 24 * 60);
 
 /** Returns the current path, e.g. for "http://foo.bar/baz/qux.php" -> "http://foo.bar/baz/". */
 function getCurentPagePathURL() {
