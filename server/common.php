@@ -12,16 +12,6 @@ function autoloader($class) {
 }
 spl_autoload_register('autoloader');
 
-// ----- Client/server interaction. NOTE: These must match K.py -----
-define('UPLOAD_KEY', 'upload');
-define('CLIENT_MD5', 'md5');
-define('STRATUM_KEY', 'stratum');
-define('STARTUP_TIME_KEY', 'startup');
-define('FAILED_UPLOADS_KEY', 'ulfs');
-define('COMMAND_EXIT', 'exit');
-define('RESPONSE_STATUS', 'status');
-define('RESPONSE_STATUS_OK', 'ok');
-
 // TODO: Clean this mess up.
 define('TEMP_KEY_TIME_SERIES', 7);
 

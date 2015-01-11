@@ -54,7 +54,7 @@ class Anemometer:
     while True:
       command = self._main_cq.get()
       self._log.info('processing command: "%s": "%s"' % command)
-      if command[0] == K.COMMAND_EXIT:
+      if command[0] == 'exit':
         self._shutdown()
         sys.exit(int(command[1]))
       else:

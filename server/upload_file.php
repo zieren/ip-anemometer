@@ -25,7 +25,7 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   echo 'Size: '.$_FILES['file']['size'].'<br>';
   $md5 = md5_file($_FILES['file']['tmp_name']);
   $db = new Database();
-  $db->updateSetting(CLIENT_MD5, $md5);
+  $db->updateSetting('md5', $md5);
   echo 'MD5: '.$md5.'<br>';
   move_uploaded_file($_FILES['file']['tmp_name'], CLIENT_UPDATE_FILENAME);
   echo 'Done.<br>';

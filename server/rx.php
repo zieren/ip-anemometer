@@ -34,21 +34,22 @@ function handleRequest($logger) {
       $meta['upto'] = $db->insertWind($data['wind']);
     }
 
-    $meta[FAILED_UPLOADS_KEY] = $data[UPLOAD_KEY][FAILED_UPLOADS_KEY];
+    $meta['fails'] = $data['upload']['fails'];
     // TODO: Throw exceptions and rollback on failure. However, this doesn't prevent: "ok" reply to
     // client is lost, client resends all data, all rows are overwritten except in hist table.
     $db->insertMetadata($meta);
 
     $settings = $db->getAppSettings();
-    $logger->debug('client md5: '.$meta[CLIENT_MD5].' - server has: '.$settings[CLIENT_MD5]);
+    $logger->debug('client md5: '.$meta['md5'].' - server has: '.$settings['md5']);
 
     $response = array();
 
-    // The client does not set CLIENT_MD5 when it's started directly (and not via the wrapper).
-    if (isset($meta[CLIENT_MD5]) && $meta[CLIENT_MD5] != NOT_AVAILABLE
-        && isset($settings[CLIENT_MD5]) && $meta[CLIENT_MD5] != $settings[CLIENT_MD5]) {
-      $logger->notice('updating client '.$meta[CLIENT_MD5].' to '.$settings[CLIENT_MD5]);
-      $response[COMMAND_EXIT] = 0;  // retval 0 will exit -> update -> restart the client
+    // The client does not set the md5 when it's started directly (i.e. not via the wrapper). We
+    // don't want to exit in that case.
+    if (isset($meta['md5']) && $meta['md5'] != NOT_AVAILABLE
+        && isset($settings['md5']) && $meta['md5'] != $settings['md5']) {
+      $logger->notice('updating client '.$meta['md5'].' to '.$settings['md5']);
+      $response['exit'] = 0;  // retval 0 will exit -> update -> restart the client
     }
 
     if (isset($data['temp'])) {
@@ -61,7 +62,7 @@ function handleRequest($logger) {
 
     $db->commit();
 
-    $response[RESPONSE_STATUS] = RESPONSE_STATUS_OK;
+    $response['status'] = 'ok';
     // TODO: Add support for reboot, shutdown etc.
 
     return $response;

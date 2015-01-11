@@ -62,7 +62,7 @@ class Uploader(threading.Thread):
       self._log.critical(traceback.format_exc())
 
   def get_sample(self):
-    return K.UPLOAD_KEY, {K.FAILED_UPLOADS_KEY: self._failed_uploads}
+    return 'upload', {'fails': self._failed_uploads}
 
   def _upload(self):
     """Returns True if data was uploaded, False if (likely) not."""
@@ -101,13 +101,13 @@ class Uploader(threading.Thread):
           'failed to parse server response: %sserver response begins with: "%s"'
           % (traceback.format_exc(), response_content[:10240]))  # return first 10kB
       return
-    if response_dict.setdefault(K.RESPONSE_STATUS, K.NOT_AVAILABLE) != K.RESPONSE_STATUS_OK:
-      self._log.error('upload failed; status: %s' % response_dict[K.RESPONSE_STATUS])
+    if response_dict.setdefault('status', K.NOT_AVAILABLE) != 'ok':
+      self._log.error('upload failed; status: %s' % response_dict['status'])
       return
     self._log.debug('upload OK; response: %s' % response_content)
     # Add commands to main command queue.
+    del response_dict['status']
     for k, v in response_dict.items():
-      if k != K.RESPONSE_STATUS:
-        self._main_cq.put((k, v))
+      self._main_cq.put((k, v))
     self._queue = {}
     self._failed_uploads = 0

@@ -220,8 +220,8 @@ class Database {
 
   public function insertMetadata($meta) {
     $q = 'REPLACE INTO meta (ts, upto, cts, stratum, fails, ip) VALUES ('.timestamp().','
-        .$meta['upto'].','.$meta['cts'].','.$meta[STRATUM_KEY].','
-        .$meta[FAILED_UPLOADS_KEY].',"'.$_SERVER['REMOTE_ADDR'].'")';
+        .$meta['upto'].','.$meta['cts'].','.$meta['stratum'].','
+        .$meta['fails'].',"'.$_SERVER['REMOTE_ADDR'].'")';
     $this->log->debug('QUERY: '.$q);
     if (!$this->query($q)) {
       $this->logCritical('failed to insert metadata: ' . $this->getError());
