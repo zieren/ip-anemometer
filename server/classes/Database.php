@@ -269,7 +269,9 @@ class Database {
         // any row in the wind table. Skip them here.
         continue;
       }
-      $histogram[$bucket['v']] += $bucket['p'] * $sampleDuration;
+      $v = $bucket['v'];
+      $histogram[$v] = (isset($histogram[$v]) ? $histogram[$v] : 0)
+          + $bucket['p'] * $sampleDuration;
     }
     foreach ($histogram as $v => $p) {
       $histogram[$v] /= $actualWindowDuration;
@@ -470,7 +472,8 @@ class Database {
     $nwtypes = array();
     $result = $this->query($q, null);
     while ($row = $result->fetch_row()) {
-      $nwtypes[$row[0]] += 1;
+      $i = $row[0];
+      $nwtypes[$i] = (isset($nwtypes[$i]) ? $nwtypes[$i] : 0) + 1;
     }
     return $nwtypes;
   }
