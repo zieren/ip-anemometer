@@ -28,65 +28,11 @@ if (isset($_POST[$CREATE]) && $_POST[$CONFIRM]) {
   $db->clearSetting($_POST[$SETTING_KEY]);
 }
 
-// Compute actual wind measurements.
-
-function printRecentWindStats($minutes, $endTimestamp = 0) {
-  global $db;
-  if (!$endTimestamp) {
-    $endTimestamp = timestamp();
-  }
-  $windStats = $db->computeWindStats($endTimestamp, $minutes * 60 * 1000, 30);
-  if (is_null($windStats)) {
-    echo '<p>n/a</p>';
-    return;
-  }
-  $latency = $endTimestamp - $windStats['end_ts'];
-  $latencyText = '@latency='.formatDuration($latency);
-  if ($latency > 15 * 60 * 1000) {  // TODO: Extract this.
-    $latencyText = '<b><font color="red">'.$latencyText.'</font></b>';
-  }
-  echo 'Last '.$minutes.' minutes [km/h] '.$latencyText.'<br />';
-  echo '<table border="1" cellpadding="3">
-    <tr><td>avg</td><td>max</td><td>time of max</td></tr>
-    <tr><td>'.round($windStats['avg'], 1)
-        .'</td><td>'.round($windStats['max'], 1)
-        .'</td><td>'.formatTimestamp($windStats['max_ts'])
-        .'</td></tr>
-  </table>';
-  printHistogram($windStats['hist']);
-}
-
-function printHistogram($histogram) {
-  $kmhRow = '<td>km/h</td>';
-  $percentRow = '<td>%</td>';
-  $percentUpRow = '<td>%&gt;=</td>';
-  $percentUp = 1;
-  foreach ($histogram as $k => $v) {
-    $kmhRow .= '<td align="right">'.$k.'</td>';
-    $percentRow .= '<td align="right">'.round($v * 100, 1).'</td>';
-    $percentUpRow .= '<td align="right">'.round($percentUp * 100, 1).'</td>';
-    $percentUp -= $v;
-  }
-  echo '<table border="1" cellpadding="3">
-    <tr>'.$kmhRow.'</tr>
-    <tr>'.$percentRow.'</tr>
-    <tr>'.$percentUpRow.'</tr>
-    </table>';
-}
-
-echo '<h2>Wind</h2>';
-
-printRecentWindStats(60);
-printRecentWindStats(30);
-printRecentWindStats(5);
-
 echo '
-<hr /><h2>Settings</h2>';
-$db->echoSettings();
+<h1>IPA Anemometer</h1>
 
-if ($_GET['admin'] === null) {
-  return;
-}
+<h2>Settings</h2>';
+$db->echoSettings();
 
 echo '
 <hr />
