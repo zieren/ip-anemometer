@@ -24,14 +24,14 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   echo 'Type: '.$_FILES['file']['type'].'<br>';
   echo 'Size: '.$_FILES['file']['size'].'<br>';
   $md5 = md5_file($_FILES['file']['tmp_name']);
-  $db = new Database();
-  $db->updateSetting('md5', $md5);
   echo 'MD5: '.$md5.'<br>';
   move_uploaded_file($_FILES['file']['tmp_name'], CLIENT_UPDATE_FILENAME);
+  $db = new Database();
+  $db->updateConfig('md5', $md5);
   echo 'Done.<br>';
 }
 echo '</p>';
 ?>
-<p><a href="index.php?admin">Back to console</a></p>
+<p><a href="admin.php">Back to console</a></p>
 </body>
 </html>

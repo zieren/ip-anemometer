@@ -37,10 +37,8 @@ define('WIND_SAMPLE_END_TS', 1);
 define('WIND_SAMPLE_AVG', 2);
 define('WIND_SAMPLE_MAX', 3);
 
-// Keys for server settings.
-define('LOG_LEVEL_KEY', 'log_level');
-
 // Internal constants.
+define('CLIENT_UPDATE_DIR', 'client');
 define('CLIENT_UPDATE_FILENAME', 'client/ipa-update.zip');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 // Maximum amount of time the desired window size is shifted back to compensate for upload

@@ -17,7 +17,7 @@ abstract class DownsampleMode {
  */
 class Database {
   /** Connects to the database, or exits on error. */
-  public function __construct() {
+  public function __construct($createMissingTables = false) {
     $this->log = Logger::Instance();
     $this->mysqli = new mysqli(DB_SERVER, DB_USER, DB_PASS, DB_NAME);
     if ($this->mysqli->connect_errno) {
@@ -26,7 +26,13 @@ class Database {
     if (!$this->mysqli->select_db(DB_NAME)) {
       $this->throwMySqlErrorException('select_db('.DB_NAME.')');
     }
-    // TODO: Read config and set log level.
+    if ($createMissingTables) {
+      $this->createMissingTables();
+    }
+    // Configure global logger.
+    if (isset($this->getConfig()['s:log_level'])) {
+      $this->log->setLogLevelThreshold($this->getConfig()['s:log_level']);
+    }  // else: defaults to debug
   }
 
   public function beginTransaction() {
@@ -41,7 +47,7 @@ class Database {
     $this->query('ROLLBACK');
   }
 
-  public function createTables() {
+  public function createMissingTables() {
     $this->query('SET storage_engine=INNODB');
     $this->query(
         'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)');
@@ -57,14 +63,15 @@ class Database {
         'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, upto BIGINT, cts BIGINT, '
         .'stratum INT, fails INT, ip VARCHAR(15))');
     $this->query(
-        // TODO: Rename settings to config
-        'CREATE TABLE IF NOT EXISTS settings (k VARCHAR(256) PRIMARY KEY, v TEXT)');
-    $this->log->notice('tables created');
+        'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT)');
   }
 
   public function dropTables() {
-    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, settings');
+    // TODO: This should drop all tables to be forward compatible.
+    // TODO: Should this keep the config table?
+    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, config');
     $this->log->notice('tables dropped');
+    unset($this->config);
   }
 
   public function insertTemperature($temp) {
@@ -153,30 +160,30 @@ class Database {
     $this->query($q);
   }
 
-  /** Updates the specified setting. */
-  public function updateSetting($key, $value) {
-    $q = 'REPLACE INTO settings (k, v) VALUES ("'.$key.'", "'.$value.'")';
+  /** Updates the specified config value. */
+  public function updateConfig($key, $value) {
+    $q = 'REPLACE INTO config (k, v) VALUES ("'.$key.'", "'.$value.'")';
     $this->query($q);
-    unset($this->appSettings);
+    unset($this->config);
   }
 
-  /** Deletes the specified setting. */
-  public function clearSetting($key) {
-    $q = 'DELETE FROM settings WHERE k="'.$key.'"';
+  /** Deletes the specified config value. */
+  public function clearConfig($key) {
+    $q = 'DELETE FROM config WHERE k="'.$key.'"';
     $this->query($q);
-    unset($this->appSettings);
+    unset($this->config);
   }
 
-  /** Returns application settings. Lazily initialized. */
-  public function getAppSettings() {
-    if (!isset($this->appSettings)) {
-      $this->appSettings = array();
-      $result = $this->query('SELECT k, v FROM settings', null);
+  /** Returns application config. Lazily initialized. */
+  public function getConfig() {
+    if (!isset($this->config)) {
+      $this->config = array();
+      $result = $this->query('SELECT k, v FROM config', null);
       while ($row = $result->fetch_assoc()) {
-        $this->appSettings[$row['k']] = $row['v'];
+        $this->config[$row['k']] = $row['v'];
       }
     }
-    return $this->appSettings;
+    return $this->config;
   }
 
   /**
@@ -520,9 +527,9 @@ class Database {
     return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
   }
 
-  public function echoSettings() {
+  public function echoConfig() {
     echo '<p><table border="1">';
-    foreach ($this->getAppSettings() as $k => $v) {
+    foreach ($this->getConfig() as $k => $v) {
       echo '<tr><td>'.$k.'</td><td>'.$v.'</td></tr>';
     }
     echo '</table></p>';
