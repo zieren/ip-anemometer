@@ -35,6 +35,7 @@ class Anemometer:
     self._uploader.add_data_source(self._wind, True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)
+    # TODO: This should be optional (auto-detect?).
     self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
 
   def _shutdown(self):
