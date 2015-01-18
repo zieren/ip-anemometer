@@ -105,8 +105,8 @@ function buildClientAppZip($filename, $db) {
   if ($retval !== true) {
     throw new Exception('failed to open '.$filename.': '.$retval);
   }
-  $ok = $zip->deleteName(CLIENT_APP_CFG_FILENAME)
-      && $zip->addFromString(CLIENT_APP_CFG_FILENAME, $db->createClientConfigFile())
+  $zip->deleteName(CLIENT_APP_CFG_FILENAME);  // may or may not be present
+  $ok = $zip->addFromString(CLIENT_APP_CFG_FILENAME, $db->createClientConfigFile())
       && $zip->close();
   if (!$ok) {
     throw new Exception('failed to replace '.CLIENT_APP_CFG_FILENAME.' in '.$filename);
