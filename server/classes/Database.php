@@ -187,6 +187,22 @@ class Database {
   }
 
   /**
+   * Builds the client config file contents. This includes all keys starting with 'c:'. The prefix
+   * is stripped in the result.
+   */
+  public function createClientConfigFile() {
+    $config = $this->getConfig();
+    ksort($config);
+    $buffer = '';
+    foreach ($config as $k => $v) {
+      if (strpos($k, 'c:') === 0) {
+        $buffer .= substr($k, 2).'='.$v."\n";
+      }
+    }
+    return $buffer;
+  }
+
+  /**
    * Compute statistics for the specified time period.
    *
    * @param int $maxEndTimestamp Consider samples up to this end timestamp in millis (usually the
