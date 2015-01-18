@@ -63,6 +63,7 @@ class Database {
         .'stratum INT, fails INT, ip VARCHAR(15))');
     $this->query(
         'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT)');
+    // TODO: Populate with a default config.
   }
 
   public function dropTables() {
