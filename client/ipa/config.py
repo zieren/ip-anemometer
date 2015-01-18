@@ -9,7 +9,7 @@ class Config:
     self._cfg = {}
     self._readFile();
 
-  def readFile(self):
+  def _readFile(self):
     for line in open(K.CONFIG_FILENAME, 'r'):
       entry = [x.strip() for x in line.split('=', 1)]
       if len(entry) != 2 or not entry[0] or not entry[1]:
