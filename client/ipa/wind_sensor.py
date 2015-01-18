@@ -1,7 +1,7 @@
 import common
 import threading
 
-import C
+from config import C
 
 
 class Revolutions:

@@ -1,5 +1,5 @@
-import C
 import common
+from config import C
 
 
 # Remember config values to avoid locking call.

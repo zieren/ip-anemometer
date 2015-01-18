@@ -27,8 +27,8 @@
 import subprocess
 import traceback
 
-import C
 import common
+from config import C
 import log
 from wind import Wind
 

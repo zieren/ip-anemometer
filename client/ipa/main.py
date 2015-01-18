@@ -5,8 +5,8 @@ import sys
 import threading
 import traceback
 
-import C
 import common
+from config import C
 import huawei_status
 import K
 import log

@@ -3,7 +3,7 @@
 import logging.handlers
 import os
 
-import C
+from config import C
 
 
 _LOG_DIR = '../logs/'

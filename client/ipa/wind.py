@@ -1,9 +1,8 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
 
-import C
 import calibration_logger
 import common
-import K
+from config import C
 import log
 import wind_sensor
 import wind_stats

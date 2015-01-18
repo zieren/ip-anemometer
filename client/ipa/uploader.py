@@ -6,7 +6,7 @@ import time
 import traceback
 import urllib2
 
-import C
+from config import C
 import K
 import log
 
