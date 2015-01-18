@@ -12,7 +12,7 @@ if (isset($_POST["reset"]) && $_POST["confirm"]) {
   $db->createMissingTables();
   $md5 = md5_file(CLIENT_UPDATE_FILENAME);
   if ($md5) {
-    $db->setConfig("_:client_app_md5", $md5);
+    $db->setConfig("s:client_app_md5", $md5);
   }
 } else if (isset($_POST["setConfig"])) {
   // TODO: This should sanitize the user input.
