@@ -5,15 +5,23 @@ require_once 'common.php';
 
 // TODO: Be sure to give credits to KLogger.
 
+function lazilySetClientAppMd5($db) {
+  $config = $db->getConfig();
+  if (!isset($config['s:client_app_md5'])) {
+    $md5 = md5_file(CLIENT_UPDATE_FILENAME);
+    if ($md5) {
+      $db->setConfig("s:client_app_md5", $md5);
+    }
+  }
+}
+
 $db = new Database(true /* create missing tables */);
+lazilySetClientAppMd5($db);
 
 if (isset($_POST["reset"]) && $_POST["confirm"]) {
   $db->dropTables();
   $db->createMissingTables();
-  $md5 = md5_file(CLIENT_UPDATE_FILENAME);
-  if ($md5) {
-    $db->setConfig("s:client_app_md5", $md5);
-  }
+  lazilySetClientAppMd5($db);
 } else if (isset($_POST["setConfig"])) {
   // TODO: This should sanitize the user input.
   $db->setConfig($_POST["configKey"], $_POST["configValue"]);
