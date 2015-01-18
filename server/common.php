@@ -88,4 +88,8 @@ function timestamp() {
 function minutesToMillis($minutes) {
   return $minutes * 60 * 1000;
 }
+
+function get(&$value, $default=null) {
+    return isset($value) ? $value : $default;
+}
 ?>

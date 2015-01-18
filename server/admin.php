@@ -10,9 +10,13 @@ $db = new Database(true /* create missing tables */);
 if (isset($_POST["reset"]) && $_POST["confirm"]) {
   $db->dropTables();
   $db->createMissingTables();
-} else if (isset($_POST["updateConfig"])) {
+  $md5 = md5_file(CLIENT_UPDATE_FILENAME);
+  if ($md5) {
+    $db->setConfig("_:client_app_md5", $md5);
+  }
+} else if (isset($_POST["setConfig"])) {
   // TODO: This should sanitize the user input.
-  $db->updateConfig($_POST["configKey"], $_POST["configValue"]);
+  $db->setConfig($_POST["configKey"], $_POST["configValue"]);
 } else if (isset($_POST["clearConfig"])) {
   // TODO: This should sanitize the user input.
   $db->clearConfig($_POST["configKey"]);
@@ -30,7 +34,7 @@ echo '
 <form action="" method="post" enctype="multipart/form-data">
   <input type="text" name="'."configKey".'" value="key">
   <input type="text" name="'."configValue".'" value="value">
-  <input type="submit" name="'."updateConfig".'" value="Update">
+  <input type="submit" name="'."setConfig".'" value="Set">
   <input type="submit" name="'."clearConfig".'" value="Clear">
 </form>';
 

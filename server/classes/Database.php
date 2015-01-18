@@ -161,7 +161,7 @@ class Database {
   }
 
   /** Updates the specified config value. */
-  public function updateConfig($key, $value) {
+  public function setConfig($key, $value) {
     $q = 'REPLACE INTO config (k, v) VALUES ("'.$key.'", "'.$value.'")';
     $this->query($q);
     unset($this->config);
