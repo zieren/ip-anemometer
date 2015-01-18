@@ -38,13 +38,14 @@ define('WIND_SAMPLE_AVG', 2);
 define('WIND_SAMPLE_MAX', 3);
 
 // Internal constants.
-define('CLIENT_UPDATE_DIR', 'client');
-define('CLIENT_UPDATE_FILENAME', 'client/ipa-update.zip');
+define('CLIENT_APP_DIR', 'client');
+define('CLIENT_APP_ZIP_FILENAME', 'client/ipa-update.zip');
+define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 // Maximum amount of time the desired window size is shifted back to compensate for upload
 // latency. TODO: This (and possibly other values) should be configurable.
 define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
-define('CLIENT_UPDATE_MAX_SIZE', 1024 * 1024);  // 1MB
+define('CLIENT_APP_MAX_SIZE', 1024 * 1024);  // 1MB
 
 // Defaults and limits for request arguments.
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
@@ -91,5 +92,30 @@ function minutesToMillis($minutes) {
 
 function get(&$value, $default=null) {
     return isset($value) ? $value : $default;
+}
+
+// TODO: This is slightly misplaced in common.php.
+// TODO: This should probably make a copy of the file and move it back to avoid races.
+// TODO: Would be nice to avoid timestamps (of ipa.cfg - and the operation itself?) in the .zip,
+// since they affect the md5 and result in an unnecessary download.
+/** Builds the client app .zip by adding the client config from $db to $filename. */
+function buildClientAppZip($filename, $db) {
+  $zip = new ZipArchive();
+  $retval = $zip->open($filename, ZipArchive::CREATE);
+  if ($retval !== true) {
+    throw new Exception('failed to open '.$filename.': '.$retval);
+  }
+  $ok = $zip->deleteName(CLIENT_APP_CFG_FILENAME)
+      && $zip->addFromString(CLIENT_APP_CFG_FILENAME, $db->createClientConfigFile())
+      && $zip->close();
+  if (!$ok) {
+    throw new Exception('failed to replace '.CLIENT_APP_CFG_FILENAME.' in '.$filename);
+  }
+  $md5 = md5_file(CLIENT_APP_ZIP_FILENAME);
+  if ($md5) {  // XXX rename: client_md5
+    $db->setConfig('s:client_app_md5', $md5);
+  } else {
+    $db->clearConfig('s:client_app_md5');
+  }
 }
 ?>

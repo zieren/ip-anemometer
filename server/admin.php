@@ -5,29 +5,23 @@ require_once 'common.php';
 
 // TODO: Be sure to give credits to KLogger.
 
-function lazilySetClientAppMd5($db) {
-  $config = $db->getConfig();
-  if (!isset($config['s:client_app_md5'])) {
-    $md5 = md5_file(CLIENT_UPDATE_FILENAME);
-    if ($md5) {
-      $db->setConfig("s:client_app_md5", $md5);
-    }
-  }
-}
-
 $db = new Database(true /* create missing tables */);
-lazilySetClientAppMd5($db);
+if (!isset($db->getConfig()['s:client_app_md5'])) {  // first run
+  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
+}
 
 if (isset($_POST["reset"]) && $_POST["confirm"]) {
   $db->dropTables();
   $db->createMissingTables();
-  lazilySetClientAppMd5($db);
+  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
 } else if (isset($_POST["setConfig"])) {
   // TODO: This should sanitize the user input.
   $db->setConfig($_POST["configKey"], $_POST["configValue"]);
+  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
 } else if (isset($_POST["clearConfig"])) {
   // TODO: This should sanitize the user input.
   $db->clearConfig($_POST["configKey"]);
+  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
 }
 
 echo '
@@ -48,7 +42,7 @@ echo '
 
 echo
 '<hr />
-<h2>Upload Client Update</h2>
+<h2>Upload Client App</h2>
     <form action="upload_file.php" method="post" enctype="multipart/form-data">
   <label for="file">Update:</label>
   <input type="file" name="file" id="file">

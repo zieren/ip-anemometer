@@ -5,12 +5,12 @@
 
 require_once 'common.php';
 
-if (!file_exists(CLIENT_UPDATE_FILENAME)) {
+if (!file_exists(CLIENT_APP_ZIP_FILENAME)) {
   exit;
 }
 
 // TODO: Get MD5 from database instead?
-$contents = file_get_contents(CLIENT_UPDATE_FILENAME);
+$contents = file_get_contents(CLIENT_APP_ZIP_FILENAME);
 $md5 = md5($contents);
 if ($md5 === $_GET['md5']) {
   exit;
@@ -18,7 +18,7 @@ if ($md5 === $_GET['md5']) {
 
 header('Content-Description: File Transfer');
 header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename='.basename(CLIENT_UPDATE_FILENAME));
+header('Content-Disposition: attachment; filename='.basename(CLIENT_APP_ZIP_FILENAME));
 header('Expires: 0');
 header('Cache-Control: must-revalidate');
 header('Pragma: public');

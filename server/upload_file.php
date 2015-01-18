@@ -13,7 +13,7 @@ $extension = strtolower(end(explode('.', $_FILES['file']['name'])));
 echo '<p>';
 if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   echo 'Invalid file type: '.$_FILES['file']['type'];
-} elseif ($_FILES['file']['size'] > CLIENT_UPDATE_MAX_SIZE) {
+} elseif ($_FILES['file']['size'] > CLIENT_APP_MAX_SIZE) {
   echo 'File too large: '.$_FILES['file']['size'];
 } elseif (!in_array($extension, $allowedExts)) {
   echo 'Invalid extension: '.$extension;
@@ -23,10 +23,13 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   echo 'File: '.$_FILES['file']['name'].'<br>';
   echo 'Type: '.$_FILES['file']['type'].'<br>';
   echo 'Size: '.$_FILES['file']['size'].'<br>';
-  $md5 = md5_file($_FILES['file']['tmp_name']);
+  $tmpName = $_FILES['file']['tmp_name'];
+  $md5 = md5_file($tmpName);
   echo 'MD5: '.$md5.'<br>';
-  move_uploaded_file($_FILES['file']['tmp_name'], CLIENT_UPDATE_FILENAME);
   $db = new Database();
+  buildClientAppZip($tmpName, $db);
+  echo 'Added client config.<br>';
+  move_uploaded_file($tmpName, CLIENT_APP_ZIP_FILENAME);
   $db->setConfig('s:client_app_md5', $md5);
   echo 'Done.<br>';
 }
