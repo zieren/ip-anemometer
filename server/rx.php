@@ -1,9 +1,6 @@
 <?php
 require_once 'common.php';
 
-// TODO: Return response (which might be an update) even when DB queries fail. DB queries should
-// still be more robust.
-
 function handleRequest() {
   $logger = Logger::Instance();
   $contentBz2 = file_get_contents('php://input');
