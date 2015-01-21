@@ -63,13 +63,10 @@ class Database {
         .'stratum INT, fails INT, ip VARCHAR(15))');
     $this->query(
         'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT)');
-    // TODO: Populate with a default config.
   }
 
-  public function dropTables() {
-    // TODO: This should drop all tables to be forward compatible.
-    // TODO: Should this keep the config table?
-    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, config');
+  public function dropTablesExceptConfig() {
+    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta');
     $this->log->notice('tables dropped');
     unset($this->config);
   }
@@ -81,7 +78,7 @@ class Database {
     }
     $q = '';
     foreach ($temp as $v) {
-      if ($q != '') {
+      if ($q) {
         $q .= ',';
       }
       $q .= '('.$v[0].','.$v[1].')';
@@ -98,7 +95,7 @@ class Database {
     }
     $q = '';
     foreach ($linkStatus as $v) {
-      if ($q != '') {
+      if ($q) {
         $q .= ',';
       }
       $q .= '('.$v['ts'].',"'.$v['nwtype'].'",'.$v['strength'].
@@ -138,7 +135,7 @@ class Database {
     ksort($histogram);  // not required, but makes the table easier to read (for humans)
     $q = '';
     foreach ($histogram as $v => $p) {  // v=speed, p=percent
-      if ($q != '') {
+      if ($q) {
         $q .= ',';
       }
       $q .= '('.$v.','.$p.')';
@@ -178,7 +175,7 @@ class Database {
   public function getConfig() {
     if (!isset($this->config)) {
       $this->config = array();
-      $result = $this->query('SELECT k, v FROM config', null);
+      $result = $this->query('SELECT k, v FROM config ORDER BY k ASC', null);
       while ($row = $result->fetch_assoc()) {
         $this->config[$row['k']] = $row['v'];
       }
@@ -541,6 +538,24 @@ class Database {
       $lag[$ts] = $ts - $previousUpto;
     }
     return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
+  }
+
+  /** Populate config table from ipa-default.cfg, keeping existing values. */
+  public function populateConfig($defaultCfg) {
+    $cfg = file($defaultCfg, FILE_IGNORE_NEW_LINES);
+    // Compute upload_url.
+    $cfg[] = 'upload_url='.getCurentPagePathURL();
+    $q = '';
+    foreach ($cfg as $line) {
+      list($key, $value) = explode('=', $line);
+      if ($q) {
+        $q .= ',';
+      }
+      $q .= '("c:'.$key.'","'.$value.'")';
+    }
+    $q = 'INSERT IGNORE INTO config (k, v) VALUES '.$q;
+    $this->query($q, 'notice');
+    unset($this->config);
   }
 
   public function echoConfig() {

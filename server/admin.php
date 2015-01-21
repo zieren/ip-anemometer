@@ -3,37 +3,42 @@
 <?php
 require_once 'common.php';
 
-// TODO: Be sure to give credits to KLogger.
-
 $db = new Database(true /* create missing tables */);
 if (!isset($db->getConfig()['s:client_md5'])) {  // first run
+  $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
   buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
 }
 
-if (isset($_POST["reset"]) && $_POST["confirm"]) {
-  $db->dropTables();
+if (isset($_POST["clearAll"]) && $_POST["confirm"]) {
+  $db->dropTablesExceptConfig();
   $db->createMissingTables();
-  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
-} else if (isset($_POST["setConfig"])) {
+} else if (isset($_POST["configDefaults"]) && $_POST["confirm"]) {
+  $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
+} else if (isset($_POST["setConfig"]) || isset($_POST["clearConfig"])) {
   // TODO: This should sanitize the user input.
-  $db->setConfig($_POST["configKey"], $_POST["configValue"]);
-  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
-} else if (isset($_POST["clearConfig"])) {
-  // TODO: This should sanitize the user input.
-  $db->clearConfig($_POST["configKey"]);
-  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
+  $key = ($_POST["serverKey"] ? "s:" : "c:").$_POST["configKey"];
+  if (isset($_POST["setConfig"])) {
+    $db->setConfig($key, $_POST["configValue"]);
+  } else {
+    $db->clearConfig($key);
+  }
+  if (!$_POST["serverKey"]) {
+    buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
+  }
 }
 
 echo '
-<h1>IPA Anemometer</h1>
+<h1>'.IPA_GREETING.'</h1>
+<p>(c) 2014-2015 J&ouml;rg Zieren (<a href="http://zieren.de">zieren.de</a>), GNU GPL v3.
+Components: <a href="http://codefury.net/projects/klogger/">KLogger</a> (c) 2008-2014 Kenny Katzgrau,
+MIT license</p>
 
 <h2>Configuration</h2>';
 $db->echoConfig();
 
 echo '
-<hr />
-<h2>Update Configuration</h2>
 <form action="" method="post" enctype="multipart/form-data">
+  <input type="checkbox" name="serverKey" />server
   <input type="text" name="'."configKey".'" value="key">
   <input type="text" name="'."configValue".'" value="value">
   <input type="submit" name="'."setConfig".'" value="Set">
@@ -53,7 +58,8 @@ echo
 '<hr />
 <h2>Manage Database</h2>
 <form action="" method="post">
-  <input type="submit" name="reset" value="RESET EVERYTHING" />
+  <input type="submit" name="clearAll" value="CLEAR ALL DATA" />
+  <input type="submit" name="configDefaults" value="config defaults" />
   <input type="checkbox" name="confirm" />Yes, I really really want to!
 </form>
 <hr />';

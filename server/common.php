@@ -29,6 +29,8 @@ function ipaFatalErrorHandler() {
 }
 register_shutdown_function('ipaFatalErrorHandler');
 
+define('IPA_GREETING', 'IP anemometer server 0.0.5');
+
 define('NOT_AVAILABLE', 'n/a');
 
 // Internal use: Indexes in time series samples (before downsampling).
@@ -41,6 +43,7 @@ define('WIND_SAMPLE_MAX', 3);
 define('CLIENT_APP_DIR', 'client');
 define('CLIENT_APP_ZIP_FILENAME', 'client/ipa-update.zip');
 define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');
+define('CLIENT_APP_CFG_DEFAULT_FILENAME', 'client/ipa-default.cfg');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 // Maximum amount of time the desired window size is shifted back to compensate for upload
 // latency. TODO: This (and possibly other values) should be configurable.
@@ -56,7 +59,7 @@ define('REQ_SYSTEM_MINUTES', 24 * 60);
 /** Returns the current path, e.g. for "http://foo.bar/baz/qux.php" -> "http://foo.bar/baz/". */
 function getCurentPagePathURL() {
   $pageURL = 'http';
-  if ($_SERVER['HTTPS'] == 'on') {
+  if (get($_SERVER['HTTPS'], '') == 'on') {
     $pageURL .= 's';
   }
   $pageURL .= '://';
@@ -97,7 +100,7 @@ function get(&$value, $default=null) {
 // TODO: This is slightly misplaced in common.php.
 // TODO: This should probably make a copy of the file and move it back to avoid races.
 // TODO: Would be nice to avoid timestamps (of ipa.cfg - and the operation itself?) in the .zip,
-// since they affect the md5 and result in an unnecessary download.
+// since they affect the md5 and result in an unnecessary download. Use touch()?
 /** Builds the client app .zip by adding the client config from $db to $filename. */
 function buildClientAppZip($filename, $db) {
   $zip = new ZipArchive();
