@@ -1,6 +1,3 @@
-import hashlib
-
-
 import K
 
 
@@ -15,12 +12,6 @@ class Config:
       if len(entry) != 2 or not entry[0] or not entry[1]:
         raise RuntimeError('invalid config file entry: %s' % line)
       self._cfg[entry[0]] = entry[1]
-    self._md5 = hashlib.md5()
-    for k, v in sorted(self._cfg.items()):
-      self._md5.update('%s=%s' % (k, v))
-
-  def md5(self):
-    return self._md5
 
   def UPLOAD_URL(self):
     """Ensures a trailing '/'."""
