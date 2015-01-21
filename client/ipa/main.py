@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import Queue
+import RPi.GPIO as GPIO  #@UnresolvedImport
 import sys
 import threading
 import traceback
@@ -25,12 +26,12 @@ class Anemometer:
     self._log.info('client md5: %s' % common.client_md5())
     # Create main command queue.
     self._main_cq = Queue.Queue()
-    # Create thread termination Event. All threads listen on this whenever they wait, and exit when
-    # it's set.
-    self._termination_event = threading.Event()
+    # Create thread termination Event for Uploader.
+    self._uploader_termination_event = threading.Event()
     # Create upload thread (started in run() below).
-    self._uploader = uploader.Uploader(self._main_cq, self._termination_event)
+    self._uploader = uploader.Uploader(self._main_cq, self._uploader_termination_event)
     # Create data sources.
+    GPIO.setmode(GPIO.BOARD)  # required before Wind()
     self._wind = wind.Wind()
     self._uploader.add_data_source(self._wind, True)
     self._uploader.add_data_source(temperature.Temperature(), True)
@@ -39,11 +40,9 @@ class Anemometer:
     self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
 
   def _shutdown(self):
-    """Attempt to shut down all threads gracefully."""
-    # Terminate the uploader:
-    self._termination_event.set()
-    # Cleanup GPIO:
-    self._wind.terminate()
+    """Deregister GPIO callbacks and attempt to shut down all threads gracefully."""
+    GPIO.cleanup()
+    self._uploader_termination_event.set()
     threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
     if threads_left:
       self._log.warning('%d thread(s) failed to shutdown' % threads_left)

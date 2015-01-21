@@ -24,6 +24,7 @@
 #
 # TODO: Complete these instructions once there's a place to put the formula and parameters.
 
+import RPi.GPIO as GPIO  #@UnresolvedImport
 import subprocess
 import traceback
 
@@ -42,9 +43,11 @@ if __name__ == "__main__":
     else:
       logger.info('--- clock in sync ---')
 
+    GPIO.setmode(GPIO.BOARD)
     wind = Wind(calibration_mode=True)
     raw_input('Press ENTER to quit...\n')  # just in case there's a kb and a screen
-    wind.terminate()
+    GPIO.cleanup()
+    wind.terminateCalibration()
     threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
     print '--- exiting - threads left: %d ---' % threads_left
   except Exception:
