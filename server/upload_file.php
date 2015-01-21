@@ -23,14 +23,10 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   echo 'File: '.$_FILES['file']['name'].'<br>';
   echo 'Type: '.$_FILES['file']['type'].'<br>';
   echo 'Size: '.$_FILES['file']['size'].'<br>';
-  $tmpName = $_FILES['file']['tmp_name'];
-  $md5 = md5_file($tmpName);
-  echo 'MD5: '.$md5.'<br>';
-  $db = new Database();
-  buildClientAppZip($tmpName, $db);
+  // Move file first, since this is more likely to fail (permissions) than the DB update.
+  move_uploaded_file($_FILES['file']['tmp_name'], CLIENT_APP_ZIP_FILENAME);
+  buildClientAppZip(new Database());
   echo 'Added client config.<br>';
-  move_uploaded_file($tmpName, CLIENT_APP_ZIP_FILENAME);
-  $db->setConfig('s:client_md5', $md5);
   echo 'Done.<br>';
 }
 echo '</p>';

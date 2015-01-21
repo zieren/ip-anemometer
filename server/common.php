@@ -101,18 +101,18 @@ function get(&$value, $default=null) {
 // TODO: This should probably make a copy of the file and move it back to avoid races.
 // TODO: Would be nice to avoid timestamps (of ipa.cfg - and the operation itself?) in the .zip,
 // since they affect the md5 and result in an unnecessary download. Use touch()?
-/** Builds the client app .zip by adding the client config from $db to $filename. */
-function buildClientAppZip($filename, $db) {
+/** Builds the client app .zip by adding the client config from $db to CLIENT_APP_ZIP_FILENAME. */
+function buildClientAppZip($db) {
   $zip = new ZipArchive();
-  $retval = $zip->open($filename, ZipArchive::CREATE);
+  $retval = $zip->open(CLIENT_APP_ZIP_FILENAME, ZipArchive::CREATE);
   if ($retval !== true) {
-    throw new Exception('failed to open '.$filename.': '.$retval);
+    throw new Exception('failed to open '.CLIENT_APP_ZIP_FILENAME.': '.$retval);
   }
   $zip->deleteName(CLIENT_APP_CFG_FILENAME);  // may or may not be present
   $ok = $zip->addFromString(CLIENT_APP_CFG_FILENAME, $db->createClientConfigFile())
       && $zip->close();
   if (!$ok) {
-    throw new Exception('failed to replace '.CLIENT_APP_CFG_FILENAME.' in '.$filename);
+    throw new Exception('failed to add '.CLIENT_APP_CFG_FILENAME.' to '.CLIENT_APP_ZIP_FILENAME);
   }
   $md5 = md5_file(CLIENT_APP_ZIP_FILENAME);
   if ($md5) {

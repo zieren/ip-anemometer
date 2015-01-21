@@ -6,7 +6,7 @@ require_once 'common.php';
 $db = new Database(true /* create missing tables */);
 if (!isset($db->getConfig()['s:client_md5'])) {  // first run
   $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
-  buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
+  buildClientAppZip($db);
 }
 
 if (isset($_POST["clearAll"]) && $_POST["confirm"]) {
@@ -23,7 +23,7 @@ if (isset($_POST["clearAll"]) && $_POST["confirm"]) {
     $db->clearConfig($key);
   }
   if (!$_POST["serverKey"]) {
-    buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
+    buildClientAppZip($db);
   }
 }
 
