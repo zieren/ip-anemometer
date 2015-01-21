@@ -24,9 +24,9 @@ class Config:
   def UPLOAD_PASSWORD(self):
     return self._cfg['upload_password']
   def UPLOAD_INTERVAL_SECONDS(self):
-    return int(self._cfg['interval_seconds'])
+    return int(self._cfg['upload_interval_seconds'])
   def UPLOAD_MAX_SIZE_KB(self):
-    return int(self._cfg['max_size_kb'])
+    return int(self._cfg['upload_max_size_kb'])
 
   def TIMEOUT_SHUTDOWN_SECONDS(self):
     return int(self._cfg['timeout_shutdown_seconds'])
