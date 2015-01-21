@@ -44,7 +44,7 @@ class Config:
   def WIND_LSF(self):
     return float(self._cfg['wind_low_speed_factor'])
   def WIND_MAX_ROTATION(self):
-    return int(self._cfg['wind_max_rotation_seconds'])
+    return int(self._cfg['wind_max_rotation_seconds']) * 1000
 
   def LOGGING_LEVEL(self):
     return self._cfg['logging_level']
