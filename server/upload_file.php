@@ -30,7 +30,7 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
   buildClientAppZip($tmpName, $db);
   echo 'Added client config.<br>';
   move_uploaded_file($tmpName, CLIENT_APP_ZIP_FILENAME);
-  $db->setConfig('s:client_app_md5', $md5);
+  $db->setConfig('s:client_md5', $md5);
   echo 'Done.<br>';
 }
 echo '</p>';

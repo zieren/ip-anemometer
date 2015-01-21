@@ -6,7 +6,7 @@ require_once 'common.php';
 // TODO: Be sure to give credits to KLogger.
 
 $db = new Database(true /* create missing tables */);
-if (!isset($db->getConfig()['s:client_app_md5'])) {  // first run
+if (!isset($db->getConfig()['s:client_md5'])) {  // first run
   buildClientAppZip(CLIENT_APP_ZIP_FILENAME, $db);
 }
 

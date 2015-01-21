@@ -20,7 +20,7 @@ function handleRequest() {
     $db->beginTransaction();
     $meta = $data['meta'];  // Metadata is required in each request.
     $clientAppMd5 = get($meta['md5'], NOT_AVAILABLE);
-    $serverAppMd5 = get($config['s:client_app_md5'], NOT_AVAILABLE);
+    $serverAppMd5 = get($config['s:client_md5'], NOT_AVAILABLE);
     $logger->debug('client md5: '.$clientAppMd5.' -- server has: '.$serverAppMd5);
 
     // First check whether a client update is available. Note that on startup the client always

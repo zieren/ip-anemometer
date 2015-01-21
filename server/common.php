@@ -112,10 +112,10 @@ function buildClientAppZip($filename, $db) {
     throw new Exception('failed to replace '.CLIENT_APP_CFG_FILENAME.' in '.$filename);
   }
   $md5 = md5_file(CLIENT_APP_ZIP_FILENAME);
-  if ($md5) {  // XXX rename: client_md5
-    $db->setConfig('s:client_app_md5', $md5);
+  if ($md5) {
+    $db->setConfig('s:client_md5', $md5);
   } else {
-    $db->clearConfig('s:client_app_md5');
+    $db->clearConfig('s:client_md5');
   }
 }
 ?>
