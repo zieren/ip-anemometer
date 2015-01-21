@@ -8,7 +8,7 @@ require_once 'common.php';
 
 $allowedExts = array('zip');
 $allowedTypes = array('application/x-zip-compressed', 'application/zip');
-$extension = strtolower(end(explode('.', $_FILES['file']['name'])));
+$extension = strtolower(array_slice(explode('.', $_FILES['file']['name']), -1, 1)[0]);
 
 echo '<p>';
 if (!in_array($_FILES['file']['type'], $allowedTypes)) {
