@@ -10,6 +10,7 @@ ipa.Options = function() {
   this.fractionalDigits = 1;  // Textual output precision.
   this.timeSeriesPoints = 30;
       // Downsample time series to make charts readable. Increase for wider charts.
+  this.doorTimeDays = 2;  // Show shed door status.
   this.systemStatusMinutes = 24 * 60;
       // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
@@ -164,6 +165,23 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
     totalPercent -= percent;
   }
   element.appendChild(table);
+}
+
+ipa.Chart.prototype.drawDoor = function(element) {
+  var doorTable = new google.visualization.DataTable();
+  doorTable.addColumn('datetime');
+  doorTable.addColumn('number');
+  var door = this.stats.door;
+  for (var ts in door) {
+    doorTable.addRow([new Date(parseInt(ts)), door[ts]]);
+  }
+  var options = {
+    title: 'Door open',
+    hAxis: {format: 'ccc HH'},
+    legend: 'none'
+  };
+  var doorChart = new google.visualization.LineChart(element);
+  doorChart.draw(doorTable, options);
 }
 
 ipa.Chart.prototype.drawTemperature = function(element) {

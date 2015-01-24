@@ -8,10 +8,12 @@ function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
 
 function computeStats() {
   // TODO: These defaults should match the ones in ipa.js.
+  // TODO: This isn't handling "not requested" properly.
   $windowMinutes = getIntParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
   $timestamp = getIntParam('ts', timestamp(), 0);
   $timeSeriesPoints = getIntParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, 1);
-  $systemMinutes = getIntParam('s', REQ_SYSTEM_MINUTES, 0);
+  $systemMinutes = getIntParam('s', REQ_SYSTEM_MINUTES, 0, REQ_SYSTEM_MINUTES_MAX);
+  $doorDays = getIntParam('d', REQ_DOOR_DAYS, 0, REQ_DOOR_DAYS_MAX);
 
   $db = new Database();
 
@@ -26,6 +28,9 @@ function computeStats() {
         'nwtype' => $db->readNetworkType($timestamp, $systemMillis),
         'traffic' => $db->readTransferVolume(),
         'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
+  }
+  if ($doorDays) {
+    $stats['door'] = $db->readDoor($doorDays);
   }
   return $stats;
 }

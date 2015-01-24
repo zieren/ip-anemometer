@@ -28,11 +28,12 @@ ipaView.updateChart = function() {
   chart.drawSummary(ipaView.clearElement(document.getElementById('summary')));
   chart.drawTimeSeries(ipaView.clearElement(document.getElementById('time')));
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
+  chart.drawDoor(ipaView.clearElement(document.getElementById('door')));
+  chart.drawLag(ipaView.clearElement(document.getElementById('lag')));
   chart.drawTemperature(ipaView.clearElement(document.getElementById('temp')));
   chart.drawSignalStrength(ipaView.clearElement(document.getElementById('signalStrength')));
   chart.drawNetworkType(ipaView.clearElement(document.getElementById('nwType')));
   chart.drawTransferVolume(ipaView.clearElement(document.getElementById('transferVolume')));
-  chart.drawLag(ipaView.clearElement(document.getElementById('lag')));
 }
 
 ipaView.handleKeyPress = function(event) {
@@ -65,6 +66,8 @@ google.setOnLoadCallback(ipaView.updateChart);
 <div id="summary" align="center"></div>
 <div id="time" class="chart"></div>
 <div id="hist" class="chart"></div>
+<h3>Shed door (last 2d)</h3>
+<div id="door" class="chart"></div>
 <h3>System status (last 24h)</h3>
 <div id="lag" class="chart"></div>
 <div id="temp" class="chart"></div>

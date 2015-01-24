@@ -177,6 +177,28 @@ class Database {
     $this->query($q);
   }
 
+  public function readDoor($days) {
+    $endTimestamp = timestamp();
+    $startTimestamp = $endTimestamp - daysToMillis($days);
+    $q = 'SELECT ts, open FROM door WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $result = $this->query($q, null);
+    $door = array($startTimestamp => 0);  // XXX assume closed door
+    $open = 0;
+    $previousOpen = 0;
+    while ($row = $result->fetch_row()) {
+      $open = intval($row[1]);
+      $ts = intval($row[0]);
+      if ($open != $previousOpen) {
+        $door[$ts - 1] = $previousOpen;
+        $previousOpen = $open;
+      }
+      $door[$ts] = $open;
+    }
+    $door[$endTimestamp] = $open;
+    return $door;
+  }
+
   /** Updates the specified config value. */
   public function setConfig($key, $value) {
     $q = 'REPLACE INTO config (k, v) VALUES ("'.$key.'", "'.$value.'")';
