@@ -15,6 +15,8 @@ spl_autoload_register('autoloader');
 define('LOG_DIR', 'logs');
 Logger::Instance();
 
+// TODO: Log request content in error handlers?
+
 function ipaErrorHandler($errno, $errstr, $errfile, $errline, $errcontext) {
   Logger::Instance()->critical('Error '.$errno.': '.$errstr.' -- '.$errfile.':'.$errline);
   return false;  // continue with built-in error handling
