@@ -47,7 +47,7 @@ if __name__ == "__main__":
     wind = Wind(calibration_mode=True)
     raw_input('Press ENTER to quit...\n')  # just in case there's a kb and a screen
     GPIO.cleanup()
-    wind.terminateCalibration()
+    wind.terminate_calibration()
     threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
     print '--- exiting - threads left: %d ---' % threads_left
   except Exception:

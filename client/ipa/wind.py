@@ -30,7 +30,6 @@ class Wind:
         C.WIND_HSF(), C.WIND_MAX_ROTATION()))
 
   def _register_callback(self, callback):
-    # Initialize GPIO.
     GPIO.setup(C.WIND_INPUT_PIN(), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     # Up to (at least) GPIO 0.5.9 edge detection is partly broken. RISING always behaves like BOTH,
     # FALLING sometimes behaves like BOTH. Since BOTH is the only mode that works as expected, we
@@ -58,5 +57,5 @@ class Wind:
       self._calc.next_timestamp(ts)
     return 'wind', self._calc.get_stats_and_reset(up_to_time)
 
-  def terminateCalibration(self):
+  def terminate_calibration(self):
     self._calibration_logger.terminate()
