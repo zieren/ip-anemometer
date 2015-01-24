@@ -20,6 +20,7 @@ class HuaweiStatus:
 
   def __init__(self):
     self._log = log.get_logger('ipa.link')
+    self._log.info('initialized')
 
   def get_sample(self):
     # TODO: It's a little awkward that we need to start a subprocess synchronously.
