@@ -184,16 +184,15 @@ class Database {
     // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
     $result = $this->query($q, null);
     $door = array($startTimestamp => 0);  // assume door initially closed
-    $open = 0;
     $previousOpen = 0;
     while ($row = $result->fetch_row()) {
       $open = intval($row[1]);
-      $ts = intval($row[0]);
-      if ($open != $previousOpen) {
-        $door[$ts - 1] = $previousOpen;
-        $previousOpen = $open;
+      if ($open == $previousOpen) {
+        continue;
       }
+      $ts = intval($row[0]);
       $door[$ts] = $open;
+      $previousOpen = $open;
     }
     $door[$endTimestamp] = $open;
     return $door;

@@ -1,4 +1,4 @@
-google.load('visualization', '1.0', {'packages': ['corechart']});
+google.load('visualization', '1.0', {'packages': ['corechart', 'timeline']});
 
 var ipa = {};
 
@@ -169,18 +169,26 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
 
 ipa.Chart.prototype.drawDoor = function(element) {
   var doorTable = new google.visualization.DataTable();
-  doorTable.addColumn('datetime');
-  doorTable.addColumn('number');
+  doorTable.addColumn({type: 'string'});
+  doorTable.addColumn({type: 'string'});
+  doorTable.addColumn({type: 'datetime'});
+  doorTable.addColumn({type: 'datetime'});
   var door = this.stats.door;
+  var previousTs = 0;
+  var status = ['closed', 'open'];
   for (var ts in door) {
-    doorTable.addRow([new Date(parseInt(ts)), door[ts]]);
+    if (previousTs) {
+      doorTable.addRow(['Door', status[door[previousTs]],
+                        new Date(parseInt(previousTs)), new Date(parseInt(ts))]);
+    }
+    previousTs = ts;
   }
   var options = {
     title: 'Door open',
-    hAxis: {format: 'ccc HH'},
-    legend: 'none'
+    hAxis: {format: "ccc H'h'"},
+    legend: 'top'
   };
-  var doorChart = new google.visualization.LineChart(element);
+  var doorChart = new google.visualization.Timeline(element);
   doorChart.draw(doorTable, options);
 }
 

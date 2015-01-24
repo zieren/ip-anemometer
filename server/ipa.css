@@ -37,6 +37,10 @@ div.chart {
 	height: 300px;
 }
 
+div.timeline {
+	width: 300px;
+}
+
 div#minutes {
 	margin-bottom: 10px;
 }
