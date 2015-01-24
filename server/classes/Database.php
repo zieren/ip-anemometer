@@ -62,6 +62,8 @@ class Database {
         'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, upto BIGINT, cts BIGINT, '
         .'stratum INT, fails INT, ip VARCHAR(15))');
     $this->query(
+        'CREATE TABLE IF NOT EXISTS door (ts BIGINT PRIMARY KEY, open BIT(1))');
+    $this->query(
         'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT)');
   }
 
@@ -154,6 +156,24 @@ class Database {
     $q = 'REPLACE INTO meta (ts, upto, cts, stratum, fails, ip) VALUES ('.timestamp().','
         .$meta['upto'].','.$meta['cts'].','.$meta['stratum'].','
         .$meta['fails'].',"'.$_SERVER['REMOTE_ADDR'].'")';
+    $this->query($q);
+  }
+
+  public function insertDoor($door) {
+    if (count($door) == 0) {
+      $this->log->warning('received empty door data');
+      return;
+    }
+    $q = '';
+    foreach ($door as $sample) {
+      foreach ($sample as $event) {
+        if ($q) {
+          $q .= ',';
+        }
+        $q .= '('.$event[0].','.$event[1].')';
+      }
+    }
+    $q = 'REPLACE INTO door (ts, open) VALUES '.$q;
     $this->query($q);
   }
 

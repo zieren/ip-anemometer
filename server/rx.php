@@ -51,6 +51,10 @@ function handleRequest() {
       $db->insertLinkStatus($data['link']);
     }
 
+    if (isset($data['door'])) {
+      $db->insertDoor($data['door']);
+    }
+
     $db->commit();
 
     $response['status'] = 'ok';

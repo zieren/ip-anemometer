@@ -46,6 +46,18 @@ class Config:
   def WIND_MAX_ROTATION(self):
     return int(self._cfg['wind_max_rotation_seconds']) * 1000
 
+  def HUAWEI_ENABLED(self):
+    return int(self._cfg['huawei_enabled']) != 0
+
+  def DOOR_ENABLED(self):
+    return int(self._cfg['door_enabled']) != 0
+  def DOOR_INPUT_PIN(self):
+    return int(self._cfg['door_input_pin'])
+  def DOOR_OPEN_STATE(self):
+    return int(self._cfg['door_open_state'])
+  def DOOR_DEBOUNCE_MILLIS(self):
+    return int(self._cfg['door_debounce_millis'])
+
   def LOGGING_LEVEL(self):
     return self._cfg['logging_level']
   def LOGGING_MAX_FILE_SIZE_KB(self):
