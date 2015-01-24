@@ -177,13 +177,13 @@ class Database {
     $this->query($q);
   }
 
-  public function readDoor($days) {
-    $endTimestamp = timestamp();
+  public function readDoor($endTimestamp, $days) {
     $startTimestamp = $endTimestamp - daysToMillis($days);
     $q = 'SELECT ts, open FROM door WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
     $result = $this->query($q, null);
-    $door = array($startTimestamp => 0);  // XXX assume closed door
+    $door = array($startTimestamp => 0);  // assume door initially closed
     $open = 0;
     $previousOpen = 0;
     while ($row = $result->fetch_row()) {

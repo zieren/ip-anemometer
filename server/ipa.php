@@ -30,7 +30,7 @@ function computeStats() {
         'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
   }
   if ($doorDays) {
-    $stats['door'] = $db->readDoor($doorDays);
+    $stats['door'] = $db->readDoor($timestamp, $doorDays);
   }
   return $stats;
 }
