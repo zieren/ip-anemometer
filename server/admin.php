@@ -14,6 +14,7 @@ if (isset($_POST["clearAll"]) && $_POST["confirm"]) {
   $db->createMissingTables();
 } else if (isset($_POST["configDefaults"]) && $_POST["confirm"]) {
   $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
+  buildClientAppZip($db);
 } else if (isset($_POST["setConfig"]) || isset($_POST["clearConfig"])) {
   // TODO: This should sanitize the user input.
   $key = ($_POST["serverKey"] ? "s:" : "c:").$_POST["configKey"];
