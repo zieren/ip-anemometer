@@ -29,16 +29,17 @@ td.to, td.toValue {
 }
 
 div#minutes, div#summary, div#expand {
-	width: 300px;
+	width: 400px;
 }
 
 div.chart {
-	width: 300px;
+	width: 400px;
 	height: 300px;
 }
 
 div.timeline {
-	width: 300px;
+	width: 400px;
+	height: 400px;
 }
 
 div#minutes {

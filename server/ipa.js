@@ -10,7 +10,7 @@ ipa.Options = function() {
   this.fractionalDigits = 1;  // Textual output precision.
   this.timeSeriesPoints = 30;
       // Downsample time series to make charts readable. Increase for wider charts.
-  this.doorTimeDays = 2;  // Show shed door status.
+  this.doorTimeDays = 7;  // Show shed door status.
   this.systemStatusMinutes = 24 * 60;
       // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
@@ -39,6 +39,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
       + '&s=' + this.options.systemStatusMinutes
+      + '&d=' + this.options.doorTimeDays
       + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
@@ -169,24 +170,46 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
 
 ipa.Chart.prototype.drawDoor = function(element) {
   var doorTable = new google.visualization.DataTable();
-  doorTable.addColumn({type: 'string'});
-  doorTable.addColumn({type: 'string'});
-  doorTable.addColumn({type: 'datetime'});
-  doorTable.addColumn({type: 'datetime'});
+  doorTable.addColumn({type: 'string'});  // day, e.g. 'Fr 13'
+  doorTable.addColumn({type: 'string'});  // 'open' or 'closed'
+  doorTable.addColumn({type: 'date'});  // from
+  doorTable.addColumn({type: 'date'});  // to
   var door = this.stats.door;
   var previousTs = 0;
   var status = ['closed', 'open'];
+  var rows = new Array();
+  var addRow = function(status, a, b) {
+    var dayNames = new Array('Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa');
+    var label = dayNames[a.getDay()] + ' ' + a.getDate();
+    a = new Date(0, 0, 0, a.getHours(), a.getMinutes(), a.getSeconds());
+    b = (typeof b === 'undefined') ? new Date(0, 0, 0, 23, 59, 59)
+        : new Date(0, 0, 0, b.getHours(), b.getMinutes(), b.getSeconds());
+    rows.push([label, status, a, b]);
+  }
+  var sameDate = function(a, b) {
+    return a.getMonth() == b.getMonth() && a.getDate() == b.getDate();
+  }
   for (var ts in door) {
     if (previousTs) {
-      doorTable.addRow(['Door', status[door[previousTs]],
-                        new Date(parseInt(previousTs)), new Date(parseInt(ts))]);
+      var cursor = new Date(parseInt(previousTs));
+      var end = new Date(parseInt(ts));
+      while (!sameDate(cursor, end)) {
+        addRow(status[door[previousTs]], cursor);
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1, 0, 0, 0);
+      }
+      addRow(status[door[previousTs]], cursor, end);
     }
     previousTs = ts;
   }
+  if (!rows.length) {
+    return;  // TODO: We should generally indicate "no data" better.
+  }
+  rows.reverse();
+  doorTable.addRows(rows);
   var options = {
     title: 'Door open',
-    hAxis: {format: "ccc H'h'"},
-    legend: 'top'
+    hAxis: {format: 'HH:mm'},
+    legend: 'none'
   };
   var doorChart = new google.visualization.Timeline(element);
   doorChart.draw(doorTable, options);
