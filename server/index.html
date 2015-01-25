@@ -44,7 +44,7 @@ ipaView.handleKeyPress = function(event) {
 
 ipaView.expand = function() {
   ipaView.options.timeSeriesPoints = 123456;  // effectively disable downsampling
-  var charts = document.getElementsByClassName('chart');
+  var charts = document.getElementsByClassName('expand');
   for (var i = 0; i < charts.length; ++i) {
     charts[i].style.width = '100%';
   }
@@ -64,16 +64,16 @@ google.setOnLoadCallback(ipaView.updateChart);
   <button onclick="ipaView.updateChart()">Load</button>
 </div>
 <div id="summary" align="center"></div>
-<div id="time" class="chart"></div>
-<div id="hist" class="chart"></div>
+<div id="time" class="chart expand"></div>
+<div id="hist" class="chart expand"></div>
 <h3>Shed door</h3>
-<div id="door" class="timeline"></div>
+<div id="door" class="timeline expand"></div>
 <h3>System status (last 24h)</h3>
-<div id="lag" class="chart"></div>
-<div id="temp" class="chart"></div>
-<div id="signalStrength" class="chart"></div>
-<div id="transferVolume" class="chart"></div>
-<div id="nwType" class="chart"></div>
+<div id="lag" class="chart expand"></div>
+<div id="temp" class="chart expand"></div>
+<div id="signalStrength" class="chart expand"></div>
+<div id="transferVolume" class="chart expand"></div>
+<div id="nwType" class="chart expand"></div>
 <div id="expand" align="center">
   <button onclick="ipaView.expand()">Max Width</button>
 </div>
