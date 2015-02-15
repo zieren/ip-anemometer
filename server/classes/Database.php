@@ -181,8 +181,7 @@ class Database {
    * Returns the sequence of changes to the door status, assuming that the door is initially (i.e.
    * before the start of the specified interval) closed (TODO: improve this). Duplicates the last
    * row for $endTimestamp. */
-  public function readDoor($endTimestamp, $days) {
-    $startTimestamp = $endTimestamp - daysToMillis($days);
+  public function readDoor($startTimestamp, $endTimestamp) {
     $q = 'SELECT ts, open FROM door WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     // TODO: Read one more row, so we know the state between $startTimestamp and the first row.

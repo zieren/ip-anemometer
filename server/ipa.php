@@ -13,7 +13,10 @@ function computeStats() {
   $timestamp = getIntParam('ts', timestamp(), 0);
   $timeSeriesPoints = getIntParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, 1);
   $systemMinutes = getIntParam('s', REQ_SYSTEM_MINUTES, 0, REQ_SYSTEM_MINUTES_MAX);
-  $doorDays = getIntParam('d', REQ_DOOR_DAYS, 0, REQ_DOOR_DAYS_MAX);
+  $doorStartMillis = getIntParam('d',
+      $timestamp - daysToMillis(REQ_DOOR_DAYS),
+      $timestamp - daysToMillis(REQ_DOOR_DAYS_MAX),
+      $timestamp);
 
   $db = new Database();
 
@@ -29,8 +32,8 @@ function computeStats() {
         'traffic' => $db->readTransferVolume(),
         'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
   }
-  if ($doorDays) {
-    $stats['door'] = $db->readDoor($timestamp, $doorDays);
+  if ($doorStartMillis) {
+    $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
   }
   return $stats;
 }

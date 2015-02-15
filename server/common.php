@@ -58,7 +58,7 @@ define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);
 define('REQ_SYSTEM_MINUTES', 24 * 60);
 define('REQ_SYSTEM_MINUTES_MAX', 7 * 24 * 60);
-define('REQ_DOOR_DAYS', 7);
+define('REQ_DOOR_DAYS', 9);
 define('REQ_DOOR_DAYS_MAX', 31);
 
 /** Returns the current path, e.g. for "http://foo.bar/baz/qux.php" -> "http://foo.bar/baz/". */

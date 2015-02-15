@@ -39,7 +39,7 @@ div.chart {
 
 div.timeline {
 	width: 400px;
-	height: 400px;
+	max-height: 500px;
 }
 
 div#minutes {

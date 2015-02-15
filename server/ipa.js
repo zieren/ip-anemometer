@@ -33,7 +33,7 @@ ipa.Options = function() {
   this.fractionalDigits = 1;  // Textual output precision.
   this.timeSeriesPoints = 30;
       // Downsample time series to make charts readable. Increase for wider charts.
-  this.doorTimeDays = 7;  // Show shed door status.
+  this.doorTimeDays = 8;  // Show shed door status.
   this.systemStatusMinutes = 24 * 60;
       // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
@@ -62,7 +62,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
       + '&s=' + this.options.systemStatusMinutes
-      + '&d=' + this.options.doorTimeDays
+      + '&d=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.doorTimeDays)
       + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
@@ -198,15 +198,18 @@ ipa.Chart.prototype.drawDoor = function(element) {
   doorTable.addColumn({type: 'string'});  // 'open' or 'closed'
   doorTable.addColumn({type: 'date'});  // from
   doorTable.addColumn({type: 'date'});  // to
-  var status = ['closed', 'open'];
+  var statusToString = ['closed', 'open'];
   var rows = [];
   var addRow = function(status, a, b) {
     var dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
     var label = dayNames[a.getDay()] + ' ' + a.getDate();
     a = new Date(0, 0, 0, a.getHours(), a.getMinutes(), a.getSeconds());
-    b = (typeof b === 'undefined') ? new Date(0, 0, 0, 23, 59, 59)
+    b = (typeof b === 'undefined') ? ipa.Chart.endOfDay_
         : new Date(0, 0, 0, b.getHours(), b.getMinutes(), b.getSeconds());
-    rows.push([label, status, a, b]);
+    // Omit entire closed days.
+    if (!(ipa.Chart.isFullDay_(a, b) && status == statusToString[0])) {
+      rows.push([label, status, a, b]);
+    }
   }
   var sameDate = function(a, b) {
     return a.getMonth() == b.getMonth() && a.getDate() == b.getDate();
@@ -217,10 +220,10 @@ ipa.Chart.prototype.drawDoor = function(element) {
     var cursor = new Date(parseInt(door[i-1][0]));
     var end = new Date(parseInt(door[i][0]));
     while (!sameDate(cursor, end)) {
-      addRow(status[door[i-1][1]], cursor);
+      addRow(statusToString[door[i-1][1]], cursor);
       cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1, 0, 0, 0);
     }
-    addRow(status[door[i-1][1]], cursor, end);
+    addRow(statusToString[door[i-1][1]], cursor, end);
   }
   if (!rows.length) {
     return;  // TODO: We should generally indicate "no data" better.
@@ -350,6 +353,22 @@ ipa.Chart.insertCells_ = function(tr) {
       td.appendChild(document.createTextNode(arguments[i]));
     }
   }
+}
+
+/** Returns epoch millis for 00:00 a.m. the specified number of daysAgo. */
+ipa.Chart.getStartOfDayDaysAgo_ = function(daysAgo) {
+  var d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return d.getTime();
+}
+
+ipa.Chart.endOfDay_ = new Date(0, 0, 0, 23, 59, 59);
+
+/** Returns true if the specified Date-s cover one day, i.e. 00:00:00 to 23:59:59. */
+ipa.Chart.isFullDay_ = function(a, b) {
+  return a.getHours() == 0 && a.getMinutes() == 0 && a.getSeconds() == 0
+      && b.getHours() == 23 && b.getMinutes() == 59 && b.getSeconds() == 59;
 }
 
 ipa.Chart.formatTimestamp_ = function(timestamp) {
