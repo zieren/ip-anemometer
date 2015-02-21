@@ -2,6 +2,21 @@ google.load('visualization', '1.0', {'packages': ['corechart', 'timeline']});
 
 var ipa = {};
 
+// Options and their defaults.
+ipa.Options = function() {
+  this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
+  this.minutes = 60;  // Compute stats for the last x minutes...
+  this.upToTimestampMillis = -1;  // ... up to here. -1 means now.
+  this.fractionalDigits = 1;  // Textual output precision.
+  this.timeSeriesPoints = 30;
+      // Downsample time series to make charts readable. Increase for wider charts.
+  this.doorTimeDays = 8;  // Show shed door status.
+  this.systemStatusMinutes = 24 * 60;
+      // Show system status (temperature, signal etc.) (0 to disable).
+  this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
+  this.dummy = false;  // Output inconsistent dummy data for testing.
+}
+
 ipa.Tools = {}
 
 ipa.Tools.sorted = function(obj) {
@@ -23,21 +38,6 @@ ipa.Tools.alphasorted = function(obj) {
   }
   array.sort();
   return array;
-}
-
-// Options and their defaults.
-ipa.Options = function() {
-  this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
-  this.minutes = 60;  // Compute stats for the last x minutes...
-  this.upToTimestampMillis = -1;  // ... up to here. -1 means now.
-  this.fractionalDigits = 1;  // Textual output precision.
-  this.timeSeriesPoints = 30;
-      // Downsample time series to make charts readable. Increase for wider charts.
-  this.doorTimeDays = 8;  // Show shed door status.
-  this.systemStatusMinutes = 24 * 60;
-      // Show system status (temperature, signal etc.) (0 to disable).
-  this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
-  this.dummy = false;  // Output inconsistent dummy data for testing.
 }
 
 ipa.Chart = function(options) {
