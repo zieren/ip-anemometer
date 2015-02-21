@@ -77,7 +77,7 @@ class Uploader(threading.Thread):
       return
 
     try:
-      request = urllib2.Request(C.UPLOAD_URL() + 'rx.php', data_bz2,
+      request = urllib2.Request(C.UPLOAD_URL() + 'ul.php', data_bz2,
           {'Content-Type': 'application/octet-stream'})
       if C.UPLOAD_USERNAME() or C.UPLOAD_PASSWORD():
         auth_string = base64.encodestring('%s:%s' % (C.UPLOAD_USERNAME(),

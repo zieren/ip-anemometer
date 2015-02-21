@@ -1,5 +1,5 @@
 <?php
-require_once 'common.php';
+require_once '../common/common.php';
 
 final class Logger {
   public static function Instance() {

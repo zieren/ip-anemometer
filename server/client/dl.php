@@ -3,7 +3,7 @@
  * the one provided by the client (if any).
  */
 
-require_once 'common.php';
+require_once '../common/common.php';
 
 if (!file_exists(CLIENT_APP_ZIP_FILENAME)) {
   exit;

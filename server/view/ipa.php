@@ -1,5 +1,5 @@
 <?php
-require_once 'common.php';
+require_once '../common/common.php';
 
 function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
   $v = isset($_REQUEST[$name]) ? intval($_REQUEST[$name]) : $default;

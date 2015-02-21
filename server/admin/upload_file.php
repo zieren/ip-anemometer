@@ -4,7 +4,7 @@
 /* Store an update file (a .zip) on the server.
  */
 
-require_once 'common.php';
+require_once '../common/common.php';
 
 $allowedExts = array('zip');
 $allowedTypes = array('application/x-zip-compressed', 'application/zip');

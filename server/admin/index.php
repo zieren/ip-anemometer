@@ -1,7 +1,7 @@
 <html>
 <body>
 <?php
-require_once 'common.php';
+require_once '../common/common.php';
 
 $db = new Database(true /* create missing tables */);
 if (!isset($db->getConfig()['s:client_md5'])) {  // first run

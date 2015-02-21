@@ -1,5 +1,5 @@
 <?php
-require_once 'common.php';
+require_once '../common/common.php';
 
 function handleRequest() {
   $logger = Logger::Instance();
@@ -61,7 +61,7 @@ function handleRequest() {
     // TODO: Add support for reboot, shutdown etc.
   } catch (Exception $e) {
     $db->rollback();
-    $logger->critical('Exception in rx.php: '.$e);
+    $logger->critical('Exception in ul.php: '.$e);
     $response['status'] = 'failure';
   }
   return $response;

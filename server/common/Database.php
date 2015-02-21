@@ -1,5 +1,5 @@
 <?php
-require_once 'common.php';
+require_once '../common/common.php';
 
 // TODO: Better separation of DB and business logic.
 
@@ -588,7 +588,7 @@ class Database {
   public function populateConfig($defaultCfg) {
     $cfg = file($defaultCfg, FILE_IGNORE_NEW_LINES);
     // Compute upload_url.
-    $cfg[] = 'upload_url='.getCurentPagePathURL();
+    $cfg[] = 'upload_url='.getAbsoluteURL('../client');
     $q = '';
     foreach ($cfg as $line) {
       list($key, $value) = explode('=', $line);

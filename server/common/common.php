@@ -6,13 +6,14 @@
 require_once 'config.php';
 
 function autoloader($class) {
-  include 'classes/' . str_replace('\\', '/', $class) . '.php';
+  // TODO: This is silly because it breaks when requests aren't exactly one directory deep.
+  include '../common/' . str_replace('\\', '/', $class) . '.php';
 }
 spl_autoload_register('autoloader');
 
 // Logger must be initialized before used in ipaFatalErrorHandler; see
 // http://stackoverflow.com/questions/4242534/php-shutdown-cant-write-files
-define('LOG_DIR', 'logs');
+define('LOG_DIR', '../logs');
 Logger::Instance();
 
 // TODO: Log request content in error handlers?
@@ -42,10 +43,9 @@ define('WIND_SAMPLE_AVG', 2);
 define('WIND_SAMPLE_MAX', 3);
 
 // Internal constants.
-define('CLIENT_APP_DIR', 'client');
-define('CLIENT_APP_ZIP_FILENAME', 'client/ipa-update.zip');
-define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');
-define('CLIENT_APP_CFG_DEFAULT_FILENAME', 'client/ipa-default.cfg');
+define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-update.zip');
+define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
+define('CLIENT_APP_CFG_DEFAULT_FILENAME', '../client/ipa-default.cfg');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 // Maximum amount of time the desired window size is shifted back to compensate for upload
 // latency. TODO: This (and possibly other values) should be configurable.
@@ -61,20 +61,48 @@ define('REQ_SYSTEM_MINUTES_MAX', 7 * 24 * 60);
 define('REQ_DOOR_DAYS', 9);
 define('REQ_DOOR_DAYS_MAX', 31);
 
-/** Returns the current path, e.g. for "http://foo.bar/baz/qux.php" -> "http://foo.bar/baz/". */
-function getCurentPagePathURL() {
-  $pageURL = 'http';
+/** Returns the absolute URL of the specified relative path. */
+function getAbsoluteURL($relativePath) {
+  $url = 'http';
   if (get($_SERVER['HTTPS'], '') == 'on') {
-    $pageURL .= 's';
+    $url .= 's';
   }
-  $pageURL .= '://';
+  $url .= '://';
   if ($_SERVER['SERVER_PORT'] != '80') {
-    $pageURL .= $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].$_SERVER['REQUEST_URI'];
+    $url .= $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'];
   } else {
-    $pageURL .= $_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+    $url .= $_SERVER['SERVER_NAME'];
   }
-  $lastSlash = strrpos($pageURL, '/');
-  return substr($pageURL, 0, $lastSlash + 1);
+  $lastSlash = strrpos($_SERVER['REQUEST_URI'], '/');  // always starts with a slash
+  $path = substr($_SERVER['REQUEST_URI'], 0, $lastSlash + 1).$relativePath;
+  $url .= executeRelativePathComponents($path);
+  return $url;
+}
+
+/** Converts '/a//b/./x/../c/' -> '/a/b/c' */
+function executeRelativePathComponents($path) {
+  $in = explode('/', $path);
+  $out = [];
+  foreach ($in as $c) {
+    switch ($c) {
+  	  case '.':
+  	    break;
+  	  case '..':
+  	    array_pop($out);
+  	    break;
+  	  case '':  // ignore empty component except from leading slash
+  	    if (!$out) {
+  	      $out[] = $c;
+  	    }
+  	    break;
+  	  default:
+  	    $out[] = $c;
+    }
+  }
+  if (count($out) === 1 && $out[0] === '') {
+    $out[] = '';  // special case: add '' to implode to '/' (instad of '')
+  }
+  return implode('/', $out);
 }
 
 function formatTimestamp($timestamp) {
