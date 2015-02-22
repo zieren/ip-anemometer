@@ -388,7 +388,8 @@ class Database {
       $inputMax = $input[$i][WIND_SAMPLE_MAX];
       while (true) {
         $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
-//         echo '<p>i='.$i.',is='.($inputStart%1000000).',ie='.($inputEnd%1000000)
+//         echo '<p>i='.$i
+//             .',is='.($inputStart%1000000).',ic='.($inputCenter%1000000).',ie='.($inputEnd%1000000)
 //             .',ws='.($windowStart%1000000).',we='.($windowEnd%1000000)
 //             .',ol='.$overlap.'</p>';
         if ($overlap >= 0) {
@@ -408,10 +409,12 @@ class Database {
       // If the current input reaches into the next window, or is the last input, output the sample
       // and proceed to the next window.
       if ($inputEnd > $windowEnd || $i == 0) {
+        $avg = $window[WIND_SAMPLE_AVG] / $windowDuration;
+        $max = $window[WIND_SAMPLE_MAX];
         $output[] = array(
             Database::center($windowStart, $windowEnd),
-            $window[WIND_SAMPLE_AVG] / $windowDuration,
-            $window[WIND_SAMPLE_MAX]
+            $avg,
+            $max < 0 ? $avg : $max  // window might not have included a max sample point
         );
         if ($i == 0) {
           break;
