@@ -608,7 +608,20 @@ class Database {
   public function echoConfig() {
     echo '<p><table border="1">';
     foreach ($this->getConfig() as $k => $v) {
-      echo '<tr><td>'.$k.'</td><td>'.$v.'</td></tr>';
+      $component = '?';
+      switch (substr($k, 0, 2)) {
+      	case 'c:':
+      	  $component = 'client';
+      	  $k = substr($k, 2);
+      	  break;
+      	case 's:':
+      	  $component = 'server';
+      	  $k = substr($k, 2);
+      	  break;
+      	default:
+      	  break;
+      }
+      echo '<tr><td>'.$component.'</td><td>'.$k.'</td><td>'.$v.'</td></tr>';
     }
     echo '</table></p>';
   }
