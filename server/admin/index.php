@@ -9,21 +9,21 @@ if (!isset($db->getConfig()['s:client_md5'])) {  // first run
   buildClientAppZip($db);
 }
 
-if (isset($_POST["clearAll"]) && $_POST["confirm"]) {
+if (isset($_POST['clearAll']) && $_POST['confirm']) {
   $db->dropTablesExceptConfig();
   $db->createMissingTables();
-} else if (isset($_POST["configDefaults"]) && $_POST["confirm"]) {
+} else if (isset($_POST['configDefaults']) && $_POST['confirm']) {
   $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
   buildClientAppZip($db);
-} else if (isset($_POST["setConfig"]) || isset($_POST["clearConfig"])) {
+} else if (isset($_POST['setConfig']) || isset($_POST['clearConfig'])) {
   // TODO: This should sanitize the user input.
-  $key = ($_POST["serverKey"] ? "s:" : "c:").$_POST["configKey"];
-  if (isset($_POST["setConfig"])) {
-    $db->setConfig($key, $_POST["configValue"]);
+  $key = ($_POST['configComponent'] == 'server' ? 's:' : 'c:').$_POST['configKey'];
+  if (isset($_POST['setConfig'])) {
+    $db->setConfig($key, $_POST['configValue']);
   } else {
     $db->clearConfig($key);
   }
-  if (!$_POST["serverKey"]) {
+  if (!$_POST['serverKey']) {
     buildClientAppZip($db);
   }
 }
@@ -40,7 +40,10 @@ $db->echoConfig();
 
 echo '
 <form action="" method="post" enctype="multipart/form-data">
-  <input type="checkbox" name="serverKey" />server
+  <select name="configComponent">
+    <option value="client">Client</option>
+    <option value="server">Server</option>
+  </select>
   <input type="text" name="'."configKey".'" value="key">
   <input type="text" name="'."configValue".'" value="value">
   <input type="submit" name="'."setConfig".'" value="Set">
