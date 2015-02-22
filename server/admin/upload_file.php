@@ -31,6 +31,6 @@ if (!in_array($_FILES['file']['type'], $allowedTypes)) {
 }
 echo '</p>';
 ?>
-<p><a href="admin.php">Back to console</a></p>
+<p><a href="index.php">Back to console</a></p>
 </body>
 </html>
