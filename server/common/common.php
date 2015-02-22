@@ -32,7 +32,7 @@ function ipaFatalErrorHandler() {
 }
 register_shutdown_function('ipaFatalErrorHandler');
 
-define('IPA_GREETING', 'IP anemometer server 0.0.5');
+define('IPA_GREETING', 'IP anemometer server 0.0.6');
 
 define('NOT_AVAILABLE', 'n/a');
 
