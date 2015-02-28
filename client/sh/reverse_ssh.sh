@@ -25,11 +25,11 @@ SERVER_ALIVE_COUNT_MAX=2
 
 while true; do
   sshpass -p "$PASSWORD" \
-  ssh -o "ServerAliveInterval=$SERVER_ALIVE_INTERVAL" \
-      -o "ServerAliveCountMax=$SERVER_ALIVE_COUNT_MAX" \
-      -o "StrictHostKeyChecking=no" \
-      -o "UserKnownHostsFile=/dev/null" \
-      -o "ConnectTimeout=15" \
+  ssh -o ServerAliveInterval=$SERVER_ALIVE_INTERVAL \
+      -o ServerAliveCountMax=$SERVER_ALIVE_COUNT_MAX \
+      -o StrictHostKeyChecking=no \
+      -o UserKnownHostsFile=/dev/null \
+      -o ConnectTimeout=15 \
       -N -R $FWD_PORT:localhost:22 $REMOTE_ADDRESS -p $REMOTE_PORT
   sleep $WAIT_SECONDS
 done
