@@ -131,7 +131,7 @@ function daysToMillis($days) {
 }
 
 function get(&$value, $default=null) {
-    return isset($value) ? $value : $default;
+  return isset($value) ? $value : $default;
 }
 
 // TODO: This is slightly misplaced in common.php.
