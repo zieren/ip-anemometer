@@ -23,15 +23,14 @@ function ipa($atts) {
     'door' => door,
     'lag' => lag,
     'temperature' => temperature,
-    'signalStrength' => signalStrength,
-    'networkType' => networkType,
-    'transferVolume' => transferVolume
+    'signal' => signalStrength,
+    'network' => networkType,
+    'transfer' => transferVolume
   );
   $code = '';
   // XXX in order of $atts?
   foreach ($handlers as $tag => $func) {
     if (get($atts[$tag])) {
-      $code .= $tag; // XXX
       $code .= $func($atts);
     }
   }
