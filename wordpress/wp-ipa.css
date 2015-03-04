@@ -1,3 +1,10 @@
+div#periodSelector {
+    width: 25ch;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+}
+
 table.ipaSummary {
 	border: 1px solid black;
     border-spacing: 0;
@@ -31,7 +38,7 @@ td.to, td.toValue {
 	background: #bf9;
 }
 
-div#minutes, div#summary, div#expand {
+div#expand {
 	width: 400px;
 }
 
