@@ -47,12 +47,6 @@ function javascript($atts) {
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript" src="$jsUrl"></script>
-<style>
-div.ipaChart {
-  width: 600px
-  height: 300px
-}
-</style>
 <script>
 
 var ipaView = {};
@@ -98,7 +92,7 @@ ipaView.updateChart = function(opt_request) {
   ipaView.draw(c, c.drawLag, 'ipaLag');
   ipaView.draw(c, c.drawTemperature, 'ipaTemperature');
   ipaView.draw(c, c.drawSignalStrength, 'ipaSignalStrength');
-  ipaView.draw(c, c.drawNetworkType, 'ipaNwType');
+  ipaView.draw(c, c.drawNetworkType, 'ipaNetworkType');
   ipaView.draw(c, c.drawTransferVolume, 'ipaTransferVolume');
 }
 
