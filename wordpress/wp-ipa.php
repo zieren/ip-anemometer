@@ -7,7 +7,9 @@ Author URI: http://zieren.de/
 Version: 0.1
 */
 
-add_shortcode( 'ipa', 'ipa' );
+add_shortcode('ipa', 'ipa');
+wp_register_style('ipaCss', plugin_dir_url(__FILE__).'/wp-ipa.css');
+wp_enqueue_style('ipaCss');
 
 function get(&$value, $default=null) {
   return isset($value) ? $value : $default;
@@ -42,7 +44,6 @@ function ipa($atts) {
 
 function javascript($atts) {
   $jsUrl = plugin_dir_url(__FILE__).'/wp-ipa.js';
-  // XXX add CSS
   $ipaUrl = $atts['url'];
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>

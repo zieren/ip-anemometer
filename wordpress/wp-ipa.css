@@ -1,0 +1,50 @@
+table.ipaSummary {
+	border: 1px solid black;
+    border-spacing: 0;
+    width: 25ch;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table.summary td {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+td.avg, td.avgValue {
+	background: #acf;
+}
+
+td.max, td.maxValue {
+	background: #fcc;
+}
+
+td.maxts, td.maxtsValue {
+	background: #ffc;
+}
+
+td.from, td.fromValue {
+	background: #ca5;
+}
+
+td.to, td.toValue {
+	background: #bf9;
+}
+
+div#minutes, div#summary, div#expand {
+	width: 400px;
+}
+
+div.chart {
+	width: 400px;
+	height: 300px;
+}
+
+div.timeline {
+	width: 400px;
+	max-height: 500px;
+}
+
+div#minutes {
+	margin-bottom: 10px;
+}
