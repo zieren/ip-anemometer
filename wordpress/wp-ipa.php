@@ -28,10 +28,13 @@ function ipa($atts) {
     'transfer' => transferVolume
   );
   $code = '';
-  // XXX in order of $atts?
-  foreach ($handlers as $tag => $func) {
-    if (get($atts[$tag])) {
-      $code .= $func($atts);
+  foreach ($atts as $k => $v) {
+    if (get($handlers[$k])) {
+      $code .= $handlers[$k]($atts);
+    } elseif (is_int($k) && get($handlers[$v])) {
+      $code .= $handlers[$v]($atts);
+    } else {
+      $code .= '<p><b>Invalid attribute: '.$k.'='.$v.'</b></p>';
     }
   }
   return $code;
