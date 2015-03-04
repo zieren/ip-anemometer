@@ -72,6 +72,7 @@ ipaView.requestStats = function() {
     ipaView.options.minutes = periodInput.value;
   }
   ipaView.options.url = '$ipaUrl';
+  ipaView.options.timeSeriesPoints = 100;
   ipaView.chart = new ipa.Chart(ipaView.options);
   ipaView.chart.requestStats(ipaView.updateChart);
 }
@@ -124,7 +125,7 @@ function histogram($atts) {
 }
 
 function door($atts) {
-  return '<div id="ipaDoor" class="ipaTimeline"></div>';
+  return '<div id="ipaDoor" class="ipaTimeSeries"></div>';
 }
 
 function lag($atts) {
