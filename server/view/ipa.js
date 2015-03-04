@@ -90,7 +90,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
 
 ipa.Chart.prototype.drawSummary = function(element) {
   var table = document.createElement('table');
-  table.className = 'summary';
+  table.className = 'ipaSummary';
   ipa.Chart.insertCells_(table.insertRow())('avg',
       this.stats.wind.avg.toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'avg';

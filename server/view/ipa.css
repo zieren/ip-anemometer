@@ -1,6 +1,7 @@
-table.summary {
+table.ipaSummary {
 	border: 1px solid black;
     border-spacing: 0;
+    width: 25ch;
 }
 
 table.summary td {
