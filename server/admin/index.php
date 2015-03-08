@@ -66,8 +66,7 @@ echo
   <input type="submit" name="clearAll" value="CLEAR ALL DATA" />
   <input type="submit" name="configDefaults" value="config defaults" />
   <input type="checkbox" name="confirm" />Yes, I really really want to!
-</form>
-<hr />';
+</form>';
 ?>
 </body>
 </html>
