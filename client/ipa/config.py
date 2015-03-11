@@ -44,7 +44,7 @@ class Config:
   def WIND_LSF(self):
     return float(self._cfg['wind_low_speed_factor'])
   def WIND_MAX_ROTATION(self):
-    return int(self._cfg['wind_max_rotation_seconds']) * 1000
+    return int(float(self._cfg['wind_max_rotation_seconds']) * 1000)
 
   def HUAWEI_ENABLED(self):
     return int(self._cfg['huawei_enabled']) != 0
