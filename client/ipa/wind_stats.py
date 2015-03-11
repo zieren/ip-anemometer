@@ -2,7 +2,7 @@ import common
 from config import C
 
 
-# Remember config values to avoid locking call.
+# Remember config values for speedup.
 _HSF = C.WIND_HSF()
 _LSF = C.WIND_LSF()
 _MAX_ROTATION = C.WIND_MAX_ROTATION()
