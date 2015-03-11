@@ -25,8 +25,8 @@ class LoggerWorker(threading.Thread):
         if not element:
           return
         ts, duration, v, avg, v_max = element
-        message = '%s\t%.3f\t%.3f\t%.3f\t%.3f' % (common.timestamp_to_string(ts),
-                                                  duration / 1000.0, v, avg, v_max)
+        message = '%s\t%6.3f\t%6.3f\t%6.3f\t%6.3f' % (common.timestamp_to_string(ts),
+                                                      duration / 1000.0, v, avg, v_max)
         self._log.info(message)
     except Exception:
       self._log.critical(traceback.format_exc())
