@@ -26,7 +26,7 @@ fi
 DOWNLOAD_URL=$1/dl.php
 
 # Internal variables.
-VERSION=0.0.0
+GREETING="IP anemometer wrapper 0.1.0 - (c) 2015 Joerg Zieren - http://zieren.de - GNU GPL v3"
 TIME_BARRIER=0  # epoch seconds
 DL_FILENAME=ipa-update.zip
 MD5=n/a
@@ -57,7 +57,7 @@ function ls_logs() {
   ls -r *.log*
 }
 
-log "IP anemometer wrapper $VERSION - (c) Joerg Zieren - http://zieren.de - GNU GPL v3"
+log "$GREETING"
 
 log "Waiting for clock to sync..."
 ./await_clock_sync.sh
