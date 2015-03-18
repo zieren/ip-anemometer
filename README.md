@@ -1,9 +1,9 @@
-ip-anemometer
+IP Anemometer
 =============
 
 This is a hardware+software project. A wind sensor is connected to a Raspberry
-Pi. Measurements are uploaded using a 3G USB stick. A server stores the data in
-a MySQL database. Average/maximum speed and a speed histogram can be shown on a
-website.
+Pi via the GPIO interface. The Pi collects measurements and uploads them to a
+web server, which stores them in a MySQL database. The server shows various
+statistics, such as wind speed over time, average, maximum and a histogram.
 
-Preliminary documentation: http://goo.gl/6b0WuI
+See http://zieren.de for more information.
