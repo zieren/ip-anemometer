@@ -19,12 +19,15 @@ ipaView.clearElement = function(element) {
 
 ipaView.options = {};
 
-ipaView.updateChart = function() {
+ipaView.requestStats = function() {
   ipaView.options.minutes = document.getElementById('minutesInput').value;
 
-  var chart = new ipa.Chart(ipaView.options);
-  chart.requestStats();
+  ipaView.chart = new ipa.Chart(ipaView.options);
+  ipaView.chart.requestStats(ipaView.updateChart);
+}
 
+ipaView.updateChart = function() {
+  var chart = ipaView.chart;
   chart.drawWindSummary(ipaView.clearElement(document.getElementById('summary')));
   chart.drawTimeSeries(ipaView.clearElement(document.getElementById('time')));
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
@@ -51,7 +54,7 @@ ipaView.expand = function() {
   ipaView.updateChart();
 }
 
-google.setOnLoadCallback(ipaView.updateChart);
+google.setOnLoadCallback(ipaView.requestStats);
 
 </script>
 
@@ -61,7 +64,7 @@ google.setOnLoadCallback(ipaView.updateChart);
   Minutes:
   <input id="minutesInput" type="text" maxlength="4" size="4"
       onkeypress="ipaView.handleKeyPress(event)" value="60" />
-  <button onclick="ipaView.updateChart()">Load</button>
+  <button onclick="ipaView.requestStats()">Load</button>
 </div>
 <div id="summary" align="center"></div>
 <div id="time" class="chart expand"></div>
