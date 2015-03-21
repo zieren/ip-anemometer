@@ -36,6 +36,7 @@ function handleRequest() {
       // but since this event should be rare we accept that.
     }
 
+    // TODO: If 'upto' is only the newest wind timestamp, we don't really need it.
     $meta['upto'] = 0;  // means n/a
     if (isset($data['wind'])) {
       $meta['upto'] = $db->insertWind($data['wind']);
