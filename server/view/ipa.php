@@ -1,6 +1,8 @@
 <?php
 require_once '../common/common.php';
 
+header("Access-Control-Allow-Origin: *");
+
 function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
   $v = isset($_REQUEST[$name]) ? intval($_REQUEST[$name]) : $default;
   return max($min, min($v, $max));
