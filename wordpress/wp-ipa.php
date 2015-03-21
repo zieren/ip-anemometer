@@ -43,7 +43,7 @@ function ipa($atts) {
 }
 
 function javascript($atts) {
-  $jsUrl = plugin_dir_url(__FILE__).'/wp-ipa.js';
+  $jsUrl = plugin_dir_url(__FILE__).'/ipa.js';
   $ipaUrl = $atts['url'];
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
