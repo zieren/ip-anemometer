@@ -248,7 +248,7 @@ ipa.Chart.prototype.drawTemperature = function(element) {
     temperatureTable.addRow([new Date(parseInt(temperature[i][0])), temperature[i][1]]);
   }
   var options = {
-    title: 'CPU temperature [°C]',
+      title: 'CPU temperature [\u00B0C]',  // \u00B0 is Unicode for the degree sign
     hAxis: {format: 'HH:mm'},
     legend: 'none'
   };
