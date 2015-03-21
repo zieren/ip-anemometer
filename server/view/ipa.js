@@ -15,6 +15,7 @@ ipa.Options = function() {
       // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
   this.dummy = false;  // Output inconsistent dummy data for testing.
+  this.maxWindLatencyMinutes = 15;  // Show a warning when wind data is older.
 }
 
 ipa.Tools = {}
@@ -112,6 +113,8 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
   table.firstChild.lastChild.children[0].className = 'to';
   table.firstChild.lastChild.children[1].className = 'toValue';
   element.appendChild(table);
+
+  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawTimeSeries = function(element) {
@@ -138,6 +141,8 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   };
   var timeSeriesChart = new google.visualization.LineChart(element);
   timeSeriesChart.draw(timeSeriesTable, options);
+
+  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawHistogram = function(element) {
@@ -174,6 +179,8 @@ ipa.Chart.prototype.drawHistogram = function(element) {
   }
   var histogramChart = new google.visualization.ComboChart(element);
   histogramChart.draw(histogramDataTable, options);
+
+  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawTextHistogram = function(element) {
@@ -197,6 +204,8 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
     totalPercent -= percent;
   }
   element.appendChild(table);
+
+  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawDoor = function(element) {
@@ -395,4 +404,27 @@ ipa.Chart.showNoData_ = function(data, element, text) {
   noDataLabel.appendChild(document.createTextNode(text));
   element.appendChild(noDataLabel);
   return true;
+}
+
+ipa.Chart.indicateStaleData_ = function(timestamp, maxMinutes, element) {
+  var now = Date.now();
+  var latencyMinutes = ipa.Chart.millisToMinutes_(now - timestamp);
+  if (latencyMinutes > maxMinutes) {
+    var updateDate = new Date(timestamp);
+    var nowDate = new Date(now);
+    var text = 'last update: ';
+    if (nowDate.toLocaleDateString() == updateDate.toLocaleDateString()) {
+      text += updateDate.toLocaleTimeString();
+    } else {
+      text += updateDate.toLocaleString();
+    }
+    var staleDataLabel = document.createElement('div')
+    staleDataLabel.className = 'ipaStaleData';
+    staleDataLabel.appendChild(document.createTextNode(text));
+    element.appendChild(staleDataLabel);
+  }
+}
+
+ipa.Chart.millisToMinutes_ = function(millis) {
+  return millis / (1000 * 60);
 }

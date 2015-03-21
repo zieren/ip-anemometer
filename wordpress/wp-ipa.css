@@ -44,7 +44,6 @@ div#expand {
 
 div.chart {
 	width: 400px;
-	height: 300px;
 }
 
 div.timeline {
@@ -60,6 +59,12 @@ div.ipaNoData {
   background: #ddd;
   padding-top: 50px;
   padding-bottom: 50px;
+  text-align: center;
+  margin: 5px;
+}
+
+div.ipaStaleData {
+  background: #fdd;
   text-align: center;
   margin: 5px;
 }
