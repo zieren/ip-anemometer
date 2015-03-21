@@ -80,15 +80,13 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
   // TODO: Handle request error (500).
   if (!isAsync) {
     this.stats = JSON.parse(request.responseText);
-    if (!this.stats.wind) {
-      alert('No wind data available.');
-      // TODO: Signal this to the client instead. Also allow the client to get the lag so it can
-      // show a message for stale data.
-    }
   }
 }
 
-ipa.Chart.prototype.drawSummary = function(element) {
+ipa.Chart.prototype.drawWindSummary = function(element) {
+  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+    return;
+  }
   var table = document.createElement('table');
   table.className = 'ipaSummary';
   ipa.Chart.insertCells_(table.insertRow())('avg',
@@ -117,6 +115,9 @@ ipa.Chart.prototype.drawSummary = function(element) {
 }
 
 ipa.Chart.prototype.drawTimeSeries = function(element) {
+  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+    return;
+  }
   var timeSeriesTable = new google.visualization.DataTable();
   timeSeriesTable.addColumn('datetime', 't');
   timeSeriesTable.addColumn('number', 'avg');
@@ -140,6 +141,9 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
 }
 
 ipa.Chart.prototype.drawHistogram = function(element) {
+  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+    return;
+  }
   var histogramDataTable = new google.visualization.DataTable();
   histogramDataTable.addColumn('number', 'km/h');
   histogramDataTable.addColumn('number', '%');
@@ -173,6 +177,9 @@ ipa.Chart.prototype.drawHistogram = function(element) {
 }
 
 ipa.Chart.prototype.drawTextHistogram = function(element) {
+  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+    return;
+  }
   table = document.createElement('table');
   var trSpeed = ipa.Chart.insertCells_(table.insertRow());
   var trPercent = ipa.Chart.insertCells_(table.insertRow());
@@ -377,4 +384,15 @@ ipa.Chart.formatTimestamp_ = function(timestamp) {
   var mm = ('0' + date.getMinutes()).slice(-2);
   var ss = ('0' + date.getSeconds()).slice(-2);
   return hh + ':' + mm + ':' + ss;
+}
+
+ipa.Chart.showNoData_ = function(data, element, text) {
+  if (data) {
+    return false;
+  }
+  var noDataLabel = document.createElement('div')
+  noDataLabel.className = 'ipaNoData';
+  noDataLabel.appendChild(document.createTextNode(text));
+  element.appendChild(noDataLabel);
+  return true;
 }

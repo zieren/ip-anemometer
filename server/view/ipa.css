@@ -1,48 +1,56 @@
 table.ipaSummary {
-    border: 1px solid black;
-    border-spacing: 0;
-    width: 25ch;
+  border: 1px solid black;
+  border-spacing: 0;
+  width: 25ch;
 }
 
 table.summary td {
-	padding-left: 5px;
-	padding-right: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 td.avg, td.avgValue {
-	background: #acf;
+  background: #acf;
 }
 
 td.max, td.maxValue {
-	background: #fcc;
+  background: #fcc;
 }
 
 td.maxts, td.maxtsValue {
-	background: #ffc;
+  background: #ffc;
 }
 
 td.from, td.fromValue {
-	background: #ca5;
+  background: #ca5;
 }
 
 td.to, td.toValue {
-	background: #bf9;
+  background: #bf9;
 }
 
 div#minutes, div#summary, div#expand {
-	width: 400px;
+  width: 400px;
 }
 
 div.chart {
-	width: 400px;
-	height: 300px;
+  width: 400px;
+  height: 300px;
 }
 
 div.timeline {
-	width: 400px;
-	max-height: 500px;
+  width: 400px;
+  max-height: 500px;
 }
 
 div#minutes {
-	margin-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+div.ipaNoData {
+  background: #ddd;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  text-align: center;
+  margin: 5px;
 }

@@ -55,3 +55,11 @@ div.timeline {
 div#minutes {
 	margin-bottom: 10px;
 }
+
+div.ipaNoData {
+  background: #ddd;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  text-align: center;
+  margin: 5px;
+}

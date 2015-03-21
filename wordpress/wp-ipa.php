@@ -87,7 +87,7 @@ ipaView.draw = function(that, draw, id) {
 
 ipaView.updateChart = function(opt_request) {
   var c = ipaView.chart;
-  ipaView.draw(c, c.drawSummary, 'ipaSummary');
+  ipaView.draw(c, c.drawWindSummary, 'ipaSummary');
   ipaView.draw(c, c.drawTimeSeries, 'ipaSpeed');
   ipaView.draw(c, c.drawHistogram, 'ipaHistogram');
   ipaView.draw(c, c.drawDoor, 'ipaDoor');
