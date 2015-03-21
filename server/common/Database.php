@@ -52,9 +52,11 @@ class Database {
         'CREATE TABLE IF NOT EXISTS temp (ts BIGINT PRIMARY KEY, t FLOAT NOT NULL)');
     $this->query(
         'CREATE TABLE IF NOT EXISTS wind (start_ts BIGINT PRIMARY KEY, '
-        .'end_ts BIGINT, avg FLOAT, max FLOAT, max_ts BIGINT, hist_id INT, buckets INT)');
+        .'end_ts BIGINT NOT NULL, avg FLOAT NOT NULL, max FLOAT NOT NULL, max_ts BIGINT NOT NULL, '
+        .'hist_id INT NOT NULL, buckets INT NOT NULL)');
     $this->query(
-        'CREATE TABLE IF NOT EXISTS hist (id INT PRIMARY KEY AUTO_INCREMENT, v INT, p FLOAT)');
+        'CREATE TABLE IF NOT EXISTS hist '
+        .'(id INT PRIMARY KEY AUTO_INCREMENT, v INT NOT NULL, p FLOAT NOT NULL)');
     $this->query(
         'CREATE TABLE IF NOT EXISTS link (ts BIGINT PRIMARY KEY, nwtype VARCHAR(20), '
         .'strength TINYINT, upload BIGINT, download BIGINT)');
@@ -62,9 +64,9 @@ class Database {
         'CREATE TABLE IF NOT EXISTS meta (ts BIGINT PRIMARY KEY, upto BIGINT, cts BIGINT, '
         .'stratum INT, fails INT, ip VARCHAR(15))');
     $this->query(
-        'CREATE TABLE IF NOT EXISTS door (ts BIGINT PRIMARY KEY, open BIT(1))');
+        'CREATE TABLE IF NOT EXISTS door (ts BIGINT PRIMARY KEY, open BIT(1) NOT NULL)');
     $this->query(
-        'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT)');
+        'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT NOT NULL)');
   }
 
   public function dropTablesExceptConfig() {
@@ -246,7 +248,7 @@ class Database {
   /**
    * Compute statistics for the specified time period.
    *
-   * @param int $maxEndTimestamp Consider samples up to this end timestamp in millis (usually the
+   * @param int $endTimestamp Consider samples up to this end timestamp in millis (usually the
    *    current time).
    * @param int $windowDuration Length of the window to consider, in millis.
    * @param int $outputLength Maximum number of samples in time series (will be downsampled if
@@ -255,12 +257,10 @@ class Database {
    *    'hist': An array of int(km/h) -> percentage.
    *    'time_series': A list of 3-tuples (timestamp, avg, max).
    */
-  public function computeWindStats($maxEndTimestamp, $windowDuration, $outputLength) {
-    $minStartTimestamp = $maxEndTimestamp - $windowDuration - WIND_MAX_LATENCY;
+  public function computeWindStats($endTimestamp, $windowDuration, $outputLength) {
+    $startTimestamp = $endTimestamp - $windowDuration - WIND_MAX_LATENCY;
     $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind WHERE '
-        .'start_ts >= '.$minStartTimestamp.' AND start_ts <= '.$maxEndTimestamp
-        .' AND end_ts <= '.$maxEndTimestamp
-        .' ORDER BY start_ts DESC';
+        .'start_ts >= '.$startTimestamp.' AND end_ts <= '.$endTimestamp.' ORDER BY start_ts DESC';
     $result = $this->query($q, null);
 
     // Read samples in reverse chronological order until the desired duration is best approximated.
@@ -277,7 +277,7 @@ class Database {
     $timeSeries = array();
     while ($sample = $result->fetch_assoc()) {
       // TODO: What about gaps?
-      // Can we approximate the desired duration better by selecting this row?
+      // Can we approximate the desired duration better by including this row?
       $sampleDuration = Database::getSampleDuration($sample);
       if (abs($actualWindowDuration - $windowDuration) <
           abs($actualWindowDuration + $sampleDuration - $windowDuration)) {
@@ -307,9 +307,21 @@ class Database {
       }
       $avgKmh += $sample['avg'] * $sampleDuration;
     }
-    if (count($selectedSamples) == 0) {
-      return null;  // indicates that no data is available for the selected time period
+
+    // Normally the result will cover the desired window. If not, rerun the query with the window
+    // shifted back.
+    if ($actualWindowDuration < $windowDuration) {
+      $newestEndTimestamp = $this->findNewestWindEndTimestamp();
+      if ($newestEndTimestamp && $newestEndTimestamp < $endTimestamp) {
+        return $this->computeWindStats($newestEndTimestamp, $windowDuration, $outputLength);
+      }
+      // The window is too short, but we can't do anything about it because there is either no
+      // data at all, or we've already shifted the window back.
     }
+    if (count($selectedSamples) == 0) {
+      return null;  // indicates that no data is available at all
+    }
+
     $avgKmh /= $actualWindowDuration;
 
     // Compute histogram.
@@ -351,6 +363,15 @@ class Database {
         'end_ts' => intval($actualEndTimestamp),
         'time_series' => Database::downsampleWind($timeSeries, $outputLength)
     );
+  }
+
+  private function findNewestWindEndTimestamp() {
+    $q = 'SELECT start_ts, end_ts FROM wind ORDER BY start_ts DESC LIMIT 1';
+    $result = $this->query($q, null);
+    if ($row = $result->fetch_assoc()) {
+      return $row['end_ts'];
+    }
+    return null;
   }
 
   private static function getSampleDuration($sample) {
