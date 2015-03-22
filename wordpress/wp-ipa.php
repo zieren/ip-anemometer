@@ -15,9 +15,16 @@ function get(&$value, $default=null) {
   return isset($value) ? $value : $default;
 }
 
+function quote($s) {
+  return "'".$s."'";
+}
+
 function ipa($atts) {
+  $options = array(
+  	'url' => array('url', quote),
+    'period' => array('minutes', intval)
+  );
   $handlers = array(
-    'url' => ipaView,
   	'period_selector' => periodSelector,
     'summary' => summary,
     'speed' => speed,
@@ -30,8 +37,14 @@ function ipa($atts) {
     'transfer' => transferVolume
   );
   $code = '';
+  $optionsJS = '';
   foreach ($atts as $k => $v) {
-    if (get($handlers[$k])) {
+    if (get($options[$k])) {
+      if ($optionsJS) {
+        $optionsJS .= ',';
+      }
+      $optionsJS .= $options[$k][0].':'.$options[$k][1]($v);
+    } elseif (get($handlers[$k])) {
       $code .= $handlers[$k]($atts);
     } elseif (is_int($k) && get($handlers[$v])) {
       $code .= $handlers[$v]($atts);
@@ -39,16 +52,15 @@ function ipa($atts) {
       $code .= '<p><b>Invalid attribute: '.$k.'='.$v.'</b></p>';
     }
   }
+  if (!$GLOBALS['ipaViewJS']) {
+    $code .= ipaViewJS($optionsJS);
+    $GLOBALS['ipaViewJS'] = true;
+  }
   return $code;
 }
 
-function ipaView($atts) {
-  if ($GLOBALS['ipaView']) {
-    return '';
-  }
-  $GLOBALS['ipaView'] = true;
+function ipaViewJS($optionsJS) {
   $jsUrl = plugin_dir_url(__FILE__).'/ipa.js';
-  $ipaUrl = $atts['url'];
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript" src="$jsUrl"></script>
@@ -69,14 +81,13 @@ ipaView.handleKeyPress = function(event) {
   }
 }
 
-ipaView.options = {};
+ipaView.options = { $optionsJS };
 
 ipaView.requestStats = function() {
   var periodInput = document.getElementById('periodInput');
   if (periodInput) {
     ipaView.options.minutes = periodInput.value;
   }
-  ipaView.options.url = '$ipaUrl';
   ipaView.options.timeSeriesPoints = 100;
   ipaView.chart = new ipa.Chart(ipaView.options);
   ipaView.chart.requestStats(ipaView.updateChart);
