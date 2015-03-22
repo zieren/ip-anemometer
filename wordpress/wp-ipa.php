@@ -1,11 +1,13 @@
 <?php
-/*
-Plugin Name: IP-Anemometer Charts
-Description: Use [ipa] to show cool charts.
-Author: J&ouml;rg Zieren
-Author URI: http://zieren.de/
-Version: 0.1
-*/
+/**
+ * Plugin Name: IP Anemometer
+ * Plugin URI: http://zieren.de
+ * Description: Embed wind speed charts in WordPress content. For use with the free <a href="http://zieren.de/">IP anemometer for the Raspberry Pi</a>.
+ * Version: 0.1.1
+ * Author: J&ouml;rg Zieren
+ * Author URI: http://zieren.de
+ * License: GPL v3
+ */
 
 add_shortcode('ipa', 'ipa');
 wp_register_style('ipaCss', plugin_dir_url(__FILE__).'/wp-ipa.css');
