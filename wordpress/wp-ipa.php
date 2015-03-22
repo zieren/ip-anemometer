@@ -17,8 +17,8 @@ function get(&$value, $default=null) {
 
 function ipa($atts) {
   $handlers = array(
-    'url' => javascript,
-  	'period' => periodSelector,
+    'url' => ipaView,
+  	'period_selector' => periodSelector,
     'summary' => summary,
     'speed' => speed,
     'histogram' => histogram,
@@ -42,7 +42,11 @@ function ipa($atts) {
   return $code;
 }
 
-function javascript($atts) {
+function ipaView($atts) {
+  if ($GLOBALS['ipaView']) {
+    return '';
+  }
+  $GLOBALS['ipaView'] = true;
   $jsUrl = plugin_dir_url(__FILE__).'/ipa.js';
   $ipaUrl = $atts['url'];
   return <<<THEEND
@@ -108,7 +112,7 @@ function periodSelector($atts) {
   return
     '<div id="periodSelector" class="ipaInput">
       Minutes: <input id="periodInput" type="text" maxlength="4" size="4"
-          onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period'].'" />
+          onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period_selector'].'" />
       <button onclick="ipaView.requestStats()">Load</button>
     </div>';
 }
