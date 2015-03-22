@@ -22,7 +22,6 @@ function computeStats() {
 
   $db = new Database();
 
-  // TODO: Handle stale data.
   $stats = array('wind' =>
       $db->computeWindStats($timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints));
   if ($systemMinutes) {
