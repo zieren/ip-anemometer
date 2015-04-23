@@ -21,7 +21,7 @@ class Door:
                           bouncetime=C.DOOR_DEBOUNCE_MILLIS())
 
     door_open = self._read_door_internal(0)
-    self._log.info('initialized (pin=%d)' % Door._PIN)
+    self._log.info('initialized (pin=%d debounce=%d)' % (Door._PIN, C.DOOR_DEBOUNCE_MILLIS()))
     self._log.debug('door_open on init: %d' % door_open)
 
   def _read_door_callback(self, pin_ignored):
