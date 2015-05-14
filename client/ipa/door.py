@@ -31,7 +31,7 @@ class Door:
 
   def _read_door_callback(self, pin_ignored):
     door_open = 1 if self._read_stable(Door._PIN) == Door._OPEN_STATE else 0
-    self._log.debug('door_open: %d' % door_open)
+    self._log.debug('door_open in callback: %d' % door_open)
     with self._lock:
       self._events.append((common.timestamp(), door_open))
     return door_open
@@ -52,6 +52,10 @@ class Door:
     with self._lock:
       events = self._events
       self._events = []
+    # TODO: Remove this redundant read if the stable read is really stable :-)
+    door_open = 1 if GPIO.input(Door._PIN) == Door._OPEN_STATE else 0
+    self._log.debug('door_open in get_sample: %d' % door_open)
+    events.append(door_open)
     # TODO: Enable this when it's otherwise working reliably.
 #     # Remove duplicates.
 #     events_compressed = []
