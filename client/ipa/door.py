@@ -14,8 +14,8 @@ class Door:
   _OPEN_STATE = C.DOOR_OPEN_STATE()
 
   # TODO: Make these configurable?
-  _STABLE_READ_INTERVAL_MILLIS = 30
-  _STABLE_READ_COUNT = 3
+  _STABLE_READ_INTERVAL_MILLIS = 25
+  _STABLE_READ_COUNT = 20
 
   def __init__(self):
     self._log = log.get_logger('ipa.door')
