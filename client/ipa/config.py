@@ -58,6 +58,25 @@ class Config:
   def DOOR_DEBOUNCE_MILLIS(self):
     return int(self._cfg['door_debounce_millis'])
 
+  def COUNT_ENABLED(self):
+    return int(self._cfg['count_enabled']) != 0
+  def COUNT_PLUS_INPUT_PIN(self):
+    return int(self._cfg['count_plus_input_pin'])
+  def COUNT_MINUS_INPUT_PIN(self):
+    return int(self._cfg['count_minus_input_pin'])
+  def COUNT_PLUS_TRIGGER_STATE(self):
+    return int(self._cfg['count_plus_trigger_state'])
+  def COUNT_MINUS_TRIGGER_STATE(self):
+    return int(self._cfg['count_minus_trigger_state'])
+  def COUNT_PLUS_DEBOUNCE_MILLIS(self):
+    return int(self._cfg['count_plus_debounce_millis'])
+  def COUNT_MINUS_DEBOUNCE_MILLIS(self):
+    return int(self._cfg['count_minus_debounce_millis'])
+  def COUNT_LED_OUTPUT_PIN(self):
+    return int(self._cfg['count_led_output_pin'])
+  def COUNT_RESET_HOUR(self):
+    return int(self._cfg['count_reset_hour'])
+
   def LOGGING_LEVEL(self):
     return self._cfg['logging_level']
   def LOGGING_MAX_FILE_SIZE_KB(self):

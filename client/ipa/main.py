@@ -13,6 +13,7 @@ import huawei_status
 import K
 import log
 import metadata
+import pilot_count
 import temperature
 import uploader
 import wind
@@ -41,6 +42,8 @@ class Anemometer:
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
     if C.DOOR_ENABLED():
       self._uploader.add_data_source(door.Door(), True)
+    if C.COUNT_ENABLED():
+      self._uploader.add_data_source(pilot_count.PilotCount(), True)
 
   def _shutdown(self):
     """Deregister GPIO callbacks and attempt to shut down all threads gracefully."""

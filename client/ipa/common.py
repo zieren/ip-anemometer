@@ -1,3 +1,4 @@
+import RPi.GPIO as GPIO  #@UnresolvedImport
 import datetime
 import threading
 import sys
@@ -35,3 +36,17 @@ def timestamp_to_string(timestamp):
 def duration_to_rps(duration):
   """Convert duration (in millis) to rotations per second."""
   return 1000.0 / duration
+
+
+def read_stable(pin, num, interval_millis, log = None):
+  # Store results in a list to investigate whether this works.
+  # TODO: Change this to simply count.
+  reads = []
+  for _ in range(num):
+    if reads:
+      time.sleep(interval_millis / 1000.0)
+    reads.append(GPIO.input(pin))
+  result = round(float(sum(reads)) / float(len(reads)))  # TODO: This is a hack.
+  if log:
+    log.debug('read_stable: %s -> %d' % (reads, result))
+  return result

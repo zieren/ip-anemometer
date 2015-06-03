@@ -1,6 +1,5 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
 import threading
-import time
 
 import common
 from config import C
@@ -19,7 +18,7 @@ class Door:
 
   def __init__(self):
     self._log = log.get_logger('ipa.door')
-    self._lock = threading.RLock()
+    self._lock = threading.Lock()
     self._events = []
     GPIO.setup(Door._PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.add_event_detect(Door._PIN, GPIO.BOTH, callback=self._read_door_callback,
@@ -30,23 +29,13 @@ class Door:
                    % (Door._PIN, door_open, C.DOOR_DEBOUNCE_MILLIS()))
 
   def _read_door_callback(self, pin_ignored):
-    door_open = 1 if self._read_stable(Door._PIN) == Door._OPEN_STATE else 0
+    read_stable = common.read_stable(Door._PIN, Door._STABLE_READ_COUNT,
+                                     Door._STABLE_READ_INTERVAL_MILLIS, self._log)
+    door_open = 1 if read_stable == Door._OPEN_STATE else 0
     self._log.debug('door_open in callback: %d' % door_open)
     with self._lock:
       self._events.append((common.timestamp(), door_open))
     return door_open
-
-  # TODO: Extract this to common (left here for logging).
-  def _read_stable(self, pin):
-    # Store results in a list to investigate whether this works.
-    # TODO: Change this to simply count.
-    reads = []
-    for _ in range(Door._STABLE_READ_COUNT):
-      if reads:
-        time.sleep(Door._STABLE_READ_INTERVAL_MILLIS / 1000.0)
-      reads.append(GPIO.input(pin))
-    self._log.debug('_read_stable: %s' % reads)
-    return round(float(sum(reads)) / float(len(reads)))  # TODO: This is a hack.
 
   def get_sample(self):
     with self._lock:
