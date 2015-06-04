@@ -19,10 +19,10 @@ function computeStats() {
       $timestamp - daysToMillis(REQ_DOOR_DAYS),
       $timestamp - daysToMillis(REQ_DOOR_DAYS_MAX),
       $timestamp);
-  $pilotsStartMillis = getIntParam('c',
-    $timestamp - daysToMillis(REQ_PILOTS_DAYS),
-    $timestamp - daysToMillis(REQ_PILOTS_DAYS_MAX),
-    $timestamp);
+  $pilotsStartMillis = getIntParam('pc',  // pc = pilot count
+      $timestamp - daysToMillis(REQ_PILOTS_DAYS),
+      $timestamp - daysToMillis(REQ_PILOTS_DAYS_MAX),
+      $timestamp);
 
   $db = new Database();
 

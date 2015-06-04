@@ -32,6 +32,7 @@ ipaView.updateChart = function() {
   chart.drawTimeSeries(ipaView.clearElement(document.getElementById('time')));
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
   chart.drawDoor(ipaView.clearElement(document.getElementById('door')));
+  chart.drawPilots(ipaView.clearElement(document.getElementById('pilots')));
   chart.drawLag(ipaView.clearElement(document.getElementById('lag')));
   chart.drawTemperature(ipaView.clearElement(document.getElementById('temp')));
   chart.drawSignalStrength(ipaView.clearElement(document.getElementById('signalStrength')));
@@ -71,6 +72,8 @@ google.setOnLoadCallback(ipaView.requestStats);
 <div id="hist" class="chart expand"></div>
 <h3>Shed door</h3>
 <div id="door" class="timeline expand"></div>
+<h3>Pilot count</h3>
+<div id="pilots" class="timeline expand"></div>
 <h3>System status (last 24h)</h3>
 <div id="lag" class="chart expand"></div>
 <div id="temp" class="chart expand"></div>

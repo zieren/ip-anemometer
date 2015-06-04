@@ -11,6 +11,8 @@ ipa.Options = function() {
   this.timeSeriesPoints = 30;
       // Downsample time series to make charts readable. Increase for wider charts.
   this.doorTimeDays = 8;  // Show shed door status.
+  this.pilotsTimeDays = 0;  // Show shed door status.
+  // TODO: Figure out how to display mutliple days.
   this.systemStatusMinutes = 24 * 60;
       // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
@@ -64,6 +66,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       + '&p=' + this.options.timeSeriesPoints
       + '&s=' + this.options.systemStatusMinutes
       + '&d=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.doorTimeDays)
+      + '&pc=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.pilotsTimeDays)
       + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
@@ -253,6 +256,38 @@ ipa.Chart.prototype.drawDoor = function(element) {
   };
   var doorChart = new google.visualization.Timeline(element);
   doorChart.draw(doorTable, options);
+}
+
+ipa.Chart.prototype.drawPilots = function(element) {
+  var pilotsTable = new google.visualization.DataTable();
+  pilotsTable.addColumn('datetime');
+  pilotsTable.addColumn('number');
+  var pilots = ipa.Tools.sorted(this.stats.pilots);
+  var maxPilots = 0;
+  for (var i = 0; i < pilots.length; i++) {
+    var ts = parseInt(pilots[i][0]);
+    var count = pilots[i][1];
+    if (count > maxPilots) {
+      maxPilots = count;
+    }
+    if (i > 0 && count != pilots[i-1][1]) {
+      pilotsTable.addRow([new Date(ts-1), pilots[i-1][1]]);
+    }
+    pilotsTable.addRow([new Date(ts), count]);
+  }
+  var options = {
+    title: 'Pilots',
+    hAxis: {format: 'HH:mm'},
+    vAxis: {
+      minValue: 0,
+      maxValue: maxPilots,
+      viewWindow: {min: 0, max: maxPilots},
+      gridlines: {count: maxPilots + 1}
+    },
+    legend: 'none'
+  };
+  var pilotsChart = new google.visualization.LineChart(element);
+  pilotsChart.draw(pilotsTable, options);
 }
 
 ipa.Chart.prototype.drawTemperature = function(element) {
