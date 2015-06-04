@@ -8,6 +8,11 @@ abstract class DownsampleMode {
   const MIN_MAX = 2;
 }
 
+// For debugging:
+// function ts($timestamp) {
+//   return date('H:i:s', $timestamp / 1000);
+// }
+
 /**
  * General notes:
  * This uses REPLACE instead of INSERT because the client may resend the same timestamp (PK) when
@@ -432,59 +437,60 @@ class Database {
       }
       return $output;
     }
+    // Values are in order of decreasing timestamp, i.e. earliest is last and latest is first.
     $startTs = $input[$inputLength - 1][WIND_SAMPLE_START_TS];
     $endTs = $input[0][WIND_SAMPLE_END_TS];
     $wi = 0;  // window index
     $windowStart = $startTs;
     $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, $wi);
     $window = Database::newWindow($windowStart, $windowEnd);
-    $windowDuration = 0;  // actually covered time in window (there might be gaps)
-    $i = $inputLength - 1;  // order is by decreasing timestamp
-    while ($i >= 0) {
+    $windowOverlap = 0;  // actually covered time in window (there might be gaps)
+    $i = $inputLength - 1;  // input order is by decreasing timestamp, but we go forward in time
+    while ($i >= 0) {  // XXX could as well be while (true)
       // Shortcuts.
       $inputStart = $input[$i][WIND_SAMPLE_START_TS];
       $inputEnd = $input[$i][WIND_SAMPLE_END_TS];
       $inputCenter = Database::center($inputStart, $inputEnd);
       $inputAvg = $input[$i][WIND_SAMPLE_AVG];
       $inputMax = $input[$i][WIND_SAMPLE_MAX];
-      while (true) {
-        $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
-//         echo '<p>i='.$i
-//             .',is='.($inputStart%1000000).',ic='.($inputCenter%1000000).',ie='.($inputEnd%1000000)
-//             .',ws='.($windowStart%1000000).',we='.($windowEnd%1000000)
-//             .',ol='.$overlap.'</p>';
-        if ($overlap >= 0) {
-          break;
+
+      // Does this input affect the current window?
+      $overlap = min($windowEnd, $inputEnd) - max($windowStart, $inputStart);
+//       echo '<p>i='.$i
+//           .',is='.ts($inputStart).',ic='.ts($inputCenter).',ie='.ts($inputEnd)
+//           .',ws='.ts($windowStart).',we='.ts($windowEnd).',ol='.$overlap.'</p>';
+      if ($overlap > 0) {  // Yes -> update the current window.
+        $windowOverlap += $overlap;
+        $window[WIND_SAMPLE_AVG] += $inputAvg * $overlap;
+        // Consider the maximum if the window includes the center of the current sample.
+        if ($windowStart <= $inputCenter && $inputCenter < $windowEnd) {
+          $window[WIND_SAMPLE_MAX] = max($window[WIND_SAMPLE_MAX], $inputMax);
         }
-        // If there is a gap in the input the overlap may be negative. Advance the window to catch
-        // up.
-        $windowStart = $windowEnd;
-        $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, ++$wi);
       }
-      $windowDuration += $overlap;
-      $window[WIND_SAMPLE_AVG] += $inputAvg * $overlap;
-      // Consider the maximum if the window includes the center of the current sample.
-      if ($windowStart <= $inputCenter && $inputCenter < $windowEnd) {
-        $window[WIND_SAMPLE_MAX] = max($window[WIND_SAMPLE_MAX], $inputMax);
-      }
-      // If the current input reaches into the next window, or is the last input, output the sample
-      // and proceed to the next window.
-      if ($inputEnd > $windowEnd || $i == 0) {
-        $avg = $window[WIND_SAMPLE_AVG] / $windowDuration;
-        $max = $window[WIND_SAMPLE_MAX];
-        $output[] = array(
+
+      // Append the current window to the output if the current input already goes beyond it, or if
+      // this is the last window.
+      if ($inputEnd >= $windowEnd || $i == 0) {
+        // Output the current window if it had any input overlap.
+        if ($windowOverlap) {
+          $avg = $window[WIND_SAMPLE_AVG] / $windowOverlap;
+          $max = $window[WIND_SAMPLE_MAX];
+          $output[] = array(
             Database::center($windowStart, $windowEnd),
             $avg,
             $max < 0 ? $avg : $max  // window might not have included a max sample point
-        );
-        if ($i == 0) {
+          );
+//           echo '<p><b>'.ts(Database::center($windowStart, $windowEnd)).'</b></p>';
+        }
+        if ($i == 0) {  // This was the last input.
           break;
         }
+        // Proceed to the next window.
         $windowStart = $windowEnd;
         $windowEnd = Database::getWindowEnd($startTs, $endTs, $outputLength, ++$wi);
-        $windowDuration = 0;
+        $windowOverlap = 0;
         $window = Database::newWindow($windowStart, $windowEnd);
-      } else {  // next input still overaps with the current window
+      } else {  // Next input might still overlap with the current window, so advance input.
         $i--;
       }
     }
@@ -495,6 +501,7 @@ class Database {
     return intval(($end - $start) / 2 + $start);
   }
 
+  /** Returns the end timestamp of the $wi-th window out of $outputLength windows. */
   private static function getWindowEnd($startTs, $endTs, $outputLength, $wi) {
     return intval((($endTs - $startTs) / $outputLength) * ($wi + 1) + $startTs);
   }
