@@ -446,7 +446,7 @@ class Database {
     $window = Database::newWindow($windowStart, $windowEnd);
     $windowOverlap = 0;  // actually covered time in window (there might be gaps)
     $i = $inputLength - 1;  // input order is by decreasing timestamp, but we go forward in time
-    while ($i >= 0) {  // XXX could as well be while (true)
+    while ($i >= 0) {  // Just for $inputLength == 0; we normally break from within the loop.
       // Shortcuts.
       $inputStart = $input[$i][WIND_SAMPLE_START_TS];
       $inputEnd = $input[$i][WIND_SAMPLE_END_TS];
