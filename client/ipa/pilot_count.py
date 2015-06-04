@@ -21,15 +21,22 @@ class PilotCount:
   _STABLE_READ_INTERVAL_MILLIS = 20
   _STABLE_READ_COUNT = 5
 
+  # TODO: Also parameters?
+  _LED_ON_MILLIS = 200
+  _LED_OFF_MILLIS = 300
+  _LED_ON_SHORT_MILLIS = 20
+  _LED_OFF_SHORT_MILLIS = 40
+
   def __init__(self):
     self._log = log.get_logger('ipa.count')
-    self._lock = threading.Lock()
-    self._events = []  # Button events sent to server. Protected by self._lock.
-    self._count = 0  # Current count. Protected by self._lock.
-    # Whether we accept input (normal) or not (LED output after input). Protected by self._lock.
-    self._accept_input = True
 
-    # XXX locked?
+    # Block further callbacks while processing an event.
+    self._callback_lock = threading.Lock()
+
+    # Synchronize access in _read_callback() and get_sample().
+    self._lock = threading.Lock()
+    self._count = 0
+    self._events = []
     self._last_reset_yday = 0  # never; yday starts at 1
 
     GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -46,12 +53,9 @@ class PilotCount:
                       PilotCount._MINUS_TRIGGER_STATE, C.COUNT_MINUS_DEBOUNCE_MILLIS()))
 
   def _read_callback(self, pin):
-    with self._lock:
-      if not self._accept_input:
-        return
-      self._accept_input = False  # so further event threads return immediately
-    # XXX CHANGE THE LOCKING: Should do self._lock.acquire(False) (because of
-    # get_sample()).
+    if not self._callback_lock.acquire(False):
+      return  # ignore button while previous button is still processing
+
     read_stable = common.read_stable(pin, PilotCount._STABLE_READ_COUNT,
                                      PilotCount._STABLE_READ_INTERVAL_MILLIS, self._log)
     delta = 0
@@ -65,38 +69,38 @@ class PilotCount:
       self._log.critical('received callback for unrelated pin: %d' % pin)
 
     if not delta:
-      self._set_accept_input()
+      self._callback_lock.release()
       return
 
-    self._reset_at_night()
-
-    self._count = max(0, self._count + delta)
-    self._log.debug('count += %d -> %d' % (delta, self._count))
-    self._events.append((common.timestamp(), delta))
-    self._output_to_led()
-    self._set_accept_input()
-
-  def _set_accept_input(self):
-    # In theory we could starve here when events never stop. In practice we ignore this :-)
     with self._lock:
-      self._accept_input = True
+      self._reset_at_night_locked()
+      self._count = max(0, self._count + delta)
+      self._log.debug('count += %d -> %d' % (delta, self._count))
+      self._events.append((common.timestamp(), self._count))
 
-  def _reset_at_night(self):
+    self._output_to_led()
+    # We only release the lock after the LED blinking so the next event doesn't interfere with it.
+    self._callback_lock.release()
+
+  def _reset_at_night_locked(self):
+    if not self._count:
+      return
     t = time.localtime(time.time())
     if t.tm_hour >= PilotCount._RESET_HOUR and t.tm_yday != self._last_reset_yday:
       self._log.debug('resetting counter to 0 (was: %d)' % self._count)
       self._count = 0
+      self._events.append((common.timestamp(), self._count))
       self._last_reset_yday = t.tm_yday
 
   def _output_to_led(self):
     if self._count:
-      self._flash_led(self._count, 200, 300)
+      self._flash_led(self._count, PilotCount._LED_ON_MILLIS, PilotCount._LED_OFF_MILLIS)
     else:
-      self._flash_led(4, 20, 40)
+      self._flash_led(4, PilotCount._LED_ON_SHORT_MILLIS, PilotCount._LED_OFF_SHORT_MILLIS)
 
   def _flash_led(self, times, on_millis, off_millis):
     for i in range(times):
-      if i != 0:
+      if i:
         time.sleep(off_millis / 1000.0)
       GPIO.output(PilotCount._LED_PIN, 1)
       time.sleep(on_millis / 1000.0)
@@ -104,7 +108,7 @@ class PilotCount:
 
   def get_sample(self):
     with self._lock:
-      self._reset_at_night()
+      self._reset_at_night_locked()
       events = self._events
       self._events = []
     return 'count', events
