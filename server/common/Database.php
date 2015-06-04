@@ -66,11 +66,13 @@ class Database {
     $this->query(
         'CREATE TABLE IF NOT EXISTS door (ts BIGINT PRIMARY KEY, open BIT(1) NOT NULL)');
     $this->query(
+        'CREATE TABLE IF NOT EXISTS pilots (ts BIGINT PRIMARY KEY, count INT NOT NULL)');
+    $this->query(
         'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT NOT NULL)');
   }
 
   public function dropTablesExceptConfig() {
-    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta');
+    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, door, pilots');
     $this->log->notice('tables dropped');
     unset($this->config);
   }
@@ -179,6 +181,22 @@ class Database {
     $this->query($q);
   }
 
+  public function insertPilotCount($pilots) {
+    if (count($pilots) == 0) {
+      $this->log->warning('received empty pilots data');
+      return;
+    }
+    $q = '';
+    foreach ($pilots as $count) {
+      if ($q) {
+        $q .= ',';
+      }
+      $q .= '('.$count[0].','.$$count[1].')';
+    }
+    $q = 'REPLACE INTO pilots (ts, count) VALUES '.$q;
+    $this->query($q);
+  }
+
   /**
    * Returns the sequence of changes to the door status, assuming that the door is initially (i.e.
    * before the start of the specified interval) closed (TODO: improve this). Duplicates the last
@@ -200,6 +218,29 @@ class Database {
       $previousOpen = $open;
     }
     $door[$endTimestamp] = $open;
+    return $door;
+  }
+
+  /**
+   * XXX Returns the sequence of changes to the door status, assuming that the door is initially (i.e.
+   * before the start of the specified interval) closed (TODO: improve this). Duplicates the last
+   * row for $endTimestamp. */
+  public function readPilots($startTimestamp, $endTimestamp) {
+    $q = 'SELECT ts, count FROM pilots WHERE ts >= '.$startTimestamp
+    .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
+    $result = $this->query($q, null);
+    // XXX $pilots = array($startTimestamp => 0);  // assume door initially closed
+    $pilots = array($startTimestamp => 0);  // XXX
+    $count = 0;
+    while ($row = $result->fetch_row()) {
+      $count = intval($row[1]);
+      $ts = intval($row[0]);
+      $pilots[$ts] = $count;
+    }
+    $pilots[$endTimestamp] = $count;
+    // XXX this should really be the actual previous value
+    $pilots[$startTimestamp] = array_values($pilots)[1];
     return $door;
   }
 

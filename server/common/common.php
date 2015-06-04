@@ -60,6 +60,8 @@ define('REQ_SYSTEM_MINUTES', 24 * 60);
 define('REQ_SYSTEM_MINUTES_MAX', 7 * 24 * 60);
 define('REQ_DOOR_DAYS', 9);
 define('REQ_DOOR_DAYS_MAX', 31);
+define('REQ_PILOTS_DAYS', 9);
+define('REQ_PILOTS_DAYS_MAX', 31);
 
 /** Returns the absolute URL of the specified relative path. */
 function getAbsoluteURL($relativePath) {

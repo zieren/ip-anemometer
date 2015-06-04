@@ -56,6 +56,10 @@ function handleRequest() {
       $db->insertDoor($data['door']);
     }
 
+    if (isset($data['pilots'])) {
+      $db->insertPilotCount($data['pilots']);
+    }
+
     $db->commit();
 
     $response['status'] = 'ok';

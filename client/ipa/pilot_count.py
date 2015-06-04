@@ -36,7 +36,7 @@ class PilotCount:
     # Synchronize access in _read_callback() and get_sample().
     self._lock = threading.Lock()
     self._count = 0
-    self._events = []
+    self._pilots = []
     self._last_reset_yday = 0  # never; yday starts at 1
 
     GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -76,7 +76,7 @@ class PilotCount:
       self._reset_at_night_locked()
       self._count = max(0, self._count + delta)
       self._log.debug('count += %d -> %d' % (delta, self._count))
-      self._events.append((common.timestamp(), self._count))
+      self._pilots.append((common.timestamp(), self._count))
 
     self._output_to_led()
     # We only release the lock after the LED blinking so the next event doesn't interfere with it.
@@ -89,7 +89,7 @@ class PilotCount:
     if t.tm_hour >= PilotCount._RESET_HOUR and t.tm_yday != self._last_reset_yday:
       self._log.debug('resetting counter to 0 (was: %d)' % self._count)
       self._count = 0
-      self._events.append((common.timestamp(), self._count))
+      self._pilots.append((common.timestamp(), self._count))
       self._last_reset_yday = t.tm_yday
 
   def _output_to_led(self):
@@ -109,6 +109,6 @@ class PilotCount:
   def get_sample(self):
     with self._lock:
       self._reset_at_night_locked()
-      events = self._events
-      self._events = []
-    return 'count', events
+      pilots = self._pilots
+      self._pilots = []
+    return 'pilots', pilots

@@ -19,6 +19,10 @@ function computeStats() {
       $timestamp - daysToMillis(REQ_DOOR_DAYS),
       $timestamp - daysToMillis(REQ_DOOR_DAYS_MAX),
       $timestamp);
+  $pilotsStartMillis = getIntParam('c',
+    $timestamp - daysToMillis(REQ_PILOTS_DAYS),
+    $timestamp - daysToMillis(REQ_PILOTS_DAYS_MAX),
+    $timestamp);
 
   $db = new Database();
 
@@ -33,8 +37,11 @@ function computeStats() {
         'traffic' => $db->readTransferVolume(),
         'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
   }
-  if ($doorStartMillis) {
+  if ($doorStartMillis) {  // XXX can this ever be false?
     $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
+  }
+  if ($pilotsStartMillis) {  // XXX can this ever be false?
+    $stats['pilots'] = $db->readPilots($pilotsStartMillis, $timestamp);
   }
   return $stats;
 }
