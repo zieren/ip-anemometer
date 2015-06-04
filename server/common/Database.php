@@ -187,11 +187,13 @@ class Database {
       return;
     }
     $q = '';
-    foreach ($pilots as $count) {
-      if ($q) {
-        $q .= ',';
+    foreach ($pilots as $sample) {
+      foreach ($sample as $count) {
+        if ($q) {
+          $q .= ',';
+        }
+        $q .= '('.$count[0].','.$count[1].')';
       }
-      $q .= '('.$count[0].','.$$count[1].')';
     }
     $q = 'REPLACE INTO pilots (ts, count) VALUES '.$q;
     $this->query($q);
@@ -222,16 +224,14 @@ class Database {
   }
 
   /**
-   * XXX Returns the sequence of changes to the door status, assuming that the door is initially (i.e.
-   * before the start of the specified interval) closed (TODO: improve this). Duplicates the last
-   * row for $endTimestamp. */
+   * Returns the pilot count over time. Extrapolates the first value back in time (TODO: improve
+   * this). Duplicates the last row for $endTimestamp. */
   public function readPilots($startTimestamp, $endTimestamp) {
     $q = 'SELECT ts, count FROM pilots WHERE ts >= '.$startTimestamp
-    .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
     $result = $this->query($q, null);
-    // XXX $pilots = array($startTimestamp => 0);  // assume door initially closed
-    $pilots = array($startTimestamp => 0);  // XXX
+    $pilots = array($startTimestamp => 0);
     $count = 0;
     while ($row = $result->fetch_row()) {
       $count = intval($row[1]);
@@ -239,9 +239,8 @@ class Database {
       $pilots[$ts] = $count;
     }
     $pilots[$endTimestamp] = $count;
-    // XXX this should really be the actual previous value
     $pilots[$startTimestamp] = array_values($pilots)[1];
-    return $door;
+    return $pilots;
   }
 
   /** Updates the specified config value. */

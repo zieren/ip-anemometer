@@ -12,6 +12,7 @@ function handleRequest() {
     $logger->critical('json decoding or bzip2 decompression failed');
     return array('status' => 'invalid json or bzip2');
   }
+  $logger->debug('Received data with keys: '.implode(array_keys($data), ', '));
 
   $db = new Database();  // TODO: Handle failure.
   $config = $db->getConfig();

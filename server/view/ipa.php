@@ -37,12 +37,8 @@ function computeStats() {
         'traffic' => $db->readTransferVolume(),
         'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
   }
-  if ($doorStartMillis) {  // XXX can this ever be false?
-    $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
-  }
-  if ($pilotsStartMillis) {  // XXX can this ever be false?
-    $stats['pilots'] = $db->readPilots($pilotsStartMillis, $timestamp);
-  }
+  $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
+  $stats['pilots'] = $db->readPilots($pilotsStartMillis, $timestamp);
   return $stats;
 }
 

@@ -10,12 +10,12 @@ import log
 class PilotCount:
   """Counts pilots by manually pressing a button connected to GPIO."""
 
-  _PLUS_PIN = C.COUNT_PLUS_INPUT_PIN()
-  _MINUS_PIN = C.COUNT_MINUS_INPUT_PIN()
-  _PLUS_TRIGGER_STATE = C.COUNT_PLUS_TRIGGER_STATE()
-  _MINUS_TRIGGER_STATE = C.COUNT_MINUS_TRIGGER_STATE()
-  _LED_PIN = C.COUNT_LED_OUTPUT_PIN()
-  _RESET_HOUR = C.COUNT_RESET_HOUR()
+  _PLUS_PIN = C.PILOTS_PLUS_INPUT_PIN()
+  _MINUS_PIN = C.PILOTS_MINUS_INPUT_PIN()
+  _PLUS_TRIGGER_STATE = C.PILOTS_PLUS_TRIGGER_STATE()
+  _MINUS_TRIGGER_STATE = C.PILOTS_MINUS_TRIGGER_STATE()
+  _LED_PIN = C.PILOTS_LED_OUTPUT_PIN()
+  _RESET_HOUR = C.PILOTS_RESET_HOUR()
 
   # TODO: Make these parameters. Plus/minus separate?
   _STABLE_READ_INTERVAL_MILLIS = 20
@@ -37,20 +37,20 @@ class PilotCount:
     self._lock = threading.Lock()
     self._count = 0
     self._pilots = []
-    self._last_reset_yday = 0  # never; yday starts at 1
+    self._last_reset_yday = time.localtime(time.time()).tm_yday
 
     GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.setup(PilotCount._MINUS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.setup(PilotCount._LED_PIN, GPIO.OUT)
     GPIO.add_event_detect(PilotCount._PLUS_PIN, GPIO.BOTH, callback=self._read_callback,
-                          bouncetime=C.COUNT_PLUS_DEBOUNCE_MILLIS())
+                          bouncetime=C.PILOTS_PLUS_DEBOUNCE_MILLIS())
     GPIO.add_event_detect(PilotCount._MINUS_PIN, GPIO.BOTH, callback=self._read_callback,
-                          bouncetime=C.COUNT_MINUS_DEBOUNCE_MILLIS())
+                          bouncetime=C.PILOTS_MINUS_DEBOUNCE_MILLIS())
     self._log.info(('initialized (plus: pin=%d trigger=%d debounce=%d; '
                     + 'minus: pin=%d trigger=%d debounce=%d)')
                    % (PilotCount._PLUS_PIN, PilotCount._PLUS_TRIGGER_STATE,
-                      C.COUNT_PLUS_DEBOUNCE_MILLIS(), PilotCount._MINUS_PIN,
-                      PilotCount._MINUS_TRIGGER_STATE, C.COUNT_MINUS_DEBOUNCE_MILLIS()))
+                      C.PILOTS_PLUS_DEBOUNCE_MILLIS(), PilotCount._MINUS_PIN,
+                      PilotCount._MINUS_TRIGGER_STATE, C.PILOTS_MINUS_DEBOUNCE_MILLIS()))
 
   def _read_callback(self, pin):
     if not self._callback_lock.acquire(False):
