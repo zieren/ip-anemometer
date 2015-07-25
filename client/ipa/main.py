@@ -7,8 +7,8 @@ import threading
 import traceback
 
 import common
-from config import C  #@UnresolvedImport (pydev bug)
-import door  #@UnresolvedImport (pydev bug)
+from config import C
+import door
 import huawei_status
 import K
 import log
