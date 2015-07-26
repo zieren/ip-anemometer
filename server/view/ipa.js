@@ -9,12 +9,12 @@ ipa.Options = function() {
   this.upToTimestampMillis = -1;  // ... up to here. -1 means now.
   this.fractionalDigits = 1;  // Textual output precision.
   this.timeSeriesPoints = 30;
-      // Downsample time series to make charts readable. Increase for wider charts.
+  // Downsample time series to make charts readable. Increase for wider charts.
   this.doorTimeDays = 8;  // Show shed door status.
   this.pilotsTimeDays = 0;  // Show shed door status.
   // TODO: Figure out how to display mutliple days.
   this.systemStatusMinutes = 24 * 60;
-      // Show system status (temperature, signal etc.) (0 to disable).
+  // Show system status (temperature, signal etc.) (0 to disable).
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
   this.dummy = false;  // Output inconsistent dummy data for testing.
   this.maxWindLatencyMinutes = 15;  // Show a warning when wind data is older.
