@@ -73,6 +73,9 @@ class Database {
     $this->query(
         'CREATE TABLE IF NOT EXISTS pilots (ts BIGINT PRIMARY KEY, count INT NOT NULL)');
     $this->query(
+        'CREATE TABLE IF NOT EXISTS status (type VARCHAR(32) PRIMARY KEY, ts BIGINT NOT NULL, '
+        .'text TEXT NOT NULL)');
+    $this->query(
         'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT NOT NULL)');
   }
 
@@ -201,6 +204,11 @@ class Database {
       }
     }
     $q = 'REPLACE INTO pilots (ts, count) VALUES '.$q;
+    $this->query($q);
+  }
+
+  public function insertStatus($status) {
+    $q = 'REPLACE INTO status (type, ts, text) VALUES ("client", '.$status[0].', "'.$status[1].'")';
     $this->query($q);
   }
 

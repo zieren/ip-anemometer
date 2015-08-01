@@ -19,4 +19,4 @@ def get_temperature():
 
   output = subprocess.check_output(_TEMPERATURE_CMD)
   m = _TEMPERATURE_PATTERN.match(output)
-  return m.group(1) if m else '666.0'  # should never happen
+  return float(m.group(1)) if m else 666.0  # should never happen

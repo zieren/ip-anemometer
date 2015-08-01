@@ -61,6 +61,10 @@ function handleRequest() {
       $db->insertPilotCount($data['pilots']);
     }
 
+    if (isset($data['status'])) {
+      $db->insertStatus($data['status']);
+    }
+
     $db->commit();
 
     $response['status'] = 'ok';
@@ -68,7 +72,7 @@ function handleRequest() {
   } catch (Exception $e) {
     $db->rollback();
     $logger->critical('Exception in ul.php: '.$e);
-    $response['status'] = 'failure';
+    $response['status'] = 'failure: '.$e;
   }
   return $response;
 }

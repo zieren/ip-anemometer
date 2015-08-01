@@ -28,6 +28,9 @@ class Config:
   def UPLOAD_MAX_SIZE_KB(self):
     return int(self._cfg['upload_max_size_kb'])
 
+  def TEMPERATURE_SHUTDOWN_AT(self):
+    return float(self._cfg['temperature_shutdown_at'])
+
   def TIMEOUT_SHUTDOWN_SECONDS(self):
     return int(self._cfg['timeout_shutdown_seconds'])
   def TIMEOUT_HTTP_REQUEST_SECONDS(self):

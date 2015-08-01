@@ -8,6 +8,7 @@ import urllib2
 
 from config import C
 import K
+import interceptor
 import log
 
 
@@ -56,7 +57,15 @@ class Uploader(threading.Thread):
           return
         start_time = time.time()
         self._poll_data_sources()
-        self._upload()
+        client_command = interceptor.process(self._queue)
+        server_commands = self._upload()
+        commands = []
+        if client_command:
+          commands = [client_command]
+        elif server_commands:
+          commands = server_commands
+        for command in commands:
+          self._main_cq.put(command)
         wait_seconds = C.UPLOAD_INTERVAL_SECONDS() - (time.time() - start_time)
     except Exception:
       self._log.critical(traceback.format_exc())
@@ -110,5 +119,7 @@ class Uploader(threading.Thread):
     # Add commands to main command queue. This also happens on failure; an outdated client might be
     # causing the failure in the first place.
     del response_dict['status']
+    server_commands = []
     for k, v in response_dict.items():
-      self._main_cq.put((k, v))
+      server_commands.append((k, v))
+    return server_commands
