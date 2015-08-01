@@ -665,7 +665,7 @@ class Database {
 
   /** Populate config table from ipa-default.cfg, keeping existing values. */
   public function populateConfig($defaultCfg) {
-    $cfg = file($defaultCfg, FILE_IGNORE_NEW_LINES);
+    $cfg = file($defaultCfg, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     // Compute upload_url.
     $cfg[] = 'upload_url='.getAbsoluteURL('../client');
     $q = '';
