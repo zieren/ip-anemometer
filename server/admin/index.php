@@ -64,7 +64,7 @@ echo
 <h2>Manage Database</h2>
 <form action="" method="post">
   <input type="submit" name="clearAll" value="CLEAR ALL DATA" />
-  <input type="submit" name="configDefaults" value="config defaults" />
+  <input type="submit" name="configDefaults" value="set missing config values to defaults" />
   <input type="checkbox" name="confirm" />Yes, I really really want to!
 </form>';
 ?>
