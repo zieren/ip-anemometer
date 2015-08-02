@@ -28,6 +28,7 @@ ipaView.requestStats = function() {
 
 ipaView.updateChart = function() {
   var chart = ipaView.chart;
+  chart.drawStatus(ipaView.clearElement(document.getElementById('status')));
   chart.drawWindSummary(ipaView.clearElement(document.getElementById('summary')));
   chart.drawTimeSeries(ipaView.clearElement(document.getElementById('time')));
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
@@ -61,6 +62,7 @@ google.setOnLoadCallback(ipaView.requestStats);
 
 </head>
 <body>
+<div id="status"></div>
 <div id="minutes" align="center">
   Minutes:
   <input id="minutesInput" type="text" maxlength="4" size="4"

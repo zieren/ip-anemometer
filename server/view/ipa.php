@@ -28,6 +28,7 @@ function computeStats() {
 
   $stats = array('wind' =>
       $db->computeWindStats($timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints));
+  $stats['status'] = $db->readStatus();
   if ($systemMinutes) {
     $systemMillis = minutesToMillis($systemMinutes);
     $stats['sys'] = array(

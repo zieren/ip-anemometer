@@ -43,6 +43,20 @@ ipa.Tools.alphasorted = function(obj) {
   return array;
 }
 
+ipa.Tools.millisToMinutes = function(millis) {
+  return millis / (1000 * 60);
+}
+
+/**
+ * Returns time if date is today, otherwise returns date and time.
+ */
+ipa.Tools.compactDateString = function(date) {
+  if (new Date(Date.now()).toLocaleDateString() == date.toLocaleDateString()) {
+    return date.toLocaleTimeString();
+  }
+  return date.toLocaleString();
+}
+
 ipa.Chart = function(options) {
   this.options = new ipa.Options();
   for (var i in options) {
@@ -209,6 +223,24 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
   element.appendChild(table);
 
   ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
+}
+
+ipa.Chart.prototype.drawStatus = function(element) {
+  if (ipa.Chart.showNoData_(
+      this.stats.status && this.stats.status.length > 0, element, 'no status available')) {
+    return;
+  }
+  var statusText = this.stats.status[1];
+  var statusDate = ipa.Tools.compactDateString(new Date(parseInt(this.stats.status[0])));
+  var statusLabel = document.createElement('div');
+  statusLabel.className = 'ipaStatus';
+  if (this.stats.status[1] == 'ok') {
+    statusLabel.className += ' ipaStatusOk';
+  }
+  statusLabel.appendChild(document.createTextNode(statusText));
+  statusLabel.appendChild(document.createElement('br'));
+  statusLabel.appendChild(document.createTextNode(statusDate));
+  element.appendChild(statusLabel);
 }
 
 ipa.Chart.prototype.drawDoor = function(element) {
@@ -443,23 +475,12 @@ ipa.Chart.showNoData_ = function(data, element, text) {
 
 ipa.Chart.indicateStaleData_ = function(timestamp, maxMinutes, element) {
   var now = Date.now();
-  var latencyMinutes = ipa.Chart.millisToMinutes_(now - timestamp);
+  var latencyMinutes = ipa.Tools.millisToMinutes(now - timestamp);
   if (latencyMinutes > maxMinutes) {
-    var updateDate = new Date(timestamp);
-    var nowDate = new Date(now);
-    var text = 'last update: ';
-    if (nowDate.toLocaleDateString() == updateDate.toLocaleDateString()) {
-      text += updateDate.toLocaleTimeString();
-    } else {
-      text += updateDate.toLocaleString();
-    }
-    var staleDataLabel = document.createElement('div')
+    var text = 'last update: ' + ipa.Tools.compactDateString(new Date(timestamp));
+    var staleDataLabel = document.createElement('div');
     staleDataLabel.className = 'ipaStaleData';
     staleDataLabel.appendChild(document.createTextNode(text));
     element.appendChild(staleDataLabel);
   }
-}
-
-ipa.Chart.millisToMinutes_ = function(millis) {
-  return millis / (1000 * 60);
 }

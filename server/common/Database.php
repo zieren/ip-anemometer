@@ -208,6 +208,7 @@ class Database {
   }
 
   public function insertStatus($status) {
+    // TODO: Consider using ts as PK to keep history.
     $q = 'REPLACE INTO status (type, ts, text) VALUES ("client", '.$status[0].', "'.$status[1].'")';
     $this->query($q);
   }
@@ -254,6 +255,16 @@ class Database {
     $pilots[$endTimestamp] = $count;
     $pilots[$startTimestamp] = array_values($pilots)[1];
     return $pilots;
+  }
+
+  public function readStatus() {
+    $q = 'SELECT ts, text FROM status WHERE type = "client"';
+    $result = $this->query($q);
+    $status = array();
+    if ($row = $result->fetch_row()) {
+      $status = array($row[0], $row[1]);
+    }
+    return $status;
   }
 
   /** Updates the specified config value. */
