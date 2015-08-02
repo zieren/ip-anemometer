@@ -38,7 +38,7 @@ td.to, td.toValue {
 	background: #bf9;
 }
 
-div#expand {
+div#expand, div#status {
 	width: 400px;
 }
 
@@ -67,4 +67,14 @@ div.ipaStaleData {
   background: #fdd;
   text-align: center;
   margin: 5px;
+}
+
+div.ipaStatus {
+  background: #fdd;
+  text-align: center;
+  margin: 5px;
+}
+
+div.ipaStatusOk {
+  display: none;
 }

@@ -3,7 +3,7 @@
  * Plugin Name: IP Anemometer
  * Plugin URI: http://zieren.de
  * Description: Embed wind speed charts in WordPress content. For use with the free <a href="http://zieren.de/">IP anemometer for the Raspberry Pi</a>.
- * Version: 0.1.1
+ * Version: 0.2.0
  * Author: J&ouml;rg Zieren
  * Author URI: http://zieren.de
  * License: GPL v3
@@ -27,6 +27,7 @@ function ipa($atts) {
     'period' => array('minutes', intval)
   );
   $handlers = array(
+    'status' => status,
   	'period_selector' => periodSelector,
     'summary' => summary,
     'speed' => speed,
@@ -61,6 +62,7 @@ function ipa($atts) {
   return $code;
 }
 
+// TODO: Unify and extract code shared with index.html.
 function ipaViewJS($optionsJS) {
   $jsUrl = plugin_dir_url(__FILE__).'/ipa.js';
   return <<<THEEND
@@ -104,6 +106,7 @@ ipaView.draw = function(that, draw, id) {
 
 ipaView.updateChart = function(opt_request) {
   var c = ipaView.chart;
+  ipaView.draw(c, c.drawStatus, 'ipaStatus');
   ipaView.draw(c, c.drawWindSummary, 'ipaSummary');
   ipaView.draw(c, c.drawTimeSeries, 'ipaSpeed');
   ipaView.draw(c, c.drawHistogram, 'ipaHistogram');
@@ -119,6 +122,10 @@ google.setOnLoadCallback(ipaView.requestStats);
 
 </script>
 THEEND;
+}
+
+function status($atts) {
+  return '<div id="ipaStatus"></div>';
 }
 
 function periodSelector($atts) {
