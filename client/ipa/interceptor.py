@@ -15,6 +15,9 @@ def process(queue):
     queue['status'] = (common.timestamp(),
                        'shutdown: CPU temp = %s (max: %s)' % (last_temp[1], MAX_TEMP))
     command = ('exit', 100)  # 100 = shutdown
+  else:
+    queue['status'] = (common.timestamp(), 'ok')
+
   return command
 
 def _get_last_sample(queue, type_key):
