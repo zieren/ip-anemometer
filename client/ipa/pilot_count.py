@@ -26,7 +26,6 @@ class PilotCount:
   _LED_OFF_MILLIS = 300
   _LED_ON_SHORT_MILLIS = 20
   _LED_OFF_SHORT_MILLIS = 40
-  _TRAILING_PAUSE_MILLIS = 1000
 
   def __init__(self):
     self._log = log.get_logger('ipa.count')
@@ -69,13 +68,12 @@ class PilotCount:
       return
 
     with self._lock:
-      self._reset_at_night_locked()
-      self._count = max(0, self._count + delta)
-      self._log.debug('count += %d -> %d' % (delta, self._count))
-      self._pilots.append((common.timestamp(), self._count))
-      # In theory we'd have to wait here until the semaphore is acquired to avoid a race against the
-      # next event. But we rely on Python starting threads fast enough :-)
-      BlinkThread(self._count, self._blink_semaphore).start()
+      if self._blink_semaphore.acquire(False):  # If we're currently blinking, ignore this event.
+        self._reset_at_night_locked()
+        self._count = max(0, self._count + delta)
+        self._log.debug('count += %d -> %d' % (delta, self._count))
+        self._pilots.append((common.timestamp(), self._count))
+        BlinkThread(self._count, self._blink_semaphore).start()
 
   def _reset_at_night_locked(self):
     """Must hold lock."""
@@ -104,12 +102,10 @@ class BlinkThread(threading.Thread):
     self._blink_semaphore = blink_semaphore
 
   def run(self):
-    self._blink_semaphore.acquire()
     if self._count:
       self._flash_led(self._count, PilotCount._LED_ON_MILLIS, PilotCount._LED_OFF_MILLIS)
     else:
       self._flash_led(4, PilotCount._LED_ON_SHORT_MILLIS, PilotCount._LED_OFF_SHORT_MILLIS)
-    time.sleep(PilotCount._TRAILING_PAUSE_MILLIS / 1000.0)
     self._blink_semaphore.release()
 
   def _flash_led(self, times, on_millis, off_millis):
