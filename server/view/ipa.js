@@ -295,7 +295,7 @@ ipa.Chart.prototype.drawPilots = function(element) {
   pilotsTable.addColumn('datetime');
   pilotsTable.addColumn('number');
   var pilots = ipa.Tools.sorted(this.stats.pilots);
-  var maxPilots = 0;
+  var maxPilots = 1;  // avoid vAxis from 0 to 0
   for (var i = 0; i < pilots.length; i++) {
     var ts = parseInt(pilots[i][0]);
     var count = pilots[i][1];
