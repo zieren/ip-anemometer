@@ -46,7 +46,7 @@ def read_stable(pin, num, interval_millis, log = None):
     if reads:
       time.sleep(interval_millis / 1000.0)
     r = GPIO.input(pin)
-    reads[r] = reads.get(r, default=0) + 1
+    reads[r] = reads.get(r, 0) + 1
   result = max(reads.iteritems(), key=operator.itemgetter(1))[0]
   if log:
     log.debug('read_stable: %s -> %d' % (reads, result))
