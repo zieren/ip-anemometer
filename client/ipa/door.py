@@ -35,7 +35,7 @@ class Door:
     door_open = 1 if read_stable == Door._OPEN_STATE else 0
     self._log.debug('door_open in callback: %d' % door_open)
     with self._lock:
-      self._consider_door_open(door_open)
+      self._consider_door_open_locked(door_open)
     return door_open
 
   def get_sample(self):
@@ -46,12 +46,12 @@ class Door:
     door_open = 1 if GPIO.input(Door._PIN) == Door._OPEN_STATE else 0
     self._log.debug('door_open in get_sample: %d' % door_open)
     with self._lock:
-      self._consider_door_open(door_open)
+      self._consider_door_open_locked(door_open)
       events = self._events
       self._events = []
     return 'door', events
 
-  def _consider_door_open(self, door_open):
+  def _consider_door_open_locked(self, door_open):
     """Append new door_open state if it differs from the previous state. Must hold lock."""
     if door_open != self._previous_door_open:
       self._events.append((common.timestamp(), door_open))
