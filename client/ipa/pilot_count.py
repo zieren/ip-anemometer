@@ -17,11 +17,11 @@ class PilotCount:
   _LED_PIN = C.PILOTS_LED_OUTPUT_PIN()
   _RESET_HOUR = C.PILOTS_RESET_HOUR()
 
-  # TODO: Make these parameters. Plus/minus separate?
+  # TODO: Make these configurable? They might depend on cable layout etc.
   _STABLE_READ_INTERVAL_MILLIS = 20
   _STABLE_READ_COUNT = 5
 
-  # TODO: Also parameters?
+  # TODO: Also configurable?
   _LED_ON_MILLIS = 200
   _LED_OFF_MILLIS = 300
   _LED_ON_SHORT_MILLIS = 20
