@@ -39,8 +39,10 @@ class PilotCount:
     self._pilots = []
     self._last_reset_yday = time.localtime(time.time()).tm_yday
 
-    GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.setup(PilotCount._MINUS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN,
+               pull_up_down=GPIO.PUD_DOWN if PilotCount._PLUS_TRIGGER_STATE else GPIO.PUD_UP)
+    GPIO.setup(PilotCount._MINUS_PIN, GPIO.IN,
+               pull_up_down=GPIO.PUD_DOWN if PilotCount._MINUS_TRIGGER_STATE else GPIO.PUD_UP)
     GPIO.setup(PilotCount._LED_PIN, GPIO.OUT)
     GPIO.add_event_detect(PilotCount._PLUS_PIN, GPIO.BOTH, callback=self._read_callback,
                           bouncetime=C.PILOTS_PLUS_DEBOUNCE_MILLIS())
