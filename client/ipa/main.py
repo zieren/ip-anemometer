@@ -30,6 +30,8 @@ class Anemometer:
     self._main_cq = Queue.Queue()
     # Create thread termination Event for Uploader.
     self._uploader_termination_event = threading.Event()
+
+  def _initialize(self):
     # Create upload thread (started in run() below).
     self._uploader = uploader.Uploader(self._main_cq, self._uploader_termination_event)
     # Create data sources.
@@ -68,6 +70,7 @@ class Anemometer:
 
   def run(self):
     try:
+      self._initialize()
       self._uploader.start()
       self._process_commands()
     except Exception:
