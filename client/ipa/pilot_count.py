@@ -26,12 +26,13 @@ class PilotCount:
   _LED_OFF_MILLIS = 300
   _LED_ON_SHORT_MILLIS = 20
   _LED_OFF_SHORT_MILLIS = 40
+  _TRAILING_PAUSE_MILLIS = 1000
 
   def __init__(self):
     self._log = log.get_logger('ipa.count')
 
-    # Block further callbacks while processing an event.
-    self._callback_lock = threading.Lock()
+    # Only one blinking thread at a time.
+    self._blink_semaphore = threading.Semaphore()
 
     # Synchronize access in _read_callback() and get_sample().
     self._lock = threading.Lock()
@@ -55,9 +56,6 @@ class PilotCount:
                       PilotCount._MINUS_TRIGGER_STATE, C.PILOTS_MINUS_DEBOUNCE_MILLIS()))
 
   def _read_callback(self, pin):
-    if not self._callback_lock.acquire(False):
-      return  # ignore button while previous button is still processing
-
     read_stable = common.read_stable(pin, PilotCount._STABLE_READ_COUNT,
                                      PilotCount._STABLE_READ_INTERVAL_MILLIS, self._log)
     delta = 0
@@ -67,11 +65,7 @@ class PilotCount:
     elif pin == PilotCount._MINUS_PIN:
       if read_stable == PilotCount._MINUS_TRIGGER_STATE:
         delta = -1
-    else:
-      self._log.critical('received callback for unrelated pin: %d' % pin)
-
     if not delta:
-      self._callback_lock.release()
       return
 
     with self._lock:
@@ -79,12 +73,12 @@ class PilotCount:
       self._count = max(0, self._count + delta)
       self._log.debug('count += %d -> %d' % (delta, self._count))
       self._pilots.append((common.timestamp(), self._count))
-
-    self._output_to_led()
-    # We only release the lock after the LED blinking so the next event doesn't interfere with it.
-    self._callback_lock.release()
+      # In theory we'd have to wait here until the semaphore is acquired to avoid a race against the
+      # next event. But we rely on Python starting threads fast enough :-)
+      BlinkThread(self._count, self._blink_semaphore).start()
 
   def _reset_at_night_locked(self):
+    """Must hold lock."""
     if not self._count:
       return
     t = time.localtime(time.time())
@@ -94,11 +88,29 @@ class PilotCount:
       self._pilots.append((common.timestamp(), self._count))
       self._last_reset_yday = t.tm_yday
 
-  def _output_to_led(self):
+  def get_sample(self):
+    with self._lock:
+      self._reset_at_night_locked()
+      pilots = self._pilots
+      self._pilots = []
+    return 'pilots', pilots
+
+
+class BlinkThread(threading.Thread):
+
+  def __init__(self, count, blink_semaphore):
+    threading.Thread.__init__(self)
+    self._count = count
+    self._blink_semaphore = blink_semaphore
+
+  def run(self):
+    self._blink_semaphore.acquire()
     if self._count:
       self._flash_led(self._count, PilotCount._LED_ON_MILLIS, PilotCount._LED_OFF_MILLIS)
     else:
       self._flash_led(4, PilotCount._LED_ON_SHORT_MILLIS, PilotCount._LED_OFF_SHORT_MILLIS)
+    time.sleep(PilotCount._TRAILING_PAUSE_MILLIS / 1000.0)
+    self._blink_semaphore.release()
 
   def _flash_led(self, times, on_millis, off_millis):
     for i in range(times):
@@ -107,10 +119,3 @@ class PilotCount:
       GPIO.output(PilotCount._LED_PIN, 1)
       time.sleep(on_millis / 1000.0)
       GPIO.output(PilotCount._LED_PIN, 0)
-
-  def get_sample(self):
-    with self._lock:
-      self._reset_at_night_locked()
-      pilots = self._pilots
-      self._pilots = []
-    return 'pilots', pilots
