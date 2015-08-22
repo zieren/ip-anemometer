@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
 import datetime
+import operator
 import threading
 import sys
 import time
@@ -40,13 +41,13 @@ def duration_to_rps(duration):
 
 def read_stable(pin, num, interval_millis, log = None):
   # Store results in a list to investigate whether this works.
-  # TODO: Change this to simply count.
-  reads = []
+  reads = {}
   for _ in range(num):
     if reads:
       time.sleep(interval_millis / 1000.0)
-    reads.append(GPIO.input(pin))
-  result = round(float(sum(reads)) / float(len(reads)))  # TODO: This is a hack.
+    r = GPIO.input(pin)
+    reads[r] = reads.get(r, default=0) + 1
+  result = max(reads.iteritems(), key=operator.itemgetter(1))[0]
   if log:
     log.debug('read_stable: %s -> %d' % (reads, result))
   return result
