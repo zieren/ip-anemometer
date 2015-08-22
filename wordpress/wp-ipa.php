@@ -32,6 +32,7 @@ function ipa($atts) {
     'summary' => summary,
     'speed' => speed,
     'histogram' => histogram,
+    'pilots' => pilots,
     'door' => door,
     'lag' => lag,
     'temperature' => temperature,
@@ -111,6 +112,7 @@ ipaView.updateChart = function(opt_request) {
   ipaView.draw(c, c.drawTimeSeries, 'ipaSpeed');
   ipaView.draw(c, c.drawHistogram, 'ipaHistogram');
   ipaView.draw(c, c.drawDoor, 'ipaDoor');
+  ipaView.draw(c, c.drawPilots, 'ipaPilots');
   ipaView.draw(c, c.drawLag, 'ipaLag');
   ipaView.draw(c, c.drawTemperature, 'ipaTemperature');
   ipaView.draw(c, c.drawSignalStrength, 'ipaSignalStrength');
@@ -147,6 +149,10 @@ function speed($atts) {
 
 function histogram($atts) {
   return '<div id="ipaHistogram" class="ipaChart"></div>';
+}
+
+function pilots($atts) {
+  return '<div id="ipaPilots" class="ipaTimeSeries"></div>';
 }
 
 function door($atts) {
