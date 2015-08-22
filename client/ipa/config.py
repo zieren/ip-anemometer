@@ -1,7 +1,14 @@
+import RPi.GPIO as GPIO  #@UnresolvedImport
+
+
 import K
 
 
 class Config:
+
+  _PUD_MAP = {'up': GPIO.PUD_UP,
+              'down': GPIO.PUD_DOWN}
+
   def __init__(self):
     self._cfg = {}
     self._readFile();
@@ -40,6 +47,8 @@ class Config:
     return int(self._cfg['wind_debounce_millis'])
   def WIND_INPUT_PIN(self):
     return int(self._cfg['wind_input_pin'])
+  def WIND_PUD(self):
+    return Config._PUD_MAP[self._cfg['wind_pud'].lower()]
   def WIND_EDGES_PER_REV(self):
     return int(self._cfg['wind_edges_per_revolution'])
   def WIND_HSF(self):

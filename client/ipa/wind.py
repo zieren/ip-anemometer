@@ -30,7 +30,7 @@ class Wind:
         C.WIND_HSF(), C.WIND_MAX_ROTATION()))
 
   def _register_callback(self, callback):
-    GPIO.setup(C.WIND_INPUT_PIN(), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(C.WIND_INPUT_PIN(), GPIO.IN, pull_up_down=C.WIND_PUD())
     # Up to (at least) GPIO 0.5.9 edge detection is partly broken. RISING always behaves like BOTH,
     # FALLING sometimes behaves like BOTH. Since BOTH is the only mode that works as expected, we
     # use BOTH even though that makes computation of revolution time more complicated.
