@@ -266,18 +266,23 @@ ipa.Chart.prototype.drawDoor = function(element) {
     return a.getMonth() == b.getMonth() && a.getDate() == b.getDate();
   }
   var door = ipa.Tools.sorted(this.stats.door);
+  if (door.length == 0) {
+    return;  // TODO: We should generally indicate "no data" better.
+  }
   // The last element is always synthesized at the end timestamp.
+  // We need to determine the initial status of the newest day because this will receive the first
+  // color (the logic being that it's located in the top left).
+  var newestDayInitialStatus = door[0][1];
   for (var i = 1; i < door.length; i++) {
     var cursor = new Date(parseInt(door[i-1][0]));
     var end = new Date(parseInt(door[i][0]));
+    var status = door[i-1][1];
     while (!sameDate(cursor, end)) {
-      addRow(statusToString[door[i-1][1]], cursor);
+      addRow(statusToString[status], cursor);
       cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1, 0, 0, 0);
+      newestDayInitialStatus = status;  // We found a newer day.
     }
-    addRow(statusToString[door[i-1][1]], cursor, end);
-  }
-  if (!rows.length) {
-    return;  // TODO: We should generally indicate "no data" better.
+    addRow(statusToString[status], cursor, end);
   }
   rows.reverse();
   doorTable.addRows(rows);
@@ -286,6 +291,12 @@ ipa.Chart.prototype.drawDoor = function(element) {
     hAxis: {format: 'HH:mm'},
     legend: 'none'
   };
+  // Make sure 'open' is red and 'closed' is gray.
+  if (newestDayInitialStatus == 1) {
+    options.colors = ['#dd0000', '#999999'];
+  } else {
+    options.colors = ['#999999', '#dd0000'];
+  }
   var doorChart = new google.visualization.Timeline(element);
   doorChart.draw(doorTable, options);
 }
