@@ -90,7 +90,7 @@ class Config:
     return int(self._cfg['pilots_reset_hour'])
 
   def LOGGING_LEVEL(self):
-    return self._cfg['logging_level']
+    return self._cfg['logging_level'].upper()
   def LOGGING_MAX_FILE_SIZE_KB(self):
     return int(self._cfg['logging_max_file_size_kb'])
   def LOGGING_BACKUP_COUNT(self):
