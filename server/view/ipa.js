@@ -339,6 +339,36 @@ ipa.Chart.prototype.drawTemperature = function(element) {
   temperatureChart.draw(temperatureTable, options);
 }
 
+ipa.Chart.prototype.drawTempHum = function(element) {
+  var tempHumTable = new google.visualization.DataTable();
+  tempHumTable.addColumn('datetime', 't');
+  // Make sure temperature vAxis label is more prominent; put it on the right, where the latest
+  // value is.
+  tempHumTable.addColumn('number', 'humidity [%]');
+  tempHumTable.addColumn('number', 'temperature [\u00B0C]');
+  var temp = ipa.Tools.sorted(this.stats.temp_hum[0]);
+  var hum = ipa.Tools.sorted(this.stats.temp_hum[1]);
+  // TODO: Assert that both match?
+  for (var i = 0; i < temp.length; i++) {
+    // Timestamps (index 0) are identical, use temp arbitrarily.
+    tempHumTable.addRow([new Date(parseInt(temp[i][0])), hum[i][1], temp[i][1]]);
+  }
+  var options = {
+    hAxis: {format: 'HH:mm'},
+    legend: {position: 'top'},
+    series: {
+      0: {targetAxisIndex: 0, color: '#0000ff'},
+      1: {targetAxisIndex: 1, color: '#ff0000'}
+    },
+    vAxes: {
+      0: {minValue: 0, maxValue: 100},
+      1: {minValue: 0}
+    }
+  };
+  var tempHumChart = new google.visualization.LineChart(element);
+  tempHumChart.draw(tempHumTable, options);
+}
+
 ipa.Chart.prototype.drawSignalStrength = function(element) {
   var strengthTable = new google.visualization.DataTable();
   strengthTable.addColumn('datetime');

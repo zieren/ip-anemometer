@@ -11,6 +11,7 @@ function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
 function computeStats() {
   // TODO: These defaults should match the ones in ipa.js.
   // TODO: This isn't handling "not requested" properly.
+  // TODO: This needs to be simplified.
   $windowMinutes = getIntParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
   $timestamp = getIntParam('ts', timestamp(), 0);
   $timeSeriesPoints = getIntParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, 1);
@@ -38,6 +39,8 @@ function computeStats() {
         'traffic' => $db->readTransferVolume(),
         'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
   }
+  // TODO: Don't use $systemMillis. Should this be the same as the wind interval, or 24h?
+  $stats['temp_hum'] = $db->readTempHum($timestamp, $systemMillis, $timeSeriesPoints);
   $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
   $stats['pilots'] = $db->readPilots($pilotsStartMillis, $timestamp);
   return $stats;

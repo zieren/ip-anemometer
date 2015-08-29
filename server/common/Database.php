@@ -627,6 +627,22 @@ class Database {
     return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
   }
 
+  public function readTempHum($endTimestamp, $windowDuration, $timeSeriesPoints) {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    $q = 'SELECT ts, t, h FROM temp_hum WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $result = $this->query($q, null);
+    $temp = array();
+    $hum = array();
+    while ($row = $result->fetch_row()) {
+      $temp[intval($row[0])] = floatval($row[1]);
+      $hum[intval($row[0])] = floatval($row[2]);
+    }
+    return array(
+        Database::downsampleTimeSeries($temp, $timeSeriesPoints),
+        Database::downsampleTimeSeries($hum, $timeSeriesPoints));
+  }
+
   public function readSignalStrength($endTimestamp, $windowDuration, $timeSeriesPoints) {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, strength FROM link WHERE ts >= '.$startTimestamp
