@@ -45,7 +45,7 @@ define('WIND_SAMPLE_MAX', 3);
 // Internal constants.
 define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-update.zip');
 define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
-define('CLIENT_APP_CFG_DEFAULT_FILENAME', '../client/ipa-default.cfg');
+define('CONFIG_DEFAULT_FILENAME', '../admin/default.cfg');
 define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 // Maximum amount of time the desired window size is shifted back to compensate for upload
 // latency. TODO: This (and possibly other values) should be configurable.

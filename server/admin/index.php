@@ -5,7 +5,7 @@ require_once '../common/common.php';
 
 $db = new Database(true /* create missing tables */);
 if (!isset($db->getConfig()['s:client_md5'])) {  // first run
-  $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
+  $db->populateConfig();
   buildClientAppZip($db);
 }
 
@@ -13,7 +13,7 @@ if (isset($_POST['clearAll']) && $_POST['confirm']) {
   $db->dropTablesExceptConfig();
   $db->createMissingTables();
 } else if (isset($_POST['configDefaults']) && $_POST['confirm']) {
-  $db->populateConfig(CLIENT_APP_CFG_DEFAULT_FILENAME);
+  $db->populateConfig();
   buildClientAppZip($db);
 } else if (isset($_POST['setConfig']) || isset($_POST['clearConfig'])) {
   // TODO: This should sanitize the user input.

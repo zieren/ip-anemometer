@@ -35,7 +35,7 @@ class Database {
     }
     // Configure global logger.
     if (isset($this->getConfig()['s:log_level'])) {
-      $this->log->setLogLevelThreshold($this->getConfig()['s:log_level']);
+      $this->log->setLogLevelThreshold(strtoupper($this->getConfig()['s:log_level']));
     }  // else: defaults to debug
   }
 
@@ -675,17 +675,17 @@ class Database {
   }
 
   /** Populate config table from ipa-default.cfg, keeping existing values. */
-  public function populateConfig($defaultCfg) {
-    $cfg = file($defaultCfg, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  public function populateConfig() {
+    $cfg = file(CONFIG_DEFAULT_FILENAME, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     // Compute upload_url.
-    $cfg[] = 'upload_url='.getAbsoluteURL('../client');
+    $cfg[] = 'c:upload_url='.getAbsoluteURL('../client');
     $q = '';
     foreach ($cfg as $line) {
       list($key, $value) = explode('=', $line);
       if ($q) {
         $q .= ',';
       }
-      $q .= '("c:'.$key.'","'.$value.'")';
+      $q .= '("'.$key.'","'.$value.'")';
     }
     $q = 'INSERT IGNORE INTO config (k, v) VALUES '.$q;
     $this->query($q, 'notice');
