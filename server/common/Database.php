@@ -73,6 +73,8 @@ class Database {
     $this->query(
         'CREATE TABLE IF NOT EXISTS pilots (ts BIGINT PRIMARY KEY, count INT NOT NULL)');
     $this->query(
+        'CREATE TABLE IF NOT EXISTS temp_hum (ts BIGINT PRIMARY KEY, t FLOAT, h FLOAT)');
+    $this->query(
         'CREATE TABLE IF NOT EXISTS status (type VARCHAR(32) PRIMARY KEY, ts BIGINT NOT NULL, '
         .'text TEXT NOT NULL)');
     $this->query(
@@ -168,6 +170,23 @@ class Database {
     $q = 'REPLACE INTO meta (ts, upto, cts, stratum, fails, ip) VALUES ('.timestamp().','
         .$meta['upto'].','.$meta['cts'].','.$meta['stratum'].','
         .$meta['fails'].',"'.$_SERVER['REMOTE_ADDR'].'")';
+    $this->query($q);
+  }
+
+  public function insertTempHum($tempHum) {
+    if (count($tempHum) == 0) {
+      $this->log->warning('received empty temp_hum data');
+      return;
+    }
+    $q = '';
+    foreach ($tempHum as $v) {
+      if ($q) {
+        $q .= ',';
+      }
+      $q .= '('.$v[0].','.$v[1].','.$v[2].')';
+    }
+
+    $q = 'REPLACE INTO temp_hum (ts, t, h) VALUES '.$q;
     $this->query($q);
   }
 

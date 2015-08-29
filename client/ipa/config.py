@@ -58,6 +58,15 @@ class Config:
   def WIND_MAX_ROTATION(self):
     return int(float(self._cfg['wind_max_rotation_seconds']) * 1000)
 
+  def DHT_ENABLED(self):
+    return int(self._cfg['dht_enabled']) != 0
+  def DHT_SENSOR(self):
+    return int(self._cfg['dht_sensor'])
+  def DHT_PIN(self):
+    return int(self._cfg['dht_pin'])
+  def DHT_RETRIES(self):
+    return int(self._cfg['dht_retries'])
+
   def HUAWEI_ENABLED(self):
     return int(self._cfg['huawei_enabled']) != 0
 

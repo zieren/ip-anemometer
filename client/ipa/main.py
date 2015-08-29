@@ -8,6 +8,7 @@ import traceback
 
 import common
 from config import C
+import dht
 import door
 import huawei_status
 import K
@@ -40,6 +41,8 @@ class Anemometer:
     self._uploader.add_data_source(self._wind, True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)
+    if C.DHT_ENABLED():
+      self._uploader.add_data_source(dht.Dht(), True)
     if C.HUAWEI_ENABLED():
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
     if C.DOOR_ENABLED():
