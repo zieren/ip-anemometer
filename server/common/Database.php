@@ -35,7 +35,7 @@ class Database {
     }
     // Configure global logger.
     if (isset($this->getConfig()['s:log_level'])) {
-      $this->log->setLogLevelThreshold(strtoupper($this->getConfig()['s:log_level']));
+      $this->log->setLogLevelThreshold(strtolower($this->getConfig()['s:log_level']));
     }  // else: defaults to debug
   }
 
@@ -180,6 +180,9 @@ class Database {
     }
     $q = '';
     foreach ($tempHum as $v) {
+      if (!($v[1] && $v[2])) {
+        continue;  // reading the sensor may fail
+      }
       if ($q) {
         $q .= ',';
       }
