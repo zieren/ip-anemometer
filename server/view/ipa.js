@@ -370,10 +370,6 @@ ipa.Chart.prototype.drawTempHum = function(element) {
     series: {
       0: {targetAxisIndex: 0, color: '#0000ff'},
       1: {targetAxisIndex: 1, color: '#ff0000'}
-    },
-    vAxes: {
-      0: {minValue: 0, maxValue: 100},
-      1: {minValue: 0}
     }
   };
   var tempHumChart = new google.visualization.LineChart(element);
