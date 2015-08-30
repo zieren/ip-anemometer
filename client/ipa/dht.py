@@ -22,4 +22,6 @@ class Dht:
 
   def get_sample(self):
     humidity, temperature = Adafruit_DHT.read_retry(Dht._SENSOR, Dht._PIN, retries=Dht._RETRIES)
+    if humidity == None or temperature == None:
+      self._log.warning('failed to read temperature/humidity')
     return 'temp_hum', (common.timestamp(), temperature, humidity)
