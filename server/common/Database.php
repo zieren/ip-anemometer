@@ -189,8 +189,10 @@ class Database {
       $q .= '('.$v[0].','.$v[1].','.$v[2].')';
     }
 
-    $q = 'REPLACE INTO temp_hum (ts, t, h) VALUES '.$q;
-    $this->query($q);
+    if ($q) {
+      $q = 'REPLACE INTO temp_hum (ts, t, h) VALUES '.$q;
+      $this->query($q);
+    }
   }
 
   public function insertDoor($door) {
