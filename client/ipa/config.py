@@ -74,6 +74,8 @@ class Config:
     return int(self._cfg['door_enabled']) != 0
   def DOOR_INPUT_PIN(self):
     return int(self._cfg['door_input_pin'])
+  def DOOR_PUD(self):
+    return Config._PUD_MAP[self._cfg['door_pud'].lower()]
   def DOOR_OPEN_STATE(self):
     return int(self._cfg['door_open_state'])
   def DOOR_DEBOUNCE_MILLIS(self):

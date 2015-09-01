@@ -21,7 +21,7 @@ class Door:
     self._lock = threading.Lock()
     self._events = []
     self._previous_door_open = None
-    GPIO.setup(Door._PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(Door._PIN, GPIO.IN, pull_up_down=C.DOOR_PUD())
     GPIO.add_event_detect(Door._PIN, GPIO.BOTH, callback=self._read_door_callback,
                           bouncetime=C.DOOR_DEBOUNCE_MILLIS())
 
