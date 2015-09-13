@@ -11,6 +11,7 @@ import log
 
 
 _STATE_FILE = K.STATE_DIR + 'pilot_count.txt'
+_STATE_LIFETIME_MINUTES = 12 * 60  # ignore persisted state when older than 12h
 
 
 class PilotCount:
@@ -27,7 +28,6 @@ class PilotCount:
   _STABLE_READ_INTERVAL_MILLIS = 20
   _STABLE_READ_COUNT = 5
 
-  # TODO: Also configurable?
   _LED_ON_MILLIS = 200
   _LED_OFF_MILLIS = 300
   _LED_ON_SHORT_MILLIS = 20
@@ -35,7 +35,6 @@ class PilotCount:
 
   def __init__(self):
     self._log = log.get_logger('ipa.count')
-    today_yday = time.localtime(time.time()).tm_yday
 
     # Only one blinking thread at a time.
     self._blink_semaphore = threading.Semaphore()
@@ -44,7 +43,7 @@ class PilotCount:
     self._lock = threading.Lock()
     self._count = 0
     self._pilots = []
-    self._last_reset_yday = today_yday
+    self._last_reset_yday = time.localtime(time.time()).tm_yday
 
     self._log.info(('initialized (plus: pin=%d trigger=%d debounce=%d; '
                     + 'minus: pin=%d trigger=%d debounce=%d)')
@@ -52,18 +51,18 @@ class PilotCount:
                       C.PILOTS_PLUS_DEBOUNCE_MILLIS(), PilotCount._MINUS_PIN,
                       PilotCount._MINUS_TRIGGER_STATE, C.PILOTS_MINUS_DEBOUNCE_MILLIS()))
 
-    # Read previous count if it's from the same day.
+    # Read previous count if it's fresh.
     try:
-      local_mtime = time.localtime(os.stat(_STATE_FILE).st_mtime)
-      if local_mtime.tm_yday == today_yday:
+      mtime = os.stat(_STATE_FILE).st_mtime
+      if (time.time() - mtime) / 60.0 < _STATE_LIFETIME_MINUTES:
         with open(_STATE_FILE) as f:
           self._count = int(f.read())
         with self._lock:  # not really necessary at this point
           self._append_count_locked()
         self._log.info('read pilot count from file: %d @ %s'
-                       % (self._count, time.strftime('%Y-%m-%d %H:%M:%S', local_mtime)))
-    except:  # TODO: Handle "not found" on Linux ("except (OSError, IOError):")
-      self._log.warning('failed to read state from %s: %s' % (_STATE_FILE, sys.exc_info()[0]))
+                       % (self._count, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))))
+    except:
+      self._log.warning('failed to read state from %s: %s' % (_STATE_FILE, sys.exc_info()))
 
     GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN,
                pull_up_down=GPIO.PUD_DOWN if PilotCount._PLUS_TRIGGER_STATE else GPIO.PUD_UP)
@@ -97,7 +96,6 @@ class PilotCount:
         BlinkThread(self._count, self._blink_semaphore).start()
 
   def _reset_at_night_locked(self):
-    """Must hold lock."""
     if not self._count:
       return
     t = time.localtime(time.time())
@@ -107,13 +105,13 @@ class PilotCount:
       self._update_pilots_locked()
       self._last_reset_yday = t.tm_yday
 
-  def _append_count_locked(self):
-    self._pilots.append((common.timestamp(), self._count))
-
   def _update_pilots_locked(self):
     self._append_count_locked()
-    with common.open_write_with_mkdir(_STATE_FILE) as f:
+    with open(_STATE_FILE, 'w') as f:
       f.write(str(self._count))
+
+  def _append_count_locked(self):
+    self._pilots.append((common.timestamp(), self._count))
 
   def get_sample(self):
     with self._lock:

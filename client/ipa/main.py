@@ -2,6 +2,7 @@
 
 import Queue
 import RPi.GPIO as GPIO  #@UnresolvedImport
+import os
 import sys
 import threading
 import traceback
@@ -34,6 +35,9 @@ class Anemometer:
     self._uploader_termination_event = threading.Event()
 
   def _initialize(self):
+    # Create state directory.
+    if not os.path.exists(K.STATE_DIR):
+      os.mkdir(K.STATE_DIR)
     # Create upload thread (started in run() below).
     self._uploader = uploader.Uploader(self._main_cq, self._uploader_termination_event)
     # Create data sources.
