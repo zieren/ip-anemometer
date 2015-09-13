@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
 import datetime
 import operator
+import os
 import threading
 import sys
 import time
@@ -51,3 +52,12 @@ def read_stable(pin, num, interval_millis, log = None):
   if log:
     log.debug('read_stable: %s -> %d' % (reads, result))
   return result
+
+def open_write_with_mkdir(filename):
+  """Opens the specified file and returns it. Creates leaf directory if required. Does not create
+  more directories (as in os.makedirs()) as a simple sanity check.
+  """
+  dirname = os.path.dirname(filename)
+  if not os.path.exists(dirname):
+    os.mkdir(dirname)
+  return open(filename, 'w')
