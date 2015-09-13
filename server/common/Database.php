@@ -75,6 +75,9 @@ class Database {
     $this->query(
         'CREATE TABLE IF NOT EXISTS temp_hum (ts BIGINT PRIMARY KEY, t FLOAT, h FLOAT)');
     $this->query(
+        'CREATE TABLE IF NOT EXISTS adc (ts BIGINT, channel INT, value FLOAT, '
+        .'PRIMARY KEY (ts, channel))');
+    $this->query(
         'CREATE TABLE IF NOT EXISTS status (type VARCHAR(32) PRIMARY KEY, ts BIGINT NOT NULL, '
         .'text TEXT NOT NULL)');
     $this->query(
@@ -82,7 +85,7 @@ class Database {
   }
 
   public function dropTablesExceptConfig() {
-    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, door, pilots');
+    $this->query('DROP TABLE IF EXISTS temp, wind, hist, link, meta, door, pilots, temp_hum, adc');
     $this->log->notice('tables dropped');
     unset($this->config);
   }
@@ -228,6 +231,26 @@ class Database {
       }
     }
     $q = 'REPLACE INTO pilots (ts, count) VALUES '.$q;
+    $this->query($q);
+  }
+
+  public function insertAdcValues($adc) {
+    if (count($adc) == 0) {
+      $this->log->warning('received empty ADC data');
+      return;
+    }
+    $q = '';
+    foreach ($adc as $sample) {
+      foreach ($sample as $channel => $measurement) {
+        $ts = $measurement[0];
+        $value = $measurement[1];
+        if ($q) {
+          $q .= ',';
+        }
+        $q .= '('.$ts.','.$channel.','.$value.')';
+      }
+    }
+    $q = 'REPLACE INTO adc (ts, channel, value) VALUES '.$q;
     $this->query($q);
   }
 

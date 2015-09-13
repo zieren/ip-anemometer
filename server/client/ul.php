@@ -65,6 +65,10 @@ function handleRequest() {
       $db->insertPilotCount($data['pilots']);
     }
 
+    if (isset($data['adc'])) {
+      $db->insertAdcValues($data['adc']);
+    }
+
     if (isset($data['status'])) {
       $db->insertStatus($data['status']);
     }
