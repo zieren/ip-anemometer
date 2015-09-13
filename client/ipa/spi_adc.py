@@ -1,5 +1,6 @@
 import spidev  #@UnresolvedImport
 
+import common
 import config
 from config import C
 import log
@@ -29,5 +30,5 @@ class SpiAdc:
     sample = {}
     for i, channel in enumerate(SpiAdc._CHANNELS):
       vref = SpiAdc._VREFS[i]
-      sample[channel] = self._read(channel) / vref
+      sample[channel] = (common.timestamp(), self._read(channel) / vref)
     return 'adc', sample
