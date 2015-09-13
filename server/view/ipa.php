@@ -4,14 +4,21 @@ require_once '../common/common.php';
 header("Access-Control-Allow-Origin: *");
 
 function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
-  $v = isset($_REQUEST[$name]) ? intval($_REQUEST[$name]) : $default;
-  return max($min, min($v, $max));
+  if (!isset($_REQUEST[$name])) {
+    return $default;
+  }
+  return max($min, min(intval($_REQUEST[$name]), $max));
+}
+
+function getStringParam($name, $default) {
+  return isset($_REQUEST[$name]) ? $_REQUEST[$name] : $default;
 }
 
 function computeStats() {
   // TODO: These defaults should match the ones in ipa.js.
   // TODO: This isn't handling "not requested" properly.
   // TODO: This needs to be simplified.
+  // TODO: This should sanitize the input.
   $windowMinutes = getIntParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
   $timestamp = getIntParam('ts', timestamp(), 0);
   $timeSeriesPoints = getIntParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, 1);
@@ -43,6 +50,7 @@ function computeStats() {
   $stats['temp_hum'] = $db->readTempHum($timestamp, $systemMillis, $timeSeriesPoints);
   $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
   $stats['pilots'] = $db->readPilots($pilotsStartMillis, $timestamp);
+  $stats['adc'] = $db->readAdcValues($timestamp, $systemMillis, $timeSeriesPoints);
   return $stats;
 }
 

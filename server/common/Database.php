@@ -671,6 +671,27 @@ class Database {
         Database::downsampleTimeSeries($hum, $timeSeriesPoints));
   }
 
+  public function readAdcValues($endTimestamp, $windowDuration, $timeSeriesPoints) {
+    $startTimestamp = $endTimestamp - $windowDuration;
+    $q = 'SELECT ts, channel, value FROM adc WHERE ts >= '.$startTimestamp
+        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $result = $this->query($q, null);
+    $data = array();
+    while ($row = $result->fetch_row()) {
+      $ts = intval($row[0]);
+      $channel = $row[1];
+      $value = floatval($row[2]);
+      if (!$data[$channel]) {
+        $data[$channel] = array();
+      }
+      $data[$channel][$ts] = $value;
+    }
+    foreach ($data as $channel => &$values) {
+      $values = Database::downsampleTimeSeries($values, $timeSeriesPoints);
+    }
+    return $data;
+  }
+
   public function readSignalStrength($endTimestamp, $windowDuration, $timeSeriesPoints) {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, strength FROM link WHERE ts >= '.$startTimestamp

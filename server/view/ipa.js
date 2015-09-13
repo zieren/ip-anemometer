@@ -376,6 +376,22 @@ ipa.Chart.prototype.drawTempHum = function(element) {
   tempHumChart.draw(tempHumTable, options);
 }
 
+ipa.Chart.prototype.drawAdcChannel = function(element, channel, label) {
+  var adcTable = new google.visualization.DataTable();
+  adcTable.addColumn('datetime', 't');
+  adcTable.addColumn('number', label);
+  var values = ipa.Tools.sorted(this.stats.adc[channel]);
+  for (var i = 0; i < values.length; i++) {
+    adcTable.addRow([new Date(parseInt(values[i][0])), values[i][1]]);
+  }
+  var options = {
+    hAxis: {format: 'HH:mm'},
+    legend: {position: 'top'},
+  };
+  var adcChart = new google.visualization.LineChart(element);
+  adcChart.draw(adcTable, options);
+}
+
 ipa.Chart.prototype.drawSignalStrength = function(element) {
   var strengthTable = new google.visualization.DataTable();
   strengthTable.addColumn('datetime');
