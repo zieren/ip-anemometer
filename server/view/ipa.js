@@ -376,11 +376,11 @@ ipa.Chart.prototype.drawTempHum = function(element) {
   tempHumChart.draw(tempHumTable, options);
 }
 
-ipa.Chart.prototype.drawAdcChannel = function(element, channel, label) {
+ipa.Chart.prototype.drawAdcChannel = function(element) {
   var adcTable = new google.visualization.DataTable();
   adcTable.addColumn('datetime', 't');
-  adcTable.addColumn('number', label);
-  var values = ipa.Tools.sorted(this.stats.adc[channel]);
+  adcTable.addColumn('number', element.dataset.label);
+  var values = ipa.Tools.sorted(this.stats.adc[element.dataset.channel]);
   for (var i = 0; i < values.length; i++) {
     adcTable.addRow([new Date(parseInt(values[i][0])), values[i][1]]);
   }

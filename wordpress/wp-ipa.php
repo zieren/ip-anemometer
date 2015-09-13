@@ -33,6 +33,7 @@ function ipa($atts) {
     'speed' => speed,
     'histogram' => histogram,
     'pilots' => pilots,
+    'adc' => adc,
     'temp_hum' => tempHum,
     'door' => door,
     'lag' => lag,
@@ -40,6 +41,10 @@ function ipa($atts) {
     'signal' => signalStrength,
     'network' => networkType,
     'transfer' => transferVolume
+  );
+  $arguments = array(
+    'channel',  // adc
+    'label'     // adc
   );
   $code = '';
   $optionsJS = '';
@@ -53,6 +58,8 @@ function ipa($atts) {
       $code .= $handlers[$k]($atts);
     } elseif (is_int($k) && get($handlers[$v])) {
       $code .= $handlers[$v]($atts);
+    } elseif (in_array($k, $arguments)) {
+      // Ignore here, will be retrieved from $atts in handler.
     } else {
       $code .= '<p><b>Invalid attribute: '.$k.'='.$v.'</b></p>';
     }
@@ -113,6 +120,7 @@ ipaView.updateChart = function(opt_request) {
   ipaView.draw(c, c.drawTimeSeries, 'ipaSpeed');
   ipaView.draw(c, c.drawHistogram, 'ipaHistogram');
   ipaView.draw(c, c.drawTempHum, 'ipaTempHum');
+  ipaView.draw(c, c.drawAdcChannel, 'ipaAdc');
   ipaView.draw(c, c.drawDoor, 'ipaDoor');
   ipaView.draw(c, c.drawPilots, 'ipaPilots');
   ipaView.draw(c, c.drawLag, 'ipaLag');
@@ -159,6 +167,11 @@ function pilots($atts) {
 
 function tempHum($atts) {
   return '<div id="ipaTempHum" class="ipaTimeSeries"></div>';
+}
+
+function adc($atts) {
+  return '<div id="ipaAdc" data-channel="'.$atts['channel'].'" data-label="'.$atts['label']
+      .'" class="ipaTimeSeries"></div>';
 }
 
 function door($atts) {

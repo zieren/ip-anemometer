@@ -34,7 +34,7 @@ ipaView.updateChart = function() {
   chart.drawHistogram(ipaView.clearElement(document.getElementById('hist')));
   chart.drawTempHum(ipaView.clearElement(document.getElementById('tempHum')));
   chart.drawDoor(ipaView.clearElement(document.getElementById('door')));
-  chart.drawAdcChannel(ipaView.clearElement(document.getElementById('adc7')), 7, 'Volt');
+  chart.drawAdcChannel(ipaView.clearElement(document.getElementById('adc')));
   chart.drawPilots(ipaView.clearElement(document.getElementById('pilots')));
   chart.drawLag(ipaView.clearElement(document.getElementById('lag')));
   chart.drawTemperature(ipaView.clearElement(document.getElementById('temp')));
@@ -81,7 +81,7 @@ google.setOnLoadCallback(ipaView.requestStats);
 <h3>Shed door</h3>
 <div id="door" class="timeline expand"></div>
 <h3>A/D converter channel 7</h3>
-<div id="adc7" class="timeline expand"></div>
+<div id="adc" data-channel="7" data-label="Volt" class="timeline expand"></div>
 <h3>System status (last 24h)</h3>
 <div id="lag" class="chart expand"></div>
 <div id="temp" class="chart expand"></div>
