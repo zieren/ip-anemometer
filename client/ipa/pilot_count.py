@@ -58,6 +58,8 @@ class PilotCount:
       if local_mtime.tm_yday == today_yday:
         with open(_STATE_FILE) as f:
           self._count = int(f.read())
+        with self._lock:  # not really necessary at this point
+          self._append_count_locked()
         self._log.info('read pilot count from file: %d @ %s'
                        % (self._count, time.strftime('%Y-%m-%d %H:%M:%S', local_mtime)))
     except:  # TODO: Handle "not found" on Linux ("except (OSError, IOError):")
@@ -105,8 +107,11 @@ class PilotCount:
       self._update_pilots_locked()
       self._last_reset_yday = t.tm_yday
 
-  def _update_pilots_locked(self):
+  def _append_count_locked(self):
     self._pilots.append((common.timestamp(), self._count))
+
+  def _update_pilots_locked(self):
+    self._append_count_locked()
     with common.open_write_with_mkdir(_STATE_FILE) as f:
       f.write(str(self._count))
 
