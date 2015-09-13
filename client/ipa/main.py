@@ -15,6 +15,7 @@ import K
 import log
 import metadata
 import pilot_count
+import spi_adc
 import temperature
 import uploader
 import wind
@@ -43,6 +44,8 @@ class Anemometer:
     self._uploader.add_data_source(metadata.Metadata(), False)
     if C.DHT_ENABLED():
       self._uploader.add_data_source(dht.Dht(), True)
+    if C.ADC_ENABLED():
+      self._uploader.add_data_source(spi_adc.SpiAdc(), True)
     if C.HUAWEI_ENABLED():
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
     if C.DOOR_ENABLED():

@@ -4,6 +4,15 @@ import RPi.GPIO as GPIO  #@UnresolvedImport
 import K
 
 
+class InvalidConfigException(Exception):
+
+  def __init__(self, message):
+    self._message = message
+
+  def __str__(self):
+    return 'Invalid config: %s' % self._message
+
+
 class Config:
 
   _PUD_MAP = {'up': GPIO.PUD_UP,
@@ -66,6 +75,13 @@ class Config:
     return int(self._cfg['dht_pin'])
   def DHT_RETRIES(self):
     return int(self._cfg['dht_retries'])
+
+  def ADC_ENABLED(self):
+    return int(self._cfg['adc_enabled']) != 0
+  def ADC_CHANNELS(self):
+    return [int(x) for x in self._cfg['adc_channels'].split(',')]
+  def ADC_VREFS(self):
+    return [float(x) for x in self._cfg['adc_vrefs'].split(',')]
 
   def HUAWEI_ENABLED(self):
     return int(self._cfg['huawei_enabled']) != 0
