@@ -17,8 +17,7 @@ class SpiAdc:
     if len(SpiAdc._CHANNELS) != len(SpiAdc._VREFS):
       raise config.InvalidConfigException(
           'config has %d channels, but %d vrefs' % (len(SpiAdc._CHANNELS), len(SpiAdc._VREFS)))
-    self._log.info('initialized (channels: %s; vrefs: %s)'
-                   % (', '.join(SpiAdc._CHANNELS), ', '.join(SpiAdc._VREFS)))
+    self._log.info('initialized (channels: %s; vrefs: %s)' % (SpiAdc._CHANNELS, SpiAdc._VREFS))
 
   def _read(self, channel):
     """Reads ADC channel 0..7"""
