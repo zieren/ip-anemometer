@@ -101,7 +101,7 @@ class PilotCount:
       if self._count:
         self._log.debug('resetting counter to 0 (was: %d)' % self._count)
         self._count = 0
-        self._update_pilots_locked()
+      self._update_pilots_locked()  # Avoid long blanks in the DB.
       self._last_reset_yday = t.tm_yday
 
   def _update_pilots_locked(self):
