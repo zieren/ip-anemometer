@@ -23,7 +23,7 @@ if (isset($_POST['clearAll']) && $_POST['confirm']) {
   } else {
     $db->clearConfig($key);
   }
-  if (!$_POST['serverKey']) {
+  if ($_POST['configComponent'] == 'client') {
     buildClientAppZip($db);
   }
 }
