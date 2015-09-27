@@ -96,13 +96,12 @@ class PilotCount:
         BlinkThread(self._count, self._blink_semaphore).start()
 
   def _reset_at_night_locked(self):
-    if not self._count:
-      return
     t = time.localtime(time.time())
     if t.tm_hour >= PilotCount._RESET_HOUR and t.tm_yday != self._last_reset_yday:
-      self._log.debug('resetting counter to 0 (was: %d)' % self._count)
-      self._count = 0
-      self._update_pilots_locked()
+      if self._count:
+        self._log.debug('resetting counter to 0 (was: %d)' % self._count)
+        self._count = 0
+        self._update_pilots_locked()
       self._last_reset_yday = t.tm_yday
 
   def _update_pilots_locked(self):
