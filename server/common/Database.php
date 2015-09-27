@@ -284,23 +284,30 @@ class Database {
     return $door;
   }
 
-  /**
-   * Returns the pilot count over time. Extrapolates the first value back in time (TODO: improve
-   * this). Duplicates the last row for $endTimestamp. */
+  /** Returns the pilot count over time. */
   public function readPilots($startTimestamp, $endTimestamp) {
-    $q = 'SELECT ts, count FROM pilots WHERE ts >= '.$startTimestamp
-        .' AND ts <= '.$endTimestamp.' ORDER BY ts';
-    // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
-    $result = $this->query($q, null);
+    // Select the next smaller timestamp before $startTimestamp so we know the previous state.
+    $q = 'SELECT ts, count FROM pilots '
+        .'WHERE ts >= ( '
+        .'  SELECT COALESCE( '
+        .'    (SELECT ts FROM pilots WHERE ts < '.$startTimestamp.' ORDER BY ts DESC LIMIT 1), '
+        .'    0 '
+        .'  ) '
+        .') '
+        .'AND ts <= '.$endTimestamp.' ORDER BY ts';
+    $result = $this->query($q);
+    // In the special case where no previous data is available, guess 0.
     $pilots = array($startTimestamp => 0);
     $count = 0;
     while ($row = $result->fetch_row()) {
       $count = intval($row[1]);
       $ts = intval($row[0]);
-      $pilots[$ts] = $count;
+      // The max() ensures that the desired range will start with the value before $startTimestamp.
+      // If there is a value exactly at $startTimestamp it will overwrite that value in the next
+      // iteration. If there are no values before $startTimestamp at all the value remains 0.
+      $pilots[max($startTimestamp, $ts)] = $count;
     }
     $pilots[$endTimestamp] = $count;
-    $pilots[$startTimestamp] = array_values($pilots)[1];
     return $pilots;
   }
 
