@@ -8,10 +8,11 @@ ipa.Options = function() {
   this.minutes = 60;  // Compute stats for the last x minutes...
   this.upToTimestampMillis = -1;  // ... up to here. -1 means now.
   this.fractionalDigits = 1;  // Textual output precision.
-  this.timeSeriesPoints = 30;
   // Downsample time series to make charts readable. Increase for wider charts.
-  this.doorTimeDays = 8;  // Show shed door status.
-  this.pilotsTimeDays = 0;  // Show shed door status.
+  this.timeSeriesPoints = 30;
+  // Number of days to show. 1 shows data for today, 2 for yesterday and today, ...
+  this.doorTimeDays = 9;  // Show shed door status.
+  this.pilotsTimeDays = 1;  // Show pilot count.
   // TODO: Figure out how to display mutliple days.
   this.systemStatusMinutes = 24 * 60;
   // Show system status (temperature, signal etc.) (0 to disable).
@@ -79,8 +80,8 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
       + '?m=' + this.options.minutes
       + '&p=' + this.options.timeSeriesPoints
       + '&s=' + this.options.systemStatusMinutes
-      + '&d=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.doorTimeDays)
-      + '&pc=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.pilotsTimeDays)
+      + '&d=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.doorTimeDays - 1)
+      + '&pc=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.pilotsTimeDays - 1)
       + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
