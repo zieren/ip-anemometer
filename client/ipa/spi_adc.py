@@ -23,11 +23,11 @@ class SpiAdc:
     """Reads ADC channel 0..7"""
     response = self._spi.xfer2([1, (8 + channel) << 4, 0])
     value = ((response[1] & 3) << 8) + response[2]
-    return value
+    return value / 1023.0  # 10 bit resolution
 
   def get_sample(self):
     sample = {}
     for i, channel in enumerate(SpiAdc._CHANNELS):
       vref = SpiAdc._VREFS[i]
-      sample[channel] = (common.timestamp(), self._read(channel) / vref)
+      sample[channel] = (common.timestamp(), self._read(channel) * vref)
     return 'adc', sample
