@@ -81,7 +81,7 @@ class Database {
         'CREATE TABLE IF NOT EXISTS status (type VARCHAR(32) PRIMARY KEY, ts BIGINT NOT NULL, '
         .'text TEXT NOT NULL)');
     $this->query(
-        'CREATE TABLE IF NOT EXISTS config (k VARCHAR(256) PRIMARY KEY, v TEXT NOT NULL)');
+        'CREATE TABLE IF NOT EXISTS config (k VARCHAR(200) PRIMARY KEY, v TEXT NOT NULL)');
   }
 
   public function dropTablesExceptConfig() {
