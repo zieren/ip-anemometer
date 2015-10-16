@@ -66,22 +66,23 @@ while true; do
   rm -f $DL_FILENAME
   log "checking for new client (current: $MD5)"
   curl -sS "${DOWNLOAD_URL}?md5=${MD5}" -o $DL_FILENAME || (sleep_dl_retry ; continue)
-	# If there is no update, the server sends an empty response and curl produces no file.
-	if [ -f $DL_FILENAME ]; then  # install new archive
-	  MD5=$(md5sum  $DL_FILENAME | cut -d ' ' -f 1)
+  # If there is no update, the server sends an empty response and curl produces no file.
+  # TODO: Handle error case (such as incorrect URL) and show a helpful message.
+  if [ -f $DL_FILENAME ]; then  # install new archive
+    MD5=$(md5sum  $DL_FILENAME | cut -d ' ' -f 1)
     log "client downloaded (new: $MD5)"
-	  DIR=ipa-$(format_date)
-	  unzip -qq -d $DIR $DL_FILENAME
+    DIR=ipa-$(format_date)
+    unzip -qq -d $DIR $DL_FILENAME
     if [ $? -ne 0 ]; then
       log "unzip failed"
       rm -rf $DIR
       sleep_dl_retry
       continue
     fi
-	  chmod a+x $DIR/*.py $DIR/*.sh
-	  ln -sfn $DIR current
-	  rm $DL_FILENAME
-	  log "client installed in $DIR"
+    chmod a+x $DIR/*.py $DIR/*.sh
+    ln -sfn $DIR current
+    rm $DL_FILENAME
+    log "client installed in $DIR"
     prune $NUM_DIRS_TO_KEEP $(ls_ipa_dirs)
   else  # continue with current version
     log "no new client available"
