@@ -280,7 +280,7 @@ class Database {
       $door[$ts] = $open;
       $previousOpen = $open;
     }
-    $door[$endTimestamp] = $open;
+    $door[$endTimestamp] = $previousOpen;
     return $door;
   }
 
@@ -788,16 +788,16 @@ class Database {
     foreach ($this->getConfig() as $k => $v) {
       $component = '?';
       switch (substr($k, 0, 2)) {
-      	case 'c:':
-      	  $component = 'client';
-      	  $k = substr($k, 2);
-      	  break;
-      	case 's:':
-      	  $component = 'server';
-      	  $k = substr($k, 2);
-      	  break;
-      	default:
-      	  break;
+        case 'c:':
+          $component = 'client';
+          $k = substr($k, 2);
+          break;
+        case 's:':
+          $component = 'server';
+          $k = substr($k, 2);
+          break;
+        default:
+          break;
       }
       echo '<tr><td>'.$component.'</td><td>'.$k.'</td><td>'.$v.'</td></tr>';
     }
