@@ -1,7 +1,7 @@
 try:
   import Adafruit_DHT  #@UnresolvedImport
 except ImportError:
-  import dht_dummy as Adafruit_DHT
+  import dht_dummy as Adafruit_DHT  # TODO: Just pass here and fail if trying to use it?
 import common
 from config import C
 import dht_dummy
