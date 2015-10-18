@@ -1,7 +1,7 @@
 try:
   import spidev  #@UnresolvedImport
 except ImportError:
-  pass
+  pass  # TODO: This will then crash; print a friendly message instead?
 
 import common
 import config
