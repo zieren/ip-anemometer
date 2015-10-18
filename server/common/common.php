@@ -3,7 +3,18 @@
  * TODO: Split this file up.
  */
 
-require_once 'config.php';
+// Internal constants.
+define('PHP_MIN_VERSION', '5.3');
+define('LOG_DIR', '../logs');
+define('CONFIG_PHP', '../common/config.php');
+define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-update.zip');
+define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
+define('CONFIG_DEFAULT_FILENAME', '../admin/default.cfg');
+define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
+// Maximum amount of time the desired window size is shifted back to compensate for upload
+// latency. TODO: This (and possibly other values) should be configurable.
+define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
+define('CLIENT_APP_MAX_SIZE', 1024 * 1024);  // 1MB
 
 function autoloader($class) {
   // TODO: This is silly because it breaks when requests aren't exactly one directory deep.
@@ -11,9 +22,34 @@ function autoloader($class) {
 }
 spl_autoload_register('autoloader');
 
+function checkRequirements() {
+  $unmet = array();
+  if (version_compare(PHP_VERSION, PHP_MIN_VERSION) < 0) {
+    $unmet[] = 'PHP version '.PHP_MIN_VERSION.' is required, but this is '.PHP_VERSION.'.';
+  }
+  foreach (array(LOG_DIR, dirname(CLIENT_APP_ZIP_FILENAME), CLIENT_APP_ZIP_FILENAME) as $file) {
+    if (!is_writable($file)) {
+      $what = is_file($file) ? 'file' : 'directory';
+      $unmet[] = 'Make the '.$what.' "'.$file.'" writable by the PHP user.';
+    }
+  }
+  if (!is_readable(CONFIG_PHP)) {
+    $unmet[] = 'Copy the file ../common/config-sample.php to '.CONFIG_PHP.' and edit it.';
+  }
+  if (!$unmet) {
+    return;
+  }
+  echo '<p><b>Please follow these steps to complete the installation:</b></p>'
+      .'<ul><li>'.implode('</li><li>', $unmet).'</li></ul><hr />';
+  throw new Exception(implode($unmet));
+}
+
+checkRequirements();
+
+require_once CONFIG_PHP;
+
 // Logger must be initialized before used in ipaFatalErrorHandler; see
 // http://stackoverflow.com/questions/4242534/php-shutdown-cant-write-files
-define('LOG_DIR', '../logs');
 Logger::Instance();
 
 // TODO: Log request content in error handlers?
@@ -41,16 +77,6 @@ define('WIND_SAMPLE_START_TS', 0);
 define('WIND_SAMPLE_END_TS', 1);
 define('WIND_SAMPLE_AVG', 2);
 define('WIND_SAMPLE_MAX', 3);
-
-// Internal constants.
-define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-update.zip');
-define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
-define('CONFIG_DEFAULT_FILENAME', '../admin/default.cfg');
-define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
-// Maximum amount of time the desired window size is shifted back to compensate for upload
-// latency. TODO: This (and possibly other values) should be configurable.
-define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
-define('CLIENT_APP_MAX_SIZE', 1024 * 1024);  // 1MB
 
 // Defaults and limits for request arguments.
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
@@ -87,18 +113,18 @@ function executeRelativePathComponents($path) {
   $out = [];
   foreach ($in as $c) {
     switch ($c) {
-  	  case '.':
-  	    break;
-  	  case '..':
-  	    array_pop($out);
-  	    break;
-  	  case '':  // ignore empty component except from leading slash
-  	    if (!$out) {
-  	      $out[] = $c;
-  	    }
-  	    break;
-  	  default:
-  	    $out[] = $c;
+      case '.':
+        break;
+      case '..':
+        array_pop($out);
+        break;
+      case '':  // ignore empty component except from leading slash
+        if (!$out) {
+          $out[] = $c;
+        }
+        break;
+      default:
+        $out[] = $c;
     }
   }
   if (count($out) === 1 && $out[0] === '') {
@@ -113,7 +139,7 @@ function formatTimestamp($timestamp) {
 
 function formatDuration($millis) {
   $seconds = $millis / 1000;
-  return sprintf("%02d:%02d:%02d", floor($seconds / 3600), ($seconds / 60) % 60, $seconds % 60);
+  return sprintf('%02d:%02d:%02d', floor($seconds / 3600), ($seconds / 60) % 60, $seconds % 60);
 }
 
 function durationToRps($duration) {
