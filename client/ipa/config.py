@@ -79,9 +79,9 @@ class Config:
   def ADC_ENABLED(self):
     return int(self._cfg['adc_enabled']) != 0
   def ADC_CHANNELS(self):
-    return [int(x) for x in self._cfg['adc_channels'].split(',')]
+    return [int(x) for x in self._cfg['adc_channels'].split(',') if x]
   def ADC_VREFS(self):
-    return [float(x) for x in self._cfg['adc_vrefs'].split(',')]
+    return [float(x) for x in self._cfg['adc_vrefs'].split(',') if x]
 
   def HUAWEI_ENABLED(self):
     return int(self._cfg['huawei_enabled']) != 0
