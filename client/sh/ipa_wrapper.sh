@@ -79,7 +79,7 @@ while true; do
       sleep_dl_retry
       continue
     fi
-    chmod a+x $DIR/*.py $DIR/*.sh
+    chmod a+x $(ls $DIR/*.py $DIR/*.sh 2> /dev/null)
     ln -sfn $DIR current
     rm $DL_FILENAME
     log "client installed in $DIR"
