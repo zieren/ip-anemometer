@@ -1,6 +1,5 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
 import os
-import sys
 import threading
 import time
 
@@ -61,8 +60,8 @@ class PilotCount:
           self._append_count_locked()
         self._log.info('read pilot count from file: %d @ %s'
                        % (self._count, time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))))
-    except:
-      self._log.warning('failed to read state from %s: %s' % (_STATE_FILE, sys.exc_info()))
+    except Exception:
+      self._log.warning('could not read state from file %s' % _STATE_FILE)
 
     GPIO.setup(PilotCount._PLUS_PIN, GPIO.IN,
                pull_up_down=GPIO.PUD_DOWN if PilotCount._PLUS_TRIGGER_STATE else GPIO.PUD_UP)
