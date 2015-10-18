@@ -1,4 +1,7 @@
-import spidev  #@UnresolvedImport
+try:
+  import spidev  #@UnresolvedImport
+except ImportError:
+  pass
 
 import common
 import config
