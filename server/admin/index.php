@@ -5,8 +5,10 @@ require_once '../common/common.php';
 
 $db = new Database(true /* create missing tables */);
 if (!isset($db->getConfig()['s:client_md5'])) {  // first run
+  echo '<h2>Initializing...</h2><p><i>This seems to be the first run. Setting default config...';
   $db->populateConfig();
   buildClientAppZip($db);
+  echo ' done.</i></p>';
 }
 
 if (isset($_POST['clearAll']) && $_POST['confirm']) {
