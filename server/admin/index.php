@@ -17,7 +17,7 @@ if (isset($_POST['clearAll']) && $_POST['confirm']) {
   buildClientAppZip($db);
 } else if (isset($_POST['setConfig']) || isset($_POST['clearConfig'])) {
   // TODO: This should sanitize the user input.
-  $key = ($_POST['configComponent'] == 'server' ? 's:' : 'c:').$_POST['configKey'];
+  $key = ($_POST['configComponent'] == 'server' ? 's:' : 'c:').trim($_POST['configKey']);
   if (isset($_POST['setConfig'])) {
     $db->setConfig($key, $_POST['configValue']);
   } else {
