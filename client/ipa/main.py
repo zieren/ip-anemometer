@@ -16,7 +16,7 @@ import K
 import log
 import metadata
 import pilot_count
-import spi_adc
+import spi_adc  #@UnresolvedImport
 import temperature
 import uploader
 import wind
