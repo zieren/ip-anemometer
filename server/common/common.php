@@ -27,6 +27,9 @@ function checkRequirements() {
   if (version_compare(PHP_VERSION, PHP_MIN_VERSION) < 0) {
     $unmet[] = 'PHP version '.PHP_MIN_VERSION.' is required, but this is '.PHP_VERSION.'.';
   }
+  if (PHP_INT_SIZE < 8) {
+    $unmet[] = '64 bit PHP is required, but this version has only '.(PHP_INT_SIZE * 8).' bit.';
+  }
   foreach (array(LOG_DIR, dirname(CLIENT_APP_ZIP_FILENAME), CLIENT_APP_ZIP_FILENAME) as $file) {
     if (!is_writable($file)) {
       $what = is_file($file) ? 'file' : 'directory';
@@ -110,7 +113,7 @@ function getAbsoluteURL($relativePath) {
 /** Converts '/a//b/./x/../c/' -> '/a/b/c' */
 function executeRelativePathComponents($path) {
   $in = explode('/', $path);
-  $out = [];
+  $out = array();
   foreach ($in as $c) {
     switch ($c) {
       case '.':
