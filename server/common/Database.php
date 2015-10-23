@@ -379,7 +379,7 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration - WIND_MAX_LATENCY;
     $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind WHERE '
         .'start_ts >= '.$startTimestamp.' AND end_ts <= '.$endTimestamp.' ORDER BY start_ts DESC';
-    $result = $this->query($q, null);
+    $result = $this->query($q);
 
     // Read samples in reverse chronological order until the desired duration is best approximated.
     // At the same time, compute running stats except histogram.
@@ -806,7 +806,8 @@ class Database {
 
   /**
    * Runs the specified query, throwing an Exception on failure. Logs the query unconditionally with
-   * the specified level (specify null to disable logging). */
+   * the specified level (specify null to disable logging).
+   */
   private function query($query, $logLevel = 'debug') {
     if ($logLevel) {
       $this->log->log($logLevel, 'Query: '.$query);
