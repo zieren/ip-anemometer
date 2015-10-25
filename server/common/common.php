@@ -22,6 +22,20 @@ function autoloader($class) {
 }
 spl_autoload_register('autoloader');
 
+function checkFileWritable($filename, $mustExist, &$unmet) {
+  if (!file_exists($filename)) {
+    if (!$mustExist) {
+      return;
+    }
+    $unmet[] = $filename.' is missing.';
+    return;
+  }
+  if (!is_writable($filename)) {
+    $what = is_dir($filename) ? 'directory' : 'file';
+    $unmet[] = 'Make the '.$what.' "'.$filename.'" writable by the PHP user.';
+  }
+}
+
 function checkRequirements() {
   $unmet = array();
   if (version_compare(PHP_VERSION, PHP_MIN_VERSION) < 0) {
@@ -30,14 +44,14 @@ function checkRequirements() {
   if (PHP_INT_SIZE < 8) {
     $unmet[] = '64 bit PHP is required, but this version has only '.(PHP_INT_SIZE * 8).' bit.';
   }
-  foreach (array(LOG_DIR, dirname(CLIENT_APP_ZIP_FILENAME), CLIENT_APP_ZIP_FILENAME) as $file) {
-    if (!is_writable($file)) {
-      $what = is_file($file) ? 'file' : 'directory';
-      $unmet[] = 'Make the '.$what.' "'.$file.'" writable by the PHP user.';
-    }
-  }
+  checkFileWritable(LOG_DIR, true, $unmet);
+  checkFileWritable(CLIENT_APP_ZIP_FILENAME, false, $unmet);
+  checkFileWritable(dirname(CLIENT_APP_ZIP_FILENAME), true, $unmet);
   if (!is_readable(CONFIG_PHP)) {
     $unmet[] = 'Copy the file ../common/config-sample.php to '.CONFIG_PHP.' and edit it.';
+  }
+  if (!function_exists('mysqli_connect')) {
+    $unmet[] = 'The mysqli extension is missing (try apt-get install php5-mysql).';
   }
   if (!$unmet) {
     return;
