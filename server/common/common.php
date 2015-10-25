@@ -10,7 +10,6 @@ define('CONFIG_PHP', '../common/config.php');
 define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-update.zip');
 define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
 define('CONFIG_DEFAULT_FILENAME', '../admin/default.cfg');
-define('DATE_FORMAT', 'Y-m-d H:i:s');  // timestamp format for MySQL and human readable output
 // Maximum amount of time the desired window size is shifted back to compensate for upload
 // latency. TODO: This (and possibly other values) should be configurable.
 define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
@@ -22,31 +21,21 @@ function autoloader($class) {
 }
 spl_autoload_register('autoloader');
 
-function checkFileWritable($filename, $mustExist, &$unmet) {
-  if (!file_exists($filename)) {
-    if (!$mustExist) {
-      return;
-    }
-    $unmet[] = $filename.' is missing.';
-    return;
-  }
-  if (!is_writable($filename)) {
-    $what = is_dir($filename) ? 'directory' : 'file';
-    $unmet[] = 'Make the '.$what.' "'.$filename.'" writable by the PHP user.';
-  }
-}
-
 function checkRequirements() {
   $unmet = array();
   if (version_compare(PHP_VERSION, PHP_MIN_VERSION) < 0) {
     $unmet[] = 'PHP version '.PHP_MIN_VERSION.' is required, but this is '.PHP_VERSION.'.';
   }
-  if (PHP_INT_SIZE < 8) {
-    $unmet[] = '64 bit PHP is required, but this version has only '.(PHP_INT_SIZE * 8).' bit.';
+  foreach (array(LOG_DIR, dirname(CLIENT_APP_ZIP_FILENAME), CLIENT_APP_ZIP_FILENAME) as $file) {
+    if (!file_exists($file)) {
+      $unmet[] = $file.' is missing.';
+      continue;
+    }
+    if (!is_writable($file)) {
+      $what = is_file($file) ? 'file' : 'directory';
+      $unmet[] = 'Make the '.$what.' "'.$file.'" writable by the PHP user.';
+    }
   }
-  checkFileWritable(LOG_DIR, true, $unmet);
-  checkFileWritable(CLIENT_APP_ZIP_FILENAME, false, $unmet);
-  checkFileWritable(dirname(CLIENT_APP_ZIP_FILENAME), true, $unmet);
   if (!is_readable(CONFIG_PHP)) {
     $unmet[] = 'Copy the file ../common/config-sample.php to '.CONFIG_PHP.' and edit it.';
   }
@@ -148,19 +137,6 @@ function executeRelativePathComponents($path) {
     $out[] = '';  // special case: add '' to implode to '/' (instad of '')
   }
   return implode('/', $out);
-}
-
-function formatTimestamp($timestamp) {
-  return date(DATE_FORMAT, $timestamp / 1000);
-}
-
-function formatDuration($millis) {
-  $seconds = $millis / 1000;
-  return sprintf('%02d:%02d:%02d', floor($seconds / 3600), ($seconds / 60) % 60, $seconds % 60);
-}
-
-function durationToRps($duration) {
-  return 1000 / $duration;
 }
 
 function timestamp() {
