@@ -88,6 +88,8 @@ define('WIND_SAMPLE_MAX', 3);
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);
+define('REQ_TIME_SERIES_POINTS_MIN', 1);
+define('REQ_TIME_SERIES_POINTS_MAX', 10000);  // a really wide screen
 define('REQ_SYSTEM_MINUTES', 24 * 60);
 define('REQ_SYSTEM_MINUTES_MAX', 7 * 24 * 60);
 define('REQ_DOOR_DAYS', 9);
@@ -140,7 +142,7 @@ function executeRelativePathComponents($path) {
 }
 
 function timestamp() {
-  return intval(round(microtime(true) * 1000));
+  return round(microtime(true) * 1000);
 }
 
 function minutesToMillis($minutes) {
@@ -153,6 +155,17 @@ function daysToMillis($days) {
 
 function get(&$value, $default=null) {
   return isset($value) ? $value : $default;
+}
+
+/**
+ * Convert the argument to a string suitable as a key in an array. This is for 32bit PHP (e.g. on
+ * the Pi): Large numbers (e.g. timestamps in millis) are represented as floats when they exceed the
+ * integer limit. We need a unique mapping of these to strings to use them as array keys. But the
+ * built-in conversion sometimes uses scientific notation (e.g. 1000 = 1e3, but "1000" != "1e3"), so
+ * make sure to always use standard notation.
+ */
+function tokey($arg) {
+  return sprintf('%d', round($arg));
 }
 
 // TODO: This is slightly misplaced in common.php.

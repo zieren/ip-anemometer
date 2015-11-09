@@ -146,7 +146,7 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   var timeSeries = this.stats.wind.time_series;
   for (var i = 0; i < timeSeries.length; ++i) {
     var row = timeSeries[i];
-    row[0] = new Date(row[0]);  // convert timestamp to Date object
+    row[0] = new Date(parseInt(row[0]));  // convert timestamp to Date object
     timeSeriesTable.addRow(row);
   }
   var options = {
@@ -509,7 +509,7 @@ ipa.Chart.isFullDay_ = function(a, b) {
 }
 
 ipa.Chart.formatTimestamp_ = function(timestamp) {
-  var date = new Date(timestamp);
+  var date = new Date(parseInt(timestamp));
   var hh = ('0' + date.getHours()).slice(-2);
   var mm = ('0' + date.getMinutes()).slice(-2);
   var ss = ('0' + date.getSeconds()).slice(-2);
@@ -531,7 +531,7 @@ ipa.Chart.indicateStaleData_ = function(timestamp, maxMinutes, element) {
   var now = Date.now();
   var latencyMinutes = ipa.Tools.millisToMinutes(now - timestamp);
   if (latencyMinutes > maxMinutes) {
-    var text = 'last update: ' + ipa.Tools.compactDateString(new Date(timestamp));
+    var text = 'last update: ' + ipa.Tools.compactDateString(new Date(parseInt(timestamp)));
     var staleDataLabel = document.createElement('div');
     staleDataLabel.className = 'ipaStaleData';
     staleDataLabel.appendChild(document.createTextNode(text));

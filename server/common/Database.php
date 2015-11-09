@@ -1,8 +1,6 @@
 <?php
 require_once '../common/common.php';
 
-// TODO: Better separation of DB and business logic.
-
 abstract class DownsampleMode {
   const AVERAGE = 1;
   const MIN_MAX = 2;
@@ -135,7 +133,7 @@ class Database {
    */
   public function insertWind($samples) {
     foreach ($samples as $stats) {
-      // Insert histogram data first because we need the IDs in the hist table.
+      // Insert histogram data first because we reference the hist ID in the wind table.
       $histogram = $stats['hist'];
       $histId = $this->insertHistogram($histogram);
       $buckets = count($histogram);
@@ -269,18 +267,18 @@ class Database {
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
     $result = $this->query($q, null);
-    $door = array($startTimestamp => 0);  // assume door initially closed
+    $door = array(tokey($startTimestamp) => 0);  // assume door initially closed
     $previousOpen = 0;
     while ($row = $result->fetch_row()) {
+      $ts = $row[0];
       $open = intval($row[1]);
       if ($open == $previousOpen) {
         continue;
       }
-      $ts = intval($row[0]);
-      $door[$ts] = $open;
+      $door[tokey($ts)] = $open;
       $previousOpen = $open;
     }
-    $door[$endTimestamp] = $previousOpen;
+    $door[tokey($endTimestamp)] = $previousOpen;
     return $door;
   }
 
@@ -297,17 +295,17 @@ class Database {
         .'AND ts <= '.$endTimestamp.' ORDER BY ts';
     $result = $this->query($q);
     // In the special case where no previous data is available, guess 0.
-    $pilots = array($startTimestamp => 0);
+    $pilots = array(tokey($startTimestamp) => 0);
     $count = 0;
     while ($row = $result->fetch_row()) {
       $count = intval($row[1]);
-      $ts = intval($row[0]);
-      // The max() ensures that the desired range will start with the value before $startTimestamp.
+      $ts = $row[0];
+      // The max() ensures that the range starts exactly at $startTimestamp even if $ts is smaller.
       // If there is a value exactly at $startTimestamp it will overwrite that value in the next
       // iteration. If there are no values before $startTimestamp at all the value remains 0.
-      $pilots[max($startTimestamp, $ts)] = $count;
+      $pilots[tokey(max($startTimestamp, $ts))] = $count;
     }
-    $pilots[$endTimestamp] = $count;
+    $pilots[tokey($endTimestamp)] = $count;
     return $pilots;
   }
 
@@ -402,10 +400,10 @@ class Database {
         break;
       }
       $timeSeries[] = array(  // order as per WIND_SAMPLE_*
-          intval($sample['start_ts']),
-          intval($sample['end_ts']),
-          floatval($sample['avg']),
-          floatval($sample['max'])  // TODO: Use max_ts for the max time series.
+          $sample['start_ts'],
+          $sample['end_ts'],
+          $sample['avg'],
+          $sample['max']  // TODO: Use max_ts for the max time series.
       );
       $selectedSamples[] = $sample;
       // Update times and IDs.
@@ -430,6 +428,8 @@ class Database {
     // shifted back.
     if ($actualWindowDuration < $windowDuration) {
       $newestEndTimestamp = $this->findNewestWindEndTimestamp();
+      $this->log->notice('Rerunning query: end timestamp '
+          .$endTimestamp.' -> '.$newestEndTimestamp);
       if ($newestEndTimestamp && $newestEndTimestamp < $endTimestamp) {
         return $this->computeWindStats($newestEndTimestamp, $windowDuration, $outputLength);
       }
@@ -463,22 +463,23 @@ class Database {
         // any row in the wind table. Skip them here.
         continue;
       }
-      $v = $bucket['v'];
-      $histogram[$v] = (isset($histogram[$v]) ? $histogram[$v] : 0)
-          + $bucket['p'] * $sampleDuration;
+      $v = intVal($bucket['v']);
+      $histogram[$v] = get($histogram[$v], 0) + $bucket['p'] * $sampleDuration;
     }
     foreach ($histogram as $v => $p) {
       $histogram[$v] /= $actualWindowDuration;
     }
     ksort($histogram);
+    // json_encode will emit a list if keys are consecutive and start at 0, otherwise a map with
+    // string keys.
 
     return array(
         'avg' => $avgKmh,  // already float
         'max' => floatval($maxKmh),
-        'max_ts' => intval($maxTimestamp),
+        'max_ts' => $maxTimestamp,
         'hist' => $histogram,
-        'start_ts' => intval($actualStartTimestamp),
-        'end_ts' => intval($actualEndTimestamp),
+        'start_ts' => $actualStartTimestamp,
+        'end_ts' => $actualEndTimestamp,
         'time_series' => Database::downsampleWind($timeSeries, $outputLength)
     );
   }
@@ -493,7 +494,6 @@ class Database {
   }
 
   private static function getSampleDuration($sample) {
-    // We rely on the difference fitting into an integer.
     return $sample['end_ts'] - $sample['start_ts'];
   }
 
@@ -504,8 +504,8 @@ class Database {
       foreach ($input as $sample) {
         $output[] = array(
             Database::center($sample[WIND_SAMPLE_START_TS], $sample[WIND_SAMPLE_END_TS]),
-            $sample[WIND_SAMPLE_AVG],
-            $sample[WIND_SAMPLE_MAX],
+            floatval($sample[WIND_SAMPLE_AVG]),
+            floatval($sample[WIND_SAMPLE_MAX])
         );
       }
       return $output;
@@ -547,7 +547,7 @@ class Database {
         // Output the current window if it had any input overlap.
         if ($windowOverlap) {
           $avg = $window[WIND_SAMPLE_AVG] / $windowOverlap;
-          $max = $window[WIND_SAMPLE_MAX];
+          $max = floatval($window[WIND_SAMPLE_MAX]);
           $output[] = array(
             Database::center($windowStart, $windowEnd),
             $avg,
@@ -571,12 +571,12 @@ class Database {
   }
 
   private static function center($start, $end) {
-    return intval(($end - $start) / 2 + $start);
+    return ($end - $start) / 2 + $start;
   }
 
   /** Returns the end timestamp of the $wi-th window out of $outputLength windows. */
   private static function getWindowEnd($startTs, $endTs, $outputLength, $wi) {
-    return intval((($endTs - $startTs) / $outputLength) * ($wi + 1) + $startTs);
+    return (($endTs - $startTs) / $outputLength) * ($wi + 1) + $startTs;
   }
 
   private static function newWindow($windowStart, $windowEnd) {
@@ -607,7 +607,7 @@ class Database {
       // Output the bucket when it's finished or at the end of the iteration.
       if ($ts >= $bucketEndTs || $ts === $endTs) {
         if ($values) {
-          $output[intval(Database::average($timestamps) + 0.5)] =
+          $output[tokey(Database::average($timestamps))] =
               $mode === DownsampleMode::AVERAGE
               ? Database::average($values)
               : Database::minMax($values);  // DownsampleMode::MIN_MAX
@@ -626,14 +626,14 @@ class Database {
   }
 
   /**
-   * Return the end timestamp (exclusive) of the current bucket, or PHP_INT_MAX if the current
-   * bucket is the last bucket.
+   * Return the end timestamp (exclusive) of the current bucket, or the pretty distant future if the
+   * current bucket is the last bucket.
    */
   private static function getBucketEndTs($startTs, $endTs, $outputLength, $bucketIndex) {
     if ($bucketIndex + 1 == $outputLength) {
-      return PHP_INT_MAX;  // last bucket catches all
+      return 1e13;  // last bucket catches all; 1e13 = year 2286 (and still fits in 32bit float)
     }
-    return intval((($endTs - $startTs) / $outputLength) * ($bucketIndex + 1) + $startTs);
+    return (($endTs - $startTs) / $outputLength) * ($bucketIndex + 1) + $startTs;
   }
 
   /** Compute the average of the specified array in a numerically stable way. */
@@ -657,7 +657,7 @@ class Database {
     $result = $this->query($q, null);
     $temp = array();
     while ($row = $result->fetch_row()) {
-      $temp[intval($row[0])] = floatval($row[1]);
+      $temp[tokey($row[0])] = floatval($row[1]);
     }
     return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
   }
@@ -670,8 +670,8 @@ class Database {
     $temp = array();
     $hum = array();
     while ($row = $result->fetch_row()) {
-      $temp[intval($row[0])] = floatval($row[1]);
-      $hum[intval($row[0])] = floatval($row[2]);
+      $temp[tokey($row[0])] = floatval($row[1]);
+      $hum[tokey($row[0])] = floatval($row[2]);
     }
     return array(
         Database::downsampleTimeSeries($temp, $timeSeriesPoints),
@@ -685,13 +685,13 @@ class Database {
     $result = $this->query($q, null);
     $data = array();
     while ($row = $result->fetch_row()) {
-      $ts = intval($row[0]);
+      $ts = $row[0];
       $channel = $row[1];
       $value = floatval($row[2]);
       if (!$data[$channel]) {
         $data[$channel] = array();
       }
-      $data[$channel][$ts] = $value;
+      $data[$channel][tokey($ts)] = $value;
     }
     foreach ($data as $channel => &$values) {
       $values = Database::downsampleTimeSeries($values, $timeSeriesPoints);
@@ -706,19 +706,20 @@ class Database {
     $strength = array();
     $result = $this->query($q, null);
     while ($row = $result->fetch_row()) {
-      $strength[intval($row[0])] = intval($row[1]);
+      $strength[tokey($row[0])] = intval($row[1]);
     }
     return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
   }
 
   public function readNetworkType($endTimestamp, $windowDuration) {
     $startTimestamp = $endTimestamp - $windowDuration;
-    $q = 'SELECT nwtype FROM link WHERE ts >= '.$startTimestamp.' AND ts <= '.$endTimestamp;
+    $q = 'SELECT nwtype, count(*) FROM link'
+        .' WHERE ts >= '.$startTimestamp.' AND ts <= '.$endTimestamp
+        .' GROUP BY nwtype';
     $nwtypes = array();
     $result = $this->query($q, null);
     while ($row = $result->fetch_row()) {
-      $i = $row[0];
-      $nwtypes[$i] = (isset($nwtypes[$i]) ? $nwtypes[$i] : 0) + 1;
+      $nwtypes[$row[0]] = intval($row[1]);  // assume equal weight
     }
     return $nwtypes;
   }
@@ -727,8 +728,8 @@ class Database {
     $q = 'SELECT upload, download FROM link ORDER BY ts DESC LIMIT 1';
     $result = $this->query($q, null);
     if ($row = $result->fetch_row()) {
-      $upload = intval($row[0]);
-      $download = intval($row[1]);
+      $upload = $row[0];
+      $download = $row[1];
     } else {
       $upload = 0;
       $download = 0;
@@ -751,16 +752,16 @@ class Database {
       }
       $ts = $row['ts'];
       // Synthesize one record just (1ms) prior to the upload to indicate the maximum lag.
-      if ($previousUpto) {
-        $lag[$ts - 1] = $ts - $previousUpto;
+      if ($lag) {
+        $lag[tokey($ts - 1)] = $ts - $previousUpto;
       }
-      $lag[$ts] = $ts - $upto;
+      $lag[tokey($ts)] = $ts - $upto;
       $previousUpto = $upto;
     }
     // Add the current lag (which might be significant).
     if ($previousUpto) {
       $ts = timestamp();
-      $lag[$ts] = $ts - $previousUpto;
+      $lag[tokey($ts)] = $ts - $previousUpto;
     }
     return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
   }

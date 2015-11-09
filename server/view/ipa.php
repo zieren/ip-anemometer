@@ -3,11 +3,11 @@ require_once '../common/common.php';
 
 header("Access-Control-Allow-Origin: *");
 
-function getIntParam($name, $default, $min, $max = PHP_INT_MAX) {
+function getNumParam($name, $default, $min, $max) {
   if (!isset($_REQUEST[$name])) {
     return $default;
   }
-  return max($min, min(intval($_REQUEST[$name]), $max));
+  return max($min, min($_REQUEST[$name], $max));
 }
 
 function getStringParam($name, $default) {
@@ -19,15 +19,16 @@ function computeStats() {
   // TODO: This isn't handling "not requested" properly.
   // TODO: This needs to be simplified.
   // TODO: This should sanitize the input.
-  $windowMinutes = getIntParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
-  $timestamp = getIntParam('ts', timestamp(), 0);
-  $timeSeriesPoints = getIntParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, 1);
-  $systemMinutes = getIntParam('s', REQ_SYSTEM_MINUTES, 0, REQ_SYSTEM_MINUTES_MAX);
-  $doorStartMillis = getIntParam('d',
+  $windowMinutes = getNumParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
+  $timestamp = getNumParam('ts', timestamp(), 0, timestamp());
+  $timeSeriesPoints = getNumParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, REQ_TIME_SERIES_POINTS_MIN,
+      REQ_TIME_SERIES_POINTS_MAX);
+  $systemMinutes = getNumParam('s', REQ_SYSTEM_MINUTES, 0, REQ_SYSTEM_MINUTES_MAX);
+  $doorStartMillis = getNumParam('d',
       $timestamp - daysToMillis(REQ_DOOR_DAYS),
       $timestamp - daysToMillis(REQ_DOOR_DAYS_MAX),
       $timestamp);
-  $pilotsStartMillis = getIntParam('pc',  // pc = pilot count
+  $pilotsStartMillis = getNumParam('pc',  // pc = pilot count
       $timestamp - daysToMillis(REQ_PILOTS_DAYS),
       $timestamp - daysToMillis(REQ_PILOTS_DAYS_MAX),
       $timestamp);
