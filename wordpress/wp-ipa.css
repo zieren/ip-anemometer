@@ -76,5 +76,9 @@ div.ipaStatus {
 }
 
 div.ipaStatusOk {
+  background: #dfd;
+}
+
+div.ipaStatusHide {
   display: none;
 }

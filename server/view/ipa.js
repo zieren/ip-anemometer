@@ -237,6 +237,9 @@ ipa.Chart.prototype.drawStatus = function(element) {
   statusLabel.className = 'ipaStatus';
   if (this.stats.status[1] == 'ok') {
     statusLabel.className += ' ipaStatusOk';
+    if (element.dataset.hideok != 0) {
+      statusLabel.className += ' ipaStatusHide';
+    }
   }
   statusLabel.appendChild(document.createTextNode(statusText));
   statusLabel.appendChild(document.createElement('br'));

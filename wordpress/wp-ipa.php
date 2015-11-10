@@ -23,12 +23,12 @@ function quote($s) {
 
 function ipa($atts) {
   $options = array(
-  	'url' => array('url', quote),
+    'url' => array('url', quote),
     'period' => array('minutes', intval)
   );
   $handlers = array(
     'status' => status,
-  	'period_selector' => periodSelector,
+    'period_selector' => periodSelector,
     'summary' => summary,
     'speed' => speed,
     'histogram' => histogram,
@@ -43,6 +43,7 @@ function ipa($atts) {
     'transfer' => transferVolume
   );
   $arguments = array(
+    'hideok',   // status
     'channel',  // adc
     'label'     // adc
   );
@@ -137,7 +138,7 @@ THEEND;
 }
 
 function status($atts) {
-  return '<div id="ipaStatus"></div>';
+  return '<div id="ipaStatus" data-hideok="'.$atts['hideok'].'"></div>';
 }
 
 function periodSelector($atts) {
