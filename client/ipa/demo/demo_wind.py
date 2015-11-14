@@ -1,4 +1,5 @@
 import common
+from demo_util import new_value
 import random
 
 class Wind:
@@ -8,7 +9,7 @@ class Wind:
 
   def get_sample(self):
     now_ts = common.timestamp()
-    self._avg += random.random() * 6 - 3
+    self._avg += new_value(self._avg, 3, 0, 60)
     self._avg = min(40, abs(self._avg))
     maxKmh = self._avg + random.random() * self._avg
     mean_ts = (now_ts + self._last_ts) / 2
