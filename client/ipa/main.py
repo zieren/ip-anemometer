@@ -19,7 +19,10 @@ import pilot_count
 import spi_adc  #@UnresolvedImport
 import temperature
 import uploader
-import wind
+if C.DEMO_MODE_ENABLED():
+  import demo.demo_wind as wind  # @UnusedImport
+else:
+  import wind  # @Reimport
 
 
 class Anemometer:

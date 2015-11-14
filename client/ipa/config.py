@@ -29,6 +29,9 @@ class Config:
         raise RuntimeError('invalid config file entry: %s' % line)
       self._cfg[entry[0]] = entry[1]
 
+  def DEMO_MODE_ENABLED(self):
+    return int(self._cfg['demo_mode_enabled']) != 0
+
   def UPLOAD_URL(self):
     """Ensures a trailing '/'."""
     url = self._cfg['upload_url']
