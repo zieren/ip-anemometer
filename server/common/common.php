@@ -165,7 +165,7 @@ function get(&$value, $default=null) {
  * make sure to always use standard notation.
  */
 function tokey($arg) {
-  return sprintf('%d', round($arg));
+  return sprintf('%.0F', round($arg));
 }
 
 // TODO: This is slightly misplaced in common.php.
