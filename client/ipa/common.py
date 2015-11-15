@@ -1,7 +1,6 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
 import datetime
 import operator
-import os
 import threading
 import sys
 import time
