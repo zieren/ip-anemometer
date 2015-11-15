@@ -3,6 +3,9 @@
  * TODO: Split this file up.
  */
 
+// Timestamps are in millis and currently have 13 digits. Typical default precision is 12.
+ini_set('precision', 14);
+
 // Internal constants.
 define('PHP_MIN_VERSION', '5.3');
 define('LOG_DIR', '../logs');
