@@ -9,19 +9,21 @@ import traceback
 
 import common
 from config import C
-import dht
 import door
 import huawei_status
 import K
 import log
 import metadata
 import pilot_count
-import spi_adc  #@UnresolvedImport
 import temperature
 import uploader
 if C.DEMO_MODE_ENABLED():
+  import demo.demo_dht as dht  # @UnusedImport
+  import demo.demo_spi_adc as spi_adc  # @UnusedImport
   import demo.demo_wind as wind  # @UnusedImport
 else:
+  import dht  # @Reimport
+  import spi_adc  # @Reimport
   import wind  # @Reimport
 
 
@@ -48,9 +50,9 @@ class Anemometer:
     self._uploader.add_data_source(wind.Wind(), True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)
-    if C.DHT_ENABLED():
+    if C.DHT_ENABLED() or C.DEMO_MODE_ENABLED():
       self._uploader.add_data_source(dht.Dht(), True)
-    if C.ADC_ENABLED():
+    if C.ADC_ENABLED() or C.DEMO_MODE_ENABLED():
       self._uploader.add_data_source(spi_adc.SpiAdc(), True)
     if C.HUAWEI_ENABLED():
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
@@ -61,7 +63,8 @@ class Anemometer:
 
   def _shutdown(self):
     """Deregister GPIO callbacks and attempt to shut down all threads gracefully."""
-    GPIO.cleanup()
+    if not C.DEMO_MODE_ENABLED():
+      GPIO.cleanup()
     self._uploader_termination_event.set()
     threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
     if threads_left:
