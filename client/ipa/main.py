@@ -12,19 +12,20 @@ from config import C
 import K
 import log
 import metadata
-import pilot_count
 import temperature
 import uploader
 if C.DEMO_MODE_ENABLED():
   import demo.demo_dht as dht  # @UnusedImport
   import demo.demo_door as door  # @UnusedImport
   import demo.demo_huawei_status as huawei_status  # @UnusedImport
+  import demo.demo_pilot_count as pilot_count  # @UnusedImport
   import demo.demo_spi_adc as spi_adc  # @UnusedImport
   import demo.demo_wind as wind  # @UnusedImport
 else:
   import dht  # @Reimport
   import door  # @Reimport
   import huawei_status  # @Reimport
+  import pilot_count  # @Reimport
   import spi_adc  # @Reimport
   import wind  # @Reimport
 
@@ -60,7 +61,7 @@ class Anemometer:
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
     if C.DOOR_ENABLED() or C.DEMO_MODE_ENABLED():
       self._uploader.add_data_source(door.Door(), True)
-    if C.PILOTS_ENABLED():
+    if C.PILOTS_ENABLED() or C.DEMO_MODE_ENABLED():
       self._uploader.add_data_source(pilot_count.PilotCount(), True)
 
   def _shutdown(self):
