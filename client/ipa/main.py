@@ -10,7 +10,6 @@ import traceback
 import common
 from config import C
 import door
-import huawei_status
 import K
 import log
 import metadata
@@ -19,10 +18,12 @@ import temperature
 import uploader
 if C.DEMO_MODE_ENABLED():
   import demo.demo_dht as dht  # @UnusedImport
+  import demo.demo_huawei_status as huawei_status  # @UnusedImport
   import demo.demo_spi_adc as spi_adc  # @UnusedImport
   import demo.demo_wind as wind  # @UnusedImport
 else:
   import dht  # @Reimport
+  import huawei_status  # @Reimport
   import spi_adc  # @Reimport
   import wind  # @Reimport
 
@@ -54,7 +55,7 @@ class Anemometer:
       self._uploader.add_data_source(dht.Dht(), True)
     if C.ADC_ENABLED() or C.DEMO_MODE_ENABLED():
       self._uploader.add_data_source(spi_adc.SpiAdc(), True)
-    if C.HUAWEI_ENABLED():
+    if C.HUAWEI_ENABLED() or C.DEMO_MODE_ENABLED():
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
     if C.DOOR_ENABLED():
       self._uploader.add_data_source(door.Door(), True)
