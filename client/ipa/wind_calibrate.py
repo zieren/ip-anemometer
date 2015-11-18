@@ -19,7 +19,7 @@ if __name__ == "__main__":
     else:
       logger.info('--- clock in sync ---')
 
-    GPIO.setmode(GPIO.BOARD)
+    GPIO.setmode(GPIO.BCM)
     wind = Wind(calibration_mode=True)
     raw_input('Press ENTER to quit...\n')  # just in case there's a kb and a screen
     GPIO.cleanup()

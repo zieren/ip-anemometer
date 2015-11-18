@@ -49,7 +49,7 @@ class Anemometer:
     # Create upload thread (started in run() below).
     self._uploader = uploader.Uploader(self._main_cq, self._uploader_termination_event)
     # Create data sources.
-    GPIO.setmode(GPIO.BOARD)  # required before Wind()
+    GPIO.setmode(GPIO.BCM)  # required before Wind()
     self._uploader.add_data_source(wind.Wind(), True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)
