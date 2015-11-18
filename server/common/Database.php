@@ -384,7 +384,9 @@ class Database {
     $actualStartTimestamp = 0;
     $actualEndTimestamp = 0;
     $actualWindowDuration = 0;
+    $actualWindowDurationHalf = 0;
     $minHistId = 0;
+    $minHistIdHalf = 0;  // second (i.e. newer) half of desired duration
     $maxHistId = 0;
     $maxKmh = 0;
     $maxTimestamp = 0;
@@ -413,6 +415,13 @@ class Database {
         $actualEndTimestamp = $sample['end_ts'];
       }
       $minHistId = $sample['hist_id'];
+      if ($actualWindowDuration <= $windowDuration / 2) {
+        // Since we don't know whether we'll actually reach the desired duration, it would be more
+        // accurate to store a map of duration => ID and then retrieve the ID after the actual
+        // duration is known. But this is easier.
+        $minHistIdHalf = $minHistId;
+        $actualWindowDurationHalf += $sampleDuration;
+      }
       if (!$maxHistId) {
         $maxHistId = $minHistId + $sample['buckets'] - 1;
       }
@@ -447,14 +456,16 @@ class Database {
         .' ORDER BY id DESC';
     $result = $this->query($q, null);
     $histogram = array();
+    $histogramHalf = array();
     $i = 0;
     $sampleDuration = Database::getSampleDuration($selectedSamples[0]);
     while ($bucket = $result->fetch_assoc()) {
-      if ($bucket['id'] < $selectedSamples[$i]['hist_id']) {  // belongs to next (older) sample
+      $id = $bucket['id'];
+      if ($id < $selectedSamples[$i]['hist_id']) {  // belongs to next (older) sample
         ++$i;
         $sampleDuration = Database::getSampleDuration($selectedSamples[$i]);
       }
-      if ($bucket['id'] >= $selectedSamples[$i]['hist_id'] + $selectedSamples[$i]['buckets']) {
+      if ($id >= $selectedSamples[$i]['hist_id'] + $selectedSamples[$i]['buckets']) {
         // Without transaction this can happen if inserting the histogram succeeded but writing the
         // wind data failed. But even with transaction the server's "status: ok" reply might not
         // reach the client, so the client will resend the same data, which will overwrite the
@@ -465,11 +476,18 @@ class Database {
       }
       $v = intVal($bucket['v']);
       $histogram[$v] = get($histogram[$v], 0) + $bucket['p'] * $sampleDuration;
+      if ($id >= $minHistIdHalf) {
+        $histogramHalf[$v] = get($histogramHalf[$v], 0) + $bucket['p'] * $sampleDuration;
+      }
     }
     foreach ($histogram as $v => $p) {
       $histogram[$v] /= $actualWindowDuration;
     }
+    foreach ($histogramHalf as $v => $p) {
+      $histogramHalf[$v] /= $actualWindowDurationHalf;
+    }
     ksort($histogram);
+    ksort($histogramHalf);
     // json_encode will emit a list if keys are consecutive and start at 0, otherwise a map with
     // string keys.
 
@@ -478,6 +496,7 @@ class Database {
         'max' => floatval($maxKmh),
         'max_ts' => $maxTimestamp,
         'hist' => $histogram,
+        'hist_half' => $histogramHalf,
         'start_ts' => $actualStartTimestamp,
         'end_ts' => $actualEndTimestamp,
         'time_series' => Database::downsampleWind($timeSeries, $outputLength)
