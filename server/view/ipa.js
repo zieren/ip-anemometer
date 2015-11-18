@@ -58,25 +58,6 @@ ipa.Tools.compactDateString = function(date) {
   return date.toLocaleString();
 }
 
-ipa.Tools.mergeHistograms = function(histogramA, histogramB) {
-  var result = {};
-  for (var i = 0; i < histogramA.length; ++i) {
-    var v = parseInt(histogramA[i][0]);
-    var p = histogramA[i][1];
-    result[v] = [p, 0];
-  }
-  for (var i = 0; i < histogramB.length; ++i) {
-    var v = parseInt(histogramB[i][0]);
-    var p = histogramB[i][1];
-    var entry = [0, p];
-    if (v in result) {  // merge with A
-      entry[0] = result[v][0];
-    }
-    result[v] = entry;
-  }
-  return result;
-}
-
 ipa.Chart = function(options) {
   this.options = new ipa.Options();
   for (var i in options) {
@@ -189,31 +170,21 @@ ipa.Chart.prototype.drawHistogram = function(element) {
   var histogramDataTable = new google.visualization.DataTable();
   histogramDataTable.addColumn('number', 'km/h');
   histogramDataTable.addColumn('number', '%');
-  histogramDataTable.addColumn('number', '% recent');
   histogramDataTable.addColumn('number', '%>=');
-  histogramDataTable.addColumn('number', '%>= recent');
   var totalPercent = 100;
-  var totalPercentHalf = 100;
-  var histograms = ipa.Tools.mergeHistograms(
-      ipa.Tools.sorted(this.stats.wind.hist),
-      ipa.Tools.sorted(this.stats.wind.hist_half));
-  var buckets = Object.keys(histograms).sort(function(a, b) { return a - b; });
-  for (var i = 0; i < buckets.length; ++i) {
-    var kmh = parseInt(buckets[i]);
-    var percent = histograms[kmh][0] * 100;
-    var percentHalf = histograms[kmh][1] * 100;
-    histogramDataTable.addRow([kmh, percent, percentHalf, totalPercent, totalPercentHalf]);
+  var histogram = ipa.Tools.sorted(this.stats.wind.hist);
+  for (var i = 0; i < histogram.length; i++) {
+    var kmh = parseInt(histogram[i][0]);
+    var percent = histogram[i][1] * 100;
+    histogramDataTable.addRow([kmh, percent, totalPercent]);
     totalPercent -= percent;
-    totalPercentHalf -= percentHalf;
   }
   options = {
     title: 'Wind [km/h]',
     hAxis: {gridlines: {count: -1}},  // -1 means automatic
     series: {
-      0: {targetAxisIndex: 0, type: 'bars', color: '#0000ff'},   // full duration
-      1: {targetAxisIndex: 0, type: 'bars', color: '#b0b0ff'},   // half duration
-      2: {targetAxisIndex: 1, type: 'lines', color: '#ff0000'},  // full duration
-      3: {targetAxisIndex: 1, type: 'lines', color: '#ffb0b0'}   // half duration
+      0: {targetAxisIndex: 0, type: 'bars'},
+      1: {targetAxisIndex: 1, type: 'lines'}
     },
     vAxes: {
       0: {minValue: 0},
@@ -221,7 +192,7 @@ ipa.Chart.prototype.drawHistogram = function(element) {
     }
   };
   // If there's only one bar we need to force a range of 0..100.
-  if (Object.keys(histograms).length == 1) {
+  if (Object.keys(histogram).length == 1) {
     options.vAxes[0].maxValue = 100;
   }
   var histogramChart = new google.visualization.ComboChart(element);
