@@ -56,4 +56,3 @@ class Door:
     if door_open != self._previous_door_open:
       self._events.append((common.timestamp(), door_open))
       self._previous_door_open = door_open
-
