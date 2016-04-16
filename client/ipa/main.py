@@ -37,6 +37,8 @@ class Anemometer:
     self._log = log.get_logger('ipa.main')
     self._log.info(K.CLIENT_GREETING)
     self._log.info('client md5: %s' % common.client_md5())
+    if C.DEMO_MODE_ENABLED():
+      self._log.warn('DEMO MODE ENABLED')
     # Create main command queue.
     self._main_cq = Queue.Queue()
     # Create thread termination Event for Uploader.
