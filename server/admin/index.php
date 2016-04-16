@@ -32,7 +32,7 @@ if (isset($_POST['clearAll']) && $_POST['confirm']) {
 
 echo '
 <h1>'.IPA_SERVER_HEADING.'</h1>
-<p>(c) 2015 J&ouml;rg Zieren - <a href="http://zieren.de">zieren.de</a> - GNU GPL v3.
+<p>(c) 2015-2016 J&ouml;rg Zieren - <a href="http://zieren.de">zieren.de</a> - GNU GPL v3.
 Components: <a href="http://codefury.net/projects/klogger/">KLogger</a> (c) 2008-2014 Kenny
 Katzgrau, MIT license</p>
 <p><a href="../view/">View anemometer</a></p>
