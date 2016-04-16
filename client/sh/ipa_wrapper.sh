@@ -18,8 +18,8 @@ NUM_DIRS_TO_KEEP=10
 # ========== end optional configuration ==========
 
 if [ "$1" == "" ]; then
-  echo "Specify IPA web server base URL, e.g. http://server.com/ipa"
-  echo "If authentication is required, use http://user:pass@server.com/ipa"
+  echo "Specify IPA web server base URL, e.g. http://server.com/ipa/client"
+  echo "If authentication is required, use http://user:pass@server.com/ipa/client"
   exit 1
 fi
 
