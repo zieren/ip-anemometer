@@ -17,14 +17,26 @@ function get(&$value, $default=null) {
   return isset($value) ? $value : $default;
 }
 
-function quote($s) {
-  return "'".$s."'";
+/**
+ * WordPress 4.4 (and possibly later) sometimes doesn't trim quotes, while earlier versions do. Be
+ * robust and accept both.
+ */
+function trimQuotesAndSpace($s) {
+  return trim($s, " '\"");
+}
+
+function quoteWithTrim($s) {
+  return "'".trimQuotesAndSpace($s)."'";
+}
+
+function intvalWithTrim($s) {
+  return intval(trimQuotesAndSpace($s));
 }
 
 function ipa($atts) {
   $options = array(
-    'url' => array('url', quote),
-    'period' => array('minutes', intval)
+    'url' => array('url', quoteWithTrim),
+    'period' => array('minutes', intvalWithTrim)
   );
   $handlers = array(
     'status' => status,
