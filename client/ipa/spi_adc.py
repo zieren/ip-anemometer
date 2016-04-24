@@ -6,7 +6,8 @@ except ImportError:
 import common
 import config
 from config import C
-import log
+from logger import LOGGER_FACTORY
+
 
 
 class SpiAdc:
@@ -14,7 +15,7 @@ class SpiAdc:
   _VREFS = C.ADC_VREFS()
 
   def __init__(self):
-    self._log = log.get_logger('ipa.adc')
+    self._log = LOGGER_FACTORY.get_logger('ipa.adc')
     self._spi = spidev.SpiDev()
     self._spi.open(0, 0)
     if len(SpiAdc._CHANNELS) != len(SpiAdc._VREFS):

@@ -4,7 +4,7 @@ import traceback
 
 import common
 from config import C
-import log
+from logger import LOGGER_FACTORY
 import wind_stats
 
 
@@ -41,7 +41,7 @@ class CalibrationLogger:
     self._v_max = 0
     self._v_window = {}
     self._queue = Queue.Queue()
-    self._worker = LoggerWorker(self._queue, log.get_logger('wind_calibrate'))
+    self._worker = LoggerWorker(self._queue, LOGGER_FACTORY.get_logger('wind_calibrate'))
     self._worker.start()
 
   def log(self, timestamp_and_duration):

@@ -3,7 +3,7 @@ import xml.dom.minidom
 import traceback
 
 import common
-import log
+from logger import LOGGER_FACTORY
 
 
 class HuaweiStatus:
@@ -19,7 +19,7 @@ class HuaweiStatus:
   _NW_TYPES = {3: '2G', 4: '3G', 7: '3G+'}
 
   def __init__(self):
-    self._log = log.get_logger('ipa.link')
+    self._log = LOGGER_FACTORY.get_logger('ipa.link')
     self._log.info('initialized')
 
   def get_sample(self):

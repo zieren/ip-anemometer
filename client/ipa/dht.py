@@ -5,7 +5,7 @@ except ImportError:
 import common
 from config import C
 import dht_dummy
-import log
+from logger import LOGGER_FACTORY
 
 class Dht:
   """Reads DHT11/DHT22/AM2302 sensor."""
@@ -15,7 +15,7 @@ class Dht:
   _RETRIES = C.DHT_RETRIES()
 
   def __init__(self):
-    self._log = log.get_logger('ipa.dht')
+    self._log = LOGGER_FACTORY.get_logger('ipa.dht')
     self._log.info('sensor=%d pin=%d retries=%d' % (Dht._SENSOR, Dht._PIN, Dht._RETRIES))
     if Adafruit_DHT.read_retry == dht_dummy.read_retry:
       self._log.critical('Adafruit_DHT module is not installed')

@@ -3,7 +3,7 @@ import threading
 
 import common
 from config import C
-import log
+from logger import LOGGER_FACTORY
 import raspisys
 
 
@@ -18,7 +18,7 @@ class Door:
   _STABLE_READ_COUNT = 5  # 20 was OK, but I believe sometimes too slow.
 
   def __init__(self):
-    self._log = log.get_logger('ipa.door')
+    self._log = LOGGER_FACTORY.get_logger('ipa.door')
     self._lock = threading.Lock()
     self._events = []
     self._previous_door_open = None

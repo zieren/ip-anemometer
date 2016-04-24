@@ -1,9 +1,11 @@
+# TODO: Make this a class.
+
 import common
 from config import C
-import log
+from logger import LOGGER_FACTORY
 
 MAX_TEMP = C.TEMPERATURE_SHUTDOWN_AT()
-LOG = log.get_logger('ipa.intcpt')
+LOG = LOGGER_FACTORY.get_logger('ipa.intcpt')
 
 def process(queue):
   """Process the queue, possibly modifying it. May return a command."""

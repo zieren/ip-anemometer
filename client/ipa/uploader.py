@@ -9,7 +9,7 @@ import urllib2
 from args import ARGS
 from config import C
 import interceptor
-import log
+from logger import LOGGER_FACTORY
 
 
 class Uploader(threading.Thread):
@@ -18,7 +18,7 @@ class Uploader(threading.Thread):
   def __init__(self, command_queue, termination_event):
     """Commands received from the server will be put into the command_queue."""
     threading.Thread.__init__(self)
-    self._log = log.get_logger('ipa.upload')
+    self._log = LOGGER_FACTORY.get_logger('ipa.upload')
     self._main_cq = command_queue
     self._termination_event = termination_event
     self._queue = {}

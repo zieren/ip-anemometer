@@ -15,7 +15,7 @@ import traceback
 import common
 from config import C
 import K
-import log
+from logger import LOGGER_FACTORY
 import metadata
 import temperature
 import uploader
@@ -39,7 +39,7 @@ class Anemometer:
   """Starts threads, processes the main command queue, and shuts down threads."""
 
   def __init__(self):
-    self._log = log.get_logger('ipa.main')
+    self._log = LOGGER_FACTORY.get_logger('ipa.main')
     self._log.info(K.CLIENT_GREETING)
     auth_info = ((' (authenticated as user "%s")' % ARGS.server_username())
                  if ARGS.server_username() else '')

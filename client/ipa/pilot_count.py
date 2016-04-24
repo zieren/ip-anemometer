@@ -6,7 +6,7 @@ import time
 import K
 import common
 from config import C
-import log
+from logger import LOGGER_FACTORY
 import raspisys
 
 
@@ -15,7 +15,7 @@ _STATE_LIFETIME_MINUTES = 12 * 60  # ignore persisted state when older than 12h
 
 
 class PilotCount:
-  """Counts pilots by manually pressing a button connected to GPIO."""
+  """Count pilots by manually pressing a button connected to GPIO."""
 
   _PLUS_PIN = C.PILOTS_PLUS_INPUT_PIN()
   _MINUS_PIN = C.PILOTS_MINUS_INPUT_PIN()
@@ -34,7 +34,7 @@ class PilotCount:
   _LED_OFF_SHORT_MILLIS = 40
 
   def __init__(self):
-    self._log = log.get_logger('ipa.count')
+    self._log = LOGGER_FACTORY.get_logger('ipa.count')
 
     # Only one blinking thread at a time.
     self._blink_semaphore = threading.Semaphore()

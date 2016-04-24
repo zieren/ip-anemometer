@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO  #@UnresolvedImport
 import calibration_logger
 import common
 from config import C
-import log
+from logger import LOGGER_FACTORY
 import wind_revolutions
 import wind_stats
 
@@ -12,7 +12,7 @@ class Wind:
   """Provides wind speed. Measurement will start immediately on creation."""
 
   def __init__(self, calibration_mode=False):
-    self._log = log.get_logger('ipa.wind')
+    self._log = LOGGER_FACTORY.get_logger('ipa.wind')
     self._revolutions = wind_revolutions.Revolutions(C.WIND_EDGES_PER_REV())
     self._startup_time = common.timestamp()
     # TODO: Consider removing start timestamp and only use sample start/end timestamps.
