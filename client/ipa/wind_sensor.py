@@ -7,7 +7,7 @@ from config import C
 class Revolutions:
   """Stores the timestamps of wind sensor revolutions."""
 
-  # Remember config value to avoid locking call in event handler.
+  # Remember config value to avoid config call in event handler.
   _EDGES_PER_REV = C.WIND_EDGES_PER_REV()
 
   def __init__(self):
