@@ -6,8 +6,8 @@ import time
 import traceback
 import urllib2
 
+from args import ARGS
 from config import C
-import K
 import interceptor
 import log
 
@@ -86,11 +86,11 @@ class Uploader(threading.Thread):
       return
 
     try:
-      request = urllib2.Request(C.UPLOAD_URL() + 'ul.php', data_bz2,
+      request = urllib2.Request(ARGS.server_url() + 'ul.php', data_bz2,
           {'Content-Type': 'application/octet-stream'})
-      if C.UPLOAD_USERNAME() or C.UPLOAD_PASSWORD():
-        auth_string = base64.encodestring('%s:%s' % (C.UPLOAD_USERNAME(),
-                                                     C.UPLOAD_PASSWORD())).replace('\n', '')
+      if ARGS.server_username():
+        user_colon_pass = '%s:%s' % (ARGS.server_username(), ARGS.server_password())
+        auth_string = base64.encodestring(user_colon_pass).replace('\n', '')
         request.add_header('Authorization', 'Basic %s' % auth_string)
       self._log.debug('uploading %d bytes...' % data_bz2_size)
       response = urllib2.urlopen(request, timeout = C.TIMEOUT_HTTP_REQUEST_SECONDS())
@@ -110,7 +110,7 @@ class Uploader(threading.Thread):
           'failed to parse server response: %sserver response begins with: "%s"'
           % (traceback.format_exc(), response_content[:10240]))  # return first 10kB
       return
-    if response_dict.setdefault('status', K.NOT_AVAILABLE) != 'ok':
+    if response_dict.setdefault('status', 'n/a') != 'ok':
       self._log.error('upload failed; status: %s' % response_dict['status'])
     else:
       self._log.debug('upload OK; response: %s' % response_content)

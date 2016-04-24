@@ -4,6 +4,7 @@ import threading
 import common
 from config import C
 import log
+import raspisys
 
 
 class Door:
@@ -30,8 +31,8 @@ class Door:
                    % (Door._PIN, door_open, C.DOOR_DEBOUNCE_MILLIS()))
 
   def _read_door_callback(self, pin_ignored):
-    read_stable = common.read_stable(Door._PIN, Door._STABLE_READ_COUNT,
-                                     Door._STABLE_READ_INTERVAL_MILLIS, self._log)
+    read_stable = raspisys.read_stable(Door._PIN, Door._STABLE_READ_COUNT,
+                                       Door._STABLE_READ_INTERVAL_MILLIS, self._log)
     door_open = 1 if read_stable == Door._OPEN_STATE else 0
     self._log.debug('door_open in callback: %d' % door_open)
     with self._lock:

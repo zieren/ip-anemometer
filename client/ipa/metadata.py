@@ -1,3 +1,4 @@
+from args import ARGS
 import common
 import raspisys
 
@@ -7,5 +8,5 @@ class Metadata:
 
   def get_sample(self):
     return 'meta', {'stratum': raspisys.get_stratum(),  # TODO: Avoid subprocess?
-                    'md5': common.client_md5(),
+                    'md5': ARGS.archive_md5(),
                     'cts': common.timestamp()}

@@ -7,6 +7,7 @@ import K
 import common
 from config import C
 import log
+import raspisys
 
 
 _STATE_FILE = K.STATE_DIR + 'pilot_count.txt'
@@ -74,8 +75,8 @@ class PilotCount:
                           bouncetime=C.PILOTS_MINUS_DEBOUNCE_MILLIS())
 
   def _read_callback(self, pin):
-    read_stable = common.read_stable(pin, PilotCount._STABLE_READ_COUNT,
-                                     PilotCount._STABLE_READ_INTERVAL_MILLIS, self._log)
+    read_stable = raspisys.read_stable(pin, PilotCount._STABLE_READ_COUNT,
+                                       PilotCount._STABLE_READ_INTERVAL_MILLIS, self._log)
     delta = 0
     if pin == PilotCount._PLUS_PIN:
       if read_stable == PilotCount._PLUS_TRIGGER_STATE:

@@ -32,16 +32,6 @@ class Config:
   def DEMO_MODE_ENABLED(self):
     return int(self._cfg['demo_mode_enabled']) != 0
 
-  def UPLOAD_URL(self):
-    """Ensures a trailing '/'."""
-    url = self._cfg['upload_url']
-    if url[-1] != '/':
-      url += '/'
-    return url
-  def UPLOAD_USERNAME(self):
-    return self._cfg['upload_username']
-  def UPLOAD_PASSWORD(self):
-    return self._cfg['upload_password']
   def UPLOAD_INTERVAL_SECONDS(self):
     return int(self._cfg['upload_interval_seconds'])
   def UPLOAD_MAX_SIZE_KB(self):

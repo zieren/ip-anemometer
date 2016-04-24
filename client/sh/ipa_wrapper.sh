@@ -17,13 +17,15 @@ NUM_DIRS_TO_KEEP=10
 
 # ========== end optional configuration ==========
 
-if [ "$1" == "" ]; then
-  echo "Specify IPA web server base URL, e.g. http://server.com/ipa/client"
+SERVER_URL="$1"
+
+if [ -z "$SERVER_URL" ]; then
+  echo "Specify the URL of the 'client' directory on your server, e.g. http://server.com/ipa/client"
   echo "If authentication is required, use http://user:pass@server.com/ipa/client"
   exit 1
 fi
 
-DOWNLOAD_URL=$1/dl.php
+DOWNLOAD_URL="$SERVER_URL/dl.php"
 
 # Internal variables.
 GREETING="IP anemometer wrapper 0.3.0 - (c) 2015-2016 Joerg Zieren - http://zieren.de - GNU GPL v3"
@@ -59,7 +61,6 @@ function ls_logs() {
 
 log "$GREETING"
 
-log "Waiting for clock to sync..."
 ./await_clock_sync.sh
 
 while true; do
@@ -69,7 +70,7 @@ while true; do
   # If there is no update, the server sends an empty response and curl produces no file.
   # TODO: Handle error case (such as incorrect URL) and show a helpful message.
   if [ -f $DL_FILENAME ]; then  # install new archive
-    MD5=$(md5sum  $DL_FILENAME | cut -d ' ' -f 1)
+    MD5=$(md5sum $DL_FILENAME | cut -d ' ' -f 1)
     log "client downloaded (new: $MD5)"
     DIR=ipa-$(format_date)
     unzip -qq -d $DIR $DL_FILENAME
@@ -91,7 +92,7 @@ while true; do
   set_time_barrier
   log "starting main program"
   cd current
-  sudo python main.py $MD5
+  sudo python main.py "$SERVER_URL" "$MD5"
   RETVAL=$?
   cd ..
   log "main program returned exit code $RETVAL"

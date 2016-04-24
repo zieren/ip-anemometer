@@ -100,24 +100,6 @@ define('REQ_DOOR_DAYS_MAX', 31);
 define('REQ_PILOTS_DAYS', 9);
 define('REQ_PILOTS_DAYS_MAX', 31);
 
-/** Returns the absolute URL of the specified relative path. */
-function getAbsoluteURL($relativePath) {
-  $url = 'http';
-  if (get($_SERVER['HTTPS'], '') == 'on') {
-    $url .= 's';
-  }
-  $url .= '://';
-  if ($_SERVER['SERVER_PORT'] != '80') {
-    $url .= $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'];
-  } else {
-    $url .= $_SERVER['SERVER_NAME'];
-  }
-  $lastSlash = strrpos($_SERVER['REQUEST_URI'], '/');  // always starts with a slash
-  $path = substr($_SERVER['REQUEST_URI'], 0, $lastSlash + 1).$relativePath;
-  $url .= executeRelativePathComponents($path);
-  return $url;
-}
-
 /** Converts '/a//b/./x/../c/' -> '/a/b/c' */
 function executeRelativePathComponents($path) {
   $in = explode('/', $path);

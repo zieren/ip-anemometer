@@ -1,15 +1,6 @@
-import RPi.GPIO as GPIO  #@UnresolvedImport
 import datetime
-import operator
 import threading
-import sys
 import time
-
-import K
-
-
-def client_md5():
-  return sys.argv[1] if len(sys.argv) > 1 else K.NOT_AVAILABLE
 
 
 def join_all_threads(timeout_seconds):
@@ -37,17 +28,3 @@ def timestamp_to_string(timestamp):
 def duration_to_rps(duration):
   """Convert duration (in millis) to rotations per second."""
   return 1000.0 / duration
-
-
-def read_stable(pin, num, interval_millis, log = None):
-  # Store results in a list to investigate whether this works.
-  reads = {}
-  for _ in range(num):
-    if reads:
-      time.sleep(interval_millis / 1000.0)
-    r = GPIO.input(pin)
-    reads[r] = reads.get(r, 0) + 1
-  result = max(reads.iteritems(), key=operator.itemgetter(1))[0]
-  if log:
-    log.debug('read_stable: %s -> %d' % (reads, result))
-  return result

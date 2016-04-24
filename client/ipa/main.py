@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# Since some modules may throw on import (e.g. missing dependencies for optional hardware),
+# parse arguments first so they are available and --help is processed.
+from args import ARGS
+ARGS.parse()
+
 import Queue
 import RPi.GPIO as GPIO  #@UnresolvedImport
 import os
@@ -36,7 +41,10 @@ class Anemometer:
   def __init__(self):
     self._log = log.get_logger('ipa.main')
     self._log.info(K.CLIENT_GREETING)
-    self._log.info('client md5: %s' % common.client_md5())
+    auth_info = ((' (authenticated as user "%s")' % ARGS.server_username())
+                 if ARGS.server_username() else '')
+    self._log.info('URL: %s%s' % (ARGS.server_url(), auth_info))
+    self._log.info('MD5: %s' % ARGS.archive_md5())
     if C.DEMO_MODE_ENABLED():
       self._log.warn('DEMO MODE ENABLED')
     # Create main command queue.
