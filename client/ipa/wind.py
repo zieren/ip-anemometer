@@ -4,7 +4,7 @@ import calibration_logger
 import common
 from config import C
 import log
-import wind_sensor
+import wind_revolutions
 import wind_stats
 
 
@@ -13,7 +13,7 @@ class Wind:
 
   def __init__(self, calibration_mode=False):
     self._log = log.get_logger('ipa.wind')
-    self._revolutions = wind_sensor.Revolutions()
+    self._revolutions = wind_revolutions.Revolutions(C.WIND_EDGES_PER_REV())
     self._startup_time = common.timestamp()
     # TODO: Consider removing start timestamp and only use sample start/end timestamps.
     self._calibration_mode = calibration_mode
@@ -23,7 +23,8 @@ class Wind:
       self._register_callback(self._revolutions.calibration_add_edge_and_log)
     else:
       self._register_callback(self._revolutions.add_edge)
-      self._calc = wind_stats.WindStatsCalculator(self._startup_time)
+      self._stats = wind_stats.WindStats(C.WIND_HSF(), C.WIND_LSF(), C.WIND_MAX_ROTATION(),
+                                         self._startup_time)
     self._log.info('initialized - CALIBRATION MODE' if calibration_mode else 'initialized')
     self._log.info('pin=%d edges=%d debounce=%dms LSF=%g HSF=%g max=%dms' % (
         C.WIND_INPUT_PIN(), C.WIND_EDGES_PER_REV(), C.WIND_DEBOUNCE_MILLIS(), C.WIND_LSF(),
@@ -54,8 +55,8 @@ class Wind:
       # sample.)
       up_to_time = max(up_to_time, revs[-1])
     for ts in revs:
-      self._calc.next_timestamp(ts)
-    return 'wind', self._calc.get_stats_and_reset(up_to_time)
+      self._stats.next_timestamp(ts)
+    return 'wind', self._stats.get_stats_and_reset(up_to_time)
 
   def terminate_calibration(self):
     self._calibration_logger.terminate()

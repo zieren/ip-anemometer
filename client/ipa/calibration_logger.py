@@ -3,8 +3,9 @@ import threading
 import traceback
 
 import common
+from config import C
 import log
-from wind_stats import compute_kmh
+import wind_stats
 
 
 _WINDOW_SIZE = 10000  # running average for last 10s
@@ -35,6 +36,8 @@ class CalibrationLogger:
   """Uses a worker thread to not block the event handling thread calling log()."""
 
   def __init__(self):
+    # We need WindStats.compute_kmh(). Timestamp isn't needed, so just use 0.
+    self._stats = wind_stats.WindStats(C.WIND_HSF(), C.WIND_LSF(), C.WIND_MAX_ROTATION(), 0)
     self._v_max = 0
     self._v_window = {}
     self._queue = Queue.Queue()
@@ -42,9 +45,9 @@ class CalibrationLogger:
     self._worker.start()
 
   def log(self, timestamp_and_duration):
-    '''timestamp_and_duration is a tuple of timestamp and duration, both in millis.'''
+    """timestamp_and_duration is a tuple of timestamp and duration, both in millis."""
     ts, duration = timestamp_and_duration
-    v = compute_kmh(duration)
+    v = self._stats.compute_kmh(duration)
     self._v_max = max(self._v_max, v)
     avg = self.update_average(v, ts)
     self._queue.put((ts, duration, v, avg, self._v_max))

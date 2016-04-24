@@ -1,16 +1,12 @@
 import common
 import threading
 
-from config import C
-
 
 class Revolutions:
   """Stores the timestamps of wind sensor revolutions."""
 
-  # Remember config value to avoid config call in event handler.
-  _EDGES_PER_REV = C.WIND_EDGES_PER_REV()
-
-  def __init__(self):
+  def __init__(self, edges_per_rev):
+    self._edges_per_rev = edges_per_rev
     self._lock = threading.RLock()  # re-entrant for use in calibration_add_edge_and_log
     # Edges seen in the current revolution.
     self._edges = 0
@@ -27,7 +23,7 @@ class Revolutions:
   def add_edge(self, pin_ignored):
     """Count one edge."""
     with self._lock:
-      self._edges = (self._edges + 1) % Revolutions._EDGES_PER_REV
+      self._edges = (self._edges + 1) % self._edges_per_rev
       if self._edges == 0:
         self._revs.append(common.timestamp())
 
