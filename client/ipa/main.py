@@ -76,14 +76,14 @@ class Anemometer:
 
   def _shutdown(self):
     """Deregister GPIO callbacks and attempt to shut down all threads gracefully."""
-    if not C.DEMO_MODE_ENABLED():
-      GPIO.cleanup()
     self._uploader_termination_event.set()
     threads_left = common.join_all_threads(C.TIMEOUT_SHUTDOWN_SECONDS())
     if threads_left:
       self._log.warning('%d thread(s) failed to shutdown' % threads_left)
     else:
       self._log.info('all threads shutdown successfully')
+    if not C.DEMO_MODE_ENABLED():
+      GPIO.cleanup()  # Do this last, otherwise GPIO may fail in running threads.
 
   def _process_commands(self):
     """Listen on the command queue and processes commands."""
