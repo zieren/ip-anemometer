@@ -9,7 +9,6 @@ from config import C
 from logger import LOGGER_FACTORY
 
 
-
 class SpiAdc:
   _CHANNELS = C.ADC_CHANNELS()
   _VREFS = C.ADC_VREFS()
