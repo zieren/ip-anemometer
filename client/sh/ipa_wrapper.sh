@@ -28,7 +28,7 @@ fi
 DOWNLOAD_URL="$SERVER_URL/dl.php"
 
 # Internal variables.
-GREETING="IP anemometer wrapper 0.3.0 - (c) 2015-2016 Joerg Zieren - http://zieren.de - GNU GPL v3"
+GREETING="IP anemometer wrapper 0.3.0 - (c) 2016 Joerg Zieren - http://zieren.de - GNU GPL v3"
 TIME_BARRIER=0  # epoch seconds
 DL_FILENAME=ipa-update.zip
 MD5=n/a
