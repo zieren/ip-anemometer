@@ -19,10 +19,10 @@ function epoch_seconds() {
 function log() {
   local MESSAGE="$(format_date) $1"
   echo $MESSAGE
-  echo $MESSAGE >> $LOG_FILENAME
+  echo $MESSAGE >> "$LOG_FILENAME"
   local SIZE=$(stat --format=%s $LOG_FILENAME)
   if [ $SIZE -gt $LOG_FILE_ROLLOVER_SIZE ]; then
-    mv $LOG_FILENAME ${LOG_FILENAME}-$(format_date)
+    mv "$LOG_FILENAME" "${LOG_FILENAME}-$(format_date)"
     prune $NUM_BACKUP_LOG_FILES $(ls_logs)
   fi
 }
@@ -37,7 +37,7 @@ function prune() {
   for FILE in $*; do
     let "INDEX=$INDEX + 1"
     if [ $INDEX -gt $NUM_TO_KEEP ]; then
-      rm -rf $FILE
+      rm -rf "$FILE"
       log "removed $FILE"
     fi
   done
