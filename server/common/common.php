@@ -10,7 +10,7 @@ ini_set('precision', 14);
 define('PHP_MIN_VERSION', '5.3');
 define('LOG_DIR', '../logs');
 define('CONFIG_PHP', '../common/config.php');
-define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-update.zip');
+define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-client.zip');
 define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
 define('CONFIG_DEFAULT_FILENAME', '../admin/default.cfg');
 // Maximum amount of time the desired window size is shifted back to compensate for upload
@@ -155,10 +155,12 @@ function tokey($arg) {
 
 // TODO: This is slightly misplaced in common.php.
 // TODO: This should probably make a copy of the file and move it back to avoid races.
-// TODO: Would be nice to avoid timestamps (of ipa.cfg - and the operation itself?) in the .zip,
-// since they affect the md5 and result in an unnecessary download. Use touch()?
-/** Builds the client app .zip by adding the client config from $db to CLIENT_APP_ZIP_FILENAME. */
+/**
+ * Builds the client app .zip by adding the client config from $db to CLIENT_APP_ZIP_FILENAME.
+ * Updates the client_version in the config first, to be included in the .zip.
+ */
 function buildClientAppZip($db) {
+  $db->setConfig('c:client_version', timestamp());
   $zip = new ZipArchive();
   $retval = $zip->open(CLIENT_APP_ZIP_FILENAME, ZipArchive::CREATE);
   if ($retval !== true) {
@@ -169,12 +171,6 @@ function buildClientAppZip($db) {
       && $zip->close();
   if (!$ok) {
     throw new Exception('failed to add '.CLIENT_APP_CFG_FILENAME.' to '.CLIENT_APP_ZIP_FILENAME);
-  }
-  $md5 = md5_file(CLIENT_APP_ZIP_FILENAME);
-  if ($md5) {
-    $db->setConfig('s:client_md5', $md5);
-  } else {
-    $db->clearConfig('s:client_md5');
   }
 }
 ?>

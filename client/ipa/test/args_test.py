@@ -15,13 +15,12 @@ class MockOptionParser:
 class Test(unittest.TestCase):
 
   def _doTest(self, input_url, expected_url, expected_username=None, expected_password=None):
-    parser = MockOptionParser((None, [input_url, 'md5']))
+    parser = MockOptionParser((None, [input_url]))
     ARGS._create_parser = parser.create_parser
     ARGS.parse()
     self.assertEqual(ARGS.server_url(), expected_url)
     self.assertEqual(ARGS.server_username(), expected_username)
     self.assertEqual(ARGS.server_password(), expected_password)
-    self.assertEqual(ARGS.archive_md5(), 'md5')
 
   def test_ParseArgs(self):
     self._doTest('foo', 'http://foo/')

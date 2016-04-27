@@ -20,21 +20,18 @@ function handleRequest() {
   try {
     $db->beginTransaction();
     $meta = $data['meta'];  // Metadata is required in each request.
-    $clientAppMd5 = get($meta['md5'], NOT_AVAILABLE);
-    $serverAppMd5 = get($config['s:client_md5'], NOT_AVAILABLE);
-    $logger->debug('client md5: '.$clientAppMd5.' -- server has: '.$serverAppMd5);
+    $clientVersionOnClient = get($meta['client_version'], NOT_AVAILABLE);
+    $clientVersionOnServer = get($config['c:client_version'], NOT_AVAILABLE);
+    $logger->debug('client version: '.$clientVersionOnClient
+        .' -- server has: '.$clientVersionOnServer);
 
-    // First check whether a client update is available. Note that on startup the client always
-    // downloads the latest version, so this applies only to updates while the client is running.
-    // When the client is started directly (i.e. not via the wrapper) it sets its md5 to
-    // NOT_AVAILABLE. We don't want to exit in that special case.
-    if ($clientAppMd5 != $serverAppMd5
-        && $clientAppMd5 != NOT_AVAILABLE && $serverAppMd5 != NOT_AVAILABLE) {
-      $logger->notice('updating client '.$clientAppMd5.' to '.$serverAppMd5);
-      $response['exit'] = 0;  // retval 0 will exit -> update -> restart the client
-      // We trigger the client update also if our status is not OK, since that is often caused by an
-      // outdated client version. Updating drops the data that the old client was trying to upload,
-      // but since this event should be rare we accept that.
+    // Check whether the server has a different client version, and if so, make the wrapper download
+    // it. We don't care whether the version on the server is actually newer or older.
+    if ($clientVersionOnClient != $clientVersionOnServer) {
+      $logger->notice('updating client '.$clientVersionOnClient.' to '.$clientVersionOnServer);
+      $response['exit'] = 102;  // retval 102 will exit -> update -> restart the client
+      // We trigger the client update also if our status is not OK, since that may be caused by an
+      // outdated client version.
     }
 
     // TODO: If 'upto' is only the newest wind timestamp, we don't really need it.

@@ -116,5 +116,8 @@ class Config:
   def LOGGING_BACKUP_COUNT(self):
     return int(self._cfg['logging_backup_count'])
 
+  def CLIENT_VERSION(self):
+    return self._cfg['client_version']
+
 
 C = Config()

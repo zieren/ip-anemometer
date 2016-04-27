@@ -30,7 +30,7 @@ class Anemometer:
     auth_info = ((' (authenticated as user "%s")' % ARGS.server_username())
                  if ARGS.server_username() else '')
     self._log.info('URL: %s%s' % (ARGS.server_url(), auth_info))
-    self._log.info('MD5: %s' % ARGS.archive_md5())
+    self._log.info('client version: %s' % C.CLIENT_VERSION())
     if C.DEMO_MODE_ENABLED():
       self._log.warn('DEMO MODE ENABLED')
     # Create main command queue.

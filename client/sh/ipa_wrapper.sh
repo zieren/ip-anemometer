@@ -25,26 +25,9 @@ if [ -z "$SERVER_URL" ]; then
   exit 1
 fi
 
-DOWNLOAD_URL="$SERVER_URL/dl.php"
-
 # Internal variables.
 GREETING="IP anemometer wrapper 0.3.0 - (c) 2016 Joerg Zieren - http://zieren.de - GNU GPL v3"
-TIME_BARRIER=0  # epoch seconds
-DL_FILENAME=ipa-update.zip
-MD5=n/a
-
-function set_time_barrier() {
-  let "TIME_BARRIER=$(epoch_seconds) + $RUN_RETRY_SECONDS"
-}
-
-function wait_time_barrier() {
-  local SECONDS
-  let "SECONDS=$TIME_BARRIER - $(epoch_seconds)"
-  if [ $SECONDS -gt 0 ]; then
-    log "waiting $SECONDS seconds before restarting main program"
-    sleep $SECONDS
-  fi
-}
+DL_FILENAME=ipa-client.zip
 
 function sleep_dl_retry() {
   log "sleeping $DL_RETRY_SECONDS seconds before retrying download"
@@ -63,42 +46,44 @@ log "$GREETING"
 
 ./await_clock_sync.sh
 
+UPDATE_CLIENT=0
+if [ ! -f current/main.py ]; then
+  log "client not found, will download"
+  UPDATE_CLIENT=1
+fi
 while true; do
-  rm -f $DL_FILENAME
-  log "checking for new client (current: $MD5)"
-  curl -sS "${DOWNLOAD_URL}?md5=${MD5}" -o $DL_FILENAME || (sleep_dl_retry ; continue)
-  # If there is no update, the server sends an empty response and curl produces no file.
-  # TODO: Handle error case (such as incorrect URL) and show a helpful message.
-  if [ -f $DL_FILENAME ]; then  # install new archive
-    MD5=$(md5sum $DL_FILENAME | cut -d ' ' -f 1)
-    log "client downloaded (new: $MD5)"
+  # Download client archive if no client exists (first run).
+  if [ $UPDATE_CLIENT -ne 0 ]; then
+    log "downloading client"
+    rm -f "$DL_FILENAME"
+    curl -sS "$SERVER_URL/$DL_FILENAME" -o "$DL_FILENAME" || (sleep_dl_retry ; continue)
+    log "client downloaded"
     DIR=ipa-$(format_date)
     unzip -qq -d $DIR $DL_FILENAME
     if [ $? -ne 0 ]; then
       log "unzip failed"
       rm -rf $DIR
+      # TODO Should we rather exit? Is this likely to be fixed over time?
       sleep_dl_retry
       continue
     fi
+    UPDATE_CLIENT=0
     chmod a+x $(ls $DIR/*.py $DIR/*.sh 2> /dev/null)
     ln -sfn $DIR current
     rm $DL_FILENAME
     log "client installed in $DIR"
     prune $NUM_DIRS_TO_KEEP $(ls_ipa_dirs)
-  else  # continue with current version
-    log "no new client available"
-    wait_time_barrier  # throttle restarts of the same binary
   fi
-  set_time_barrier
-  log "starting main program"
+  log "starting client"
   cd current
-  sudo python main.py "$SERVER_URL" "$MD5"
+  sudo python main.py "$SERVER_URL"
   RETVAL=$?
   cd ..
-  log "main program returned exit code $RETVAL"
+  log "client returned exit code $RETVAL"
   case $RETVAL in
-    0)  # no error - restart
-      continue
+    0)  # no error; exit
+      log "exiting"
+      exit
       ;;
     100)  # shutdown
       log "shutting down"
@@ -108,7 +93,13 @@ while true; do
       log "rebooting"
       sudo reboot
       ;;
+    102)  # update
+      log "update available"
+      UPDATE_CLIENT=1
+      continue
+      ;;
     *)  # error
+      log "restarting client"  # ... hoping that the error was transient
       continue
       ;;
   esac
