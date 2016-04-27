@@ -69,3 +69,7 @@ div.ipaStatus {
 div.ipaStatusOk {
   display: none;
 }
+
+div#idIpaSpinnerContainer {
+  position: relative;
+}

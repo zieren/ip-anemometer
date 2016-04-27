@@ -36,7 +36,8 @@ function intvalWithTrim($s) {
 function ipa($atts) {
   $options = array(
     'url' => array('url', quoteWithTrim),
-    'period' => array('minutes', intvalWithTrim)
+    'period' => array('minutes', intvalWithTrim),
+    'spinner' => array('showSpinner', intvalWithTrim)
   );
   $handlers = array(
     'status' => status,
@@ -89,6 +90,7 @@ function ipaViewJS($optionsJS) {
   $jsUrl = plugin_dir_url(__FILE__).'/ipa.js';
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
 <script type="text/javascript" src="$jsUrl"></script>
 <script>
 
@@ -159,6 +161,7 @@ function periodSelector($atts) {
       Minutes: <input id="periodInput" type="text" maxlength="4" size="4"
           onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period_selector'].'" />
       <button onclick="ipaView.requestStats()">Load</button>
+      <div id="idIpaSpinnerContainer"></div>
     </div>';
 }
 

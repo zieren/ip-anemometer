@@ -5,6 +5,7 @@
 <link rel="stylesheet" type="text/css" href="ipa.css" />
 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
 <script type="text/javascript" src="ipa.js"></script>
 <script type="text/javascript">
 
@@ -70,6 +71,7 @@ google.setOnLoadCallback(ipaView.requestStats);
   <input id="minutesInput" type="text" maxlength="4" size="4"
       onkeypress="ipaView.handleKeyPress(event)" value="60" />
   <button onclick="ipaView.requestStats()">Load</button>
+  <div id="idIpaSpinnerContainer"></div>
 </div>
 <div id="summary" align="center"></div>
 <div id="time" class="chart expand"></div>

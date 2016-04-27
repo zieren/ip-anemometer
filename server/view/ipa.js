@@ -19,6 +19,7 @@ ipa.Options = function() {
   this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
   this.dummy = false;  // Output inconsistent dummy data for testing.
   this.maxWindLatencyMinutes = 15;  // Show a warning when wind data is older.
+  this.showSpinner = 1;  // Show spinner while loading.
 }
 
 ipa.Tools = {}
@@ -75,6 +76,14 @@ ipa.Chart = function(options) {
 ipa.Chart.prototype.requestStats = function(opt_callback) {
   var isAsync = typeof(opt_callback) !== 'undefined';
   var request = new XMLHttpRequest();
+  var spinner = null;
+  if (this.options.showSpinner) {
+    var spinnerContainer = document.getElementById('idIpaSpinnerContainer');
+    var spinnerOptions = {
+        scale: 4
+    }
+    spinner = new Spinner(spinnerOptions).spin(spinnerContainer);
+  }
   request.open('GET',
       this.options.url
       + '?m=' + this.options.minutes
@@ -88,6 +97,9 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
   if (isAsync) {
     var chart = this;
     request.onreadystatechange = function() {
+      if (spinner) {
+        spinner.stop();
+      }
       if (request.readyState == 4 && request.status == 200) {
         chart.stats = JSON.parse(request.responseText);
         // TODO: Should we run the callback for all states instead of just success?
