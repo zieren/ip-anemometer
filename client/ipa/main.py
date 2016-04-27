@@ -5,9 +5,9 @@
 from args import ARGS
 ARGS.parse()
 
+import os
 import Queue
 import RPi.GPIO as GPIO  #@UnresolvedImport
-import os
 import sys
 import threading
 import traceback
@@ -19,20 +19,6 @@ from logger import LOGGER_FACTORY
 import metadata
 import temperature
 import uploader
-if C.DEMO_MODE_ENABLED():
-  import demo.demo_dht as dht  # @UnusedImport
-  import demo.demo_door as door  # @UnusedImport
-  import demo.demo_huawei_status as huawei_status  # @UnusedImport
-  import demo.demo_pilot_count as pilot_count  # @UnusedImport
-  import demo.demo_spi_adc as spi_adc  # @UnusedImport
-  import demo.demo_wind as wind  # @UnusedImport
-else:
-  import dht  # @Reimport
-  import door  # @Reimport
-  import huawei_status  # @Reimport
-  import pilot_count  # @Reimport
-  import spi_adc  # @Reimport
-  import wind  # @Reimport
 
 
 class Anemometer:
@@ -60,18 +46,46 @@ class Anemometer:
     self._uploader = uploader.Uploader(self._main_cq, self._uploader_termination_event)
     # Create data sources.
     GPIO.setmode(GPIO.BCM)  # required before Wind()
-    self._uploader.add_data_source(wind.Wind(), True)
     self._uploader.add_data_source(temperature.Temperature(), True)
     self._uploader.add_data_source(metadata.Metadata(), False)
+
+    # Import modules only when enabled, since some again import optional libraries (e.g. DHT).
+    # In demo mode, enable all and import demo instances.
+    if True:  # TODO: Make wind optional.
+      if C.DEMO_MODE_ENABLED():
+        import demo.demo_wind as wind  # @UnusedImport
+      else:
+        import wind  # @Reimport
+      self._uploader.add_data_source(wind.Wind(), True)
     if C.DHT_ENABLED() or C.DEMO_MODE_ENABLED():
+      if C.DEMO_MODE_ENABLED():
+        import demo.demo_dht as dht  # @UnusedImport
+      else:
+        import dht  # @Reimport
       self._uploader.add_data_source(dht.Dht(), True)
     if C.ADC_ENABLED() or C.DEMO_MODE_ENABLED():
+      if C.DEMO_MODE_ENABLED():
+        import demo.demo_spi_adc as spi_adc  # @UnusedImport
+      else:
+        import spi_adc  # @Reimport
       self._uploader.add_data_source(spi_adc.SpiAdc(), True)
     if C.HUAWEI_ENABLED() or C.DEMO_MODE_ENABLED():
+      if C.DEMO_MODE_ENABLED():
+        import demo.demo_huawei_status as huawei_status  # @UnusedImport
+      else:
+        import huawei_status  # @Reimport
       self._uploader.add_data_source(huawei_status.HuaweiStatus(), True)
     if C.DOOR_ENABLED() or C.DEMO_MODE_ENABLED():
+      if C.DEMO_MODE_ENABLED():
+        import demo.demo_door as door  # @UnusedImport
+      else:
+        import door  # @Reimport
       self._uploader.add_data_source(door.Door(), True)
     if C.PILOTS_ENABLED() or C.DEMO_MODE_ENABLED():
+      if C.DEMO_MODE_ENABLED():
+        import demo.demo_pilot_count as pilot_count  # @UnusedImport
+      else:
+        import pilot_count  # @Reimport
       self._uploader.add_data_source(pilot_count.PilotCount(), True)
 
   def _shutdown(self):

@@ -1,7 +1,4 @@
-try:
-  import spidev  #@UnresolvedImport
-except ImportError:
-  pass  # TODO: This will then crash; print a friendly message instead?
+import spidev
 
 import common
 import config
