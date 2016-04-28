@@ -56,16 +56,27 @@ while true; do
   if [ $UPDATE_CLIENT -ne 0 ]; then
     log "downloading client"
     rm -f "$DL_FILENAME"
-    curl -sS "$SERVER_URL/$DL_FILENAME" -o "$DL_FILENAME" || (sleep_dl_retry ; continue)
+    HTTP_CODE=$(curl -sS "$SERVER_URL/$DL_FILENAME" -o "$DL_FILENAME" -w "%{http_code}")
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]; then
+      log "download failed, curl returned error code $RETVAL"
+      # Maybe just a flaky link; wait and retry.
+      sleep_dl_retry
+      continue
+    fi
+    if [ $HTTP_CODE -ne 200 ]; then
+      # This error is likely permanent.
+      log "download failed, HTTP error code $HTTP_CODE (exiting)"
+      exit
+    fi
     log "client downloaded"
     DIR=ipa-$(format_date)
     unzip -qq -d $DIR $DL_FILENAME
     if [ $? -ne 0 ]; then
-      log "unzip failed"
+      # This error is likely permanent.
+      log "unzip failed (exiting)"
       rm -rf $DIR
-      # TODO Should we rather exit? Is this likely to be fixed over time?
-      sleep_dl_retry
-      continue
+      exit
     fi
     UPDATE_CLIENT=0
     chmod a+x $(ls $DIR/*.py $DIR/*.sh 2> /dev/null)
