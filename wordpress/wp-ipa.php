@@ -112,7 +112,7 @@ ipaView.handleKeyPress = function(event) {
 ipaView.options = { $optionsJS };
 
 ipaView.requestStats = function() {
-  var periodInput = document.getElementById('periodInput');
+  var periodInput = document.getElementById('idIpaWpPeriodInput');
   if (periodInput) {
     ipaView.options.minutes = periodInput.value;
   }
@@ -130,19 +130,19 @@ ipaView.draw = function(that, draw, id) {
 
 ipaView.updateChart = function(opt_request) {
   var c = ipaView.chart;
-  ipaView.draw(c, c.drawStatus, 'ipaStatus');
-  ipaView.draw(c, c.drawWindSummary, 'idIpaSummary');
-  ipaView.draw(c, c.drawTimeSeries, 'ipaSpeed');
-  ipaView.draw(c, c.drawHistogram, 'ipaHistogram');
-  ipaView.draw(c, c.drawTempHum, 'ipaTempHum');
-  ipaView.draw(c, c.drawAdcChannel, 'ipaAdc');
-  ipaView.draw(c, c.drawDoor, 'ipaDoor');
-  ipaView.draw(c, c.drawPilots, 'ipaPilots');
-  ipaView.draw(c, c.drawLag, 'ipaLag');
-  ipaView.draw(c, c.drawTemperature, 'ipaTemperature');
-  ipaView.draw(c, c.drawSignalStrength, 'ipaSignalStrength');
-  ipaView.draw(c, c.drawNetworkType, 'ipaNetworkType');
-  ipaView.draw(c, c.drawTransferVolume, 'ipaTransferVolume');
+  ipaView.draw(c, c.drawStatus, 'idIpaWpStatus');
+  ipaView.draw(c, c.drawWindSummary, 'idIpaWpSummary');
+  ipaView.draw(c, c.drawTimeSeries, 'idIpaWpSpeed');
+  ipaView.draw(c, c.drawHistogram, 'idIpaWpHistogram');
+  ipaView.draw(c, c.drawTempHum, 'idIpaWpTempHum');
+  ipaView.draw(c, c.drawAdcChannel, 'idIpaWpAdc');
+  ipaView.draw(c, c.drawDoor, 'idIpaWpDoor');
+  ipaView.draw(c, c.drawPilots, 'idIpaWpPilots');
+  ipaView.draw(c, c.drawLag, 'idIpaWpLag');
+  ipaView.draw(c, c.drawTemperature, 'idIpaWpTemperature');
+  ipaView.draw(c, c.drawSignalStrength, 'idIpaWpSignalStrength');
+  ipaView.draw(c, c.drawNetworkType, 'idIpaWpNetworkType');
+  ipaView.draw(c, c.drawTransferVolume, 'idIpaWpTransferVolume');
 }
 
 google.setOnLoadCallback(ipaView.requestStats);
@@ -152,13 +152,13 @@ THEEND;
 }
 
 function status($atts) {
-  return '<div id="ipaStatus" data-hideok="'.$atts['hideok'].'"></div>';
+  return '<div id="idIpaWpStatus" data-hideok="'.$atts['hideok'].'"></div>';
 }
 
 function periodSelector($atts) {
   return
-    '<div id="idIpaPeriodSelector" class="ipaInput">
-      Minutes: <input id="periodInput" type="text" maxlength="4" size="4"
+    '<div id="idIpaWpPeriodSelector" class="ipaInput">
+      Minutes: <input id="idIpaWpPeriodInput" type="text" maxlength="4" size="4"
           onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period_selector'].'" />
       <button onclick="ipaView.requestStats()">Load</button>
       <div id="idIpaSpinnerContainer"></div>
@@ -166,50 +166,50 @@ function periodSelector($atts) {
 }
 
 function summary($atts) {
-  return '<div id="idIpaSummary"></div>';
+  return '<div id="idIpaWpSummary"></div>';
 }
 
 function speed($atts) {
-  return '<div id="ipaSpeed" class="ipaChart"></div>';
+  return '<div id="idIpaWpSpeed"></div>';
 }
 
 function histogram($atts) {
-  return '<div id="ipaHistogram" class="ipaChart"></div>';
+  return '<div id="idIpaWpHistogram"></div>';
 }
 
 function pilots($atts) {
-  return '<div id="ipaPilots" class="ipaTimeSeries"></div>';
+  return '<div id="idIpaWpPilots"></div>';
 }
 
 function tempHum($atts) {
-  return '<div id="ipaTempHum" class="ipaTimeSeries"></div>';
+  return '<div id="idIpaWpTempHum"></div>';
 }
 
 function adc($atts) {
-  return '<div id="ipaAdc" data-channel="'.$atts['channel'].'" data-label="'.$atts['label']
-      .'" class="ipaTimeSeries"></div>';
+  return '<div id="idIpaWpAdc" data-channel="'.$atts['channel']
+      .'" data-label="'.$atts['label'].'"></div>';
 }
 
 function door($atts) {
-  return '<div id="ipaDoor" class="ipaTimeSeries"></div>';
+  return '<div id="idIpaWpDoor"></div>';
 }
 
 function lag($atts) {
-  return '<div id="ipaLag" class="ipaChart"></div>';
+  return '<div id="idIpaWpLag"></div>';
 }
 
 function temperature($atts) {
-  return '<div id="ipaTemperature" class="ipaChart"></div>';
+  return '<div id="idIpaWpTemperature"></div>';
 }
 
 function signalStrength($atts) {
-  return '<div id="ipaSignalStrength" class="ipaChart"></div>';
+  return '<div id="idIpaWpSignalStrength"></div>';
 }
 
 function networkType($atts) {
-  return '<div id="ipaNetworkType" class="ipaChart"></div>';
+  return '<div id="idIpaWpNetworkType"></div>';
 }
 
 function transferVolume($atts) {
-  return '<div id="ipaTransferVolume" class="ipaChart"></div>';
+  return '<div id="idIpaWpTransferVolume"></div>';
 }
