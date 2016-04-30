@@ -131,7 +131,7 @@ ipaView.draw = function(that, draw, id) {
 ipaView.updateChart = function(opt_request) {
   var c = ipaView.chart;
   ipaView.draw(c, c.drawStatus, 'ipaStatus');
-  ipaView.draw(c, c.drawWindSummary, 'ipaSummary');
+  ipaView.draw(c, c.drawWindSummary, 'idIpaSummary');
   ipaView.draw(c, c.drawTimeSeries, 'ipaSpeed');
   ipaView.draw(c, c.drawHistogram, 'ipaHistogram');
   ipaView.draw(c, c.drawTempHum, 'ipaTempHum');
@@ -166,7 +166,7 @@ function periodSelector($atts) {
 }
 
 function summary($atts) {
-  return '<div id="ipaSummary"></div>';
+  return '<div id="idIpaSummary"></div>';
 }
 
 function speed($atts) {
