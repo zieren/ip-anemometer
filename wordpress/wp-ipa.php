@@ -166,7 +166,7 @@ function periodSelector($atts) {
 }
 
 function summary($atts) {
-  return '<div id="ipaSummary" class="ipaText"></div>';
+  return '<div id="ipaSummary"></div>';
 }
 
 function speed($atts) {
