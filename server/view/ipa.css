@@ -1,10 +1,19 @@
+div#periodSelector {
+  width: 25ch;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
 table.ipaSummary {
   border: 1px solid black;
   border-spacing: 0;
   width: 25ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-table.summary td {
+div.ipaView table.ipaSummary td {
   padding-left: 5px;
   padding-right: 5px;
 }
@@ -67,6 +76,10 @@ div.ipaStatus {
 }
 
 div.ipaStatusOk {
+  background: #dfd;
+}
+
+div.ipaStatusHide {
   display: none;
 }
 

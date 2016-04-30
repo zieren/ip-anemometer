@@ -10,7 +10,7 @@
  */
 
 add_shortcode('ipa', 'ipa');
-wp_register_style('ipaCss', plugin_dir_url(__FILE__).'/wp-ipa.css');
+wp_register_style('ipaCss', plugin_dir_url(__FILE__).'/ipa.css');
 wp_enqueue_style('ipaCss');
 
 function get(&$value, $default=null) {
