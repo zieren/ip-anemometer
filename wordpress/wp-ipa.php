@@ -157,7 +157,7 @@ function status($atts) {
 
 function periodSelector($atts) {
   return
-    '<div id="periodSelector" class="ipaInput">
+    '<div id="idIpaPeriodSelector" class="ipaInput">
       Minutes: <input id="periodInput" type="text" maxlength="4" size="4"
           onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period_selector'].'" />
       <button onclick="ipaView.requestStats()">Load</button>

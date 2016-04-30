@@ -122,26 +122,26 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
   table.className = 'ipaSummary';
   ipa.Chart.insertCells_(table.insertRow())('avg',
       this.stats.wind.avg.toFixed(this.options.fractionalDigits) + ' km/h');
-  table.firstChild.lastChild.children[0].className = 'avg';
-  table.firstChild.lastChild.children[1].className = 'avgValue';
+  table.firstChild.lastChild.children[0].className = 'ipaAvgLabel';
+  table.firstChild.lastChild.children[1].className = 'ipaAvgValue';
   ipa.Chart.insertCells_(table.insertRow())('max',
       this.stats.wind.max.toFixed(this.options.fractionalDigits) + ' km/h');
-  table.firstChild.lastChild.children[0].className = 'max';
-  table.firstChild.lastChild.children[1].className = 'maxValue';
+  table.firstChild.lastChild.children[0].className = 'ipaMaxLabel';
+  table.firstChild.lastChild.children[1].className = 'ipaMaxValue';
   if (this.options.showTimeOfMax) {
     ipa.Chart.insertCells_(table.insertRow())('max@',
         ipa.Chart.formatTimestamp_(this.stats.wind.max_ts));
-    table.firstChild.lastChild.children[0].className = 'maxts';
-    table.firstChild.lastChild.children[1].className = 'maxtsValue';
+    table.firstChild.lastChild.children[0].className = 'ipaMaxtsLabel';
+    table.firstChild.lastChild.children[1].className = 'ipaMaxtsValue';
   }
   ipa.Chart.insertCells_(table.insertRow())('from',
       ipa.Chart.formatTimestamp_(this.stats.wind.start_ts));
-  table.firstChild.lastChild.children[0].className = 'from';
-  table.firstChild.lastChild.children[1].className = 'fromValue';
+  table.firstChild.lastChild.children[0].className = 'ipaFromLabel';
+  table.firstChild.lastChild.children[1].className = 'ipaFromValue';
   ipa.Chart.insertCells_(table.insertRow())('to',
       ipa.Chart.formatTimestamp_(this.stats.wind.end_ts));
-  table.firstChild.lastChild.children[0].className = 'to';
-  table.firstChild.lastChild.children[1].className = 'toValue';
+  table.firstChild.lastChild.children[0].className = 'ipaToLabel';
+  table.firstChild.lastChild.children[1].className = 'ipaToValue';
   element.appendChild(table);
 
   ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
