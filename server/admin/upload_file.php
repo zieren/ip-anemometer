@@ -1,7 +1,8 @@
 <html>
 <body>
 <?php
-/* Store an update file (a .zip) on the server.
+/**
+ * Store an update file (a .zip) on the server.
  */
 
 require_once '../common/common.php';
