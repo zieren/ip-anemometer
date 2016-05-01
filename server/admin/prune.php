@@ -23,13 +23,13 @@ if (get($_GET['days'], null)) {
 
     // Delete log files. Parse KLogger default file name format to determine date.
     $dateString = date('Y-m-d H:i:s', $pruneTimestamp / 1000);
-    $logfiles = scandir('../logs');
+    $logfiles = scandir(LOG_DIR);
     foreach ($logfiles as $f) {
       if (preg_match(LOG_PATTERN, $f, $matches)) {
         $ts = dateStringToTimestamp($matches[1].'-'.$matches[2].'-'.$matches[3])
             + daysToMillis(1);  // We assume 00:00:00 on the file date, but write until 24h later.
         if ($ts < $pruneTimestamp) {
-          unlink($f);
+          unlink(LOG_DIR.'/'.$f);
         }
       }
     }
