@@ -126,6 +126,7 @@ function executeRelativePathComponents($path) {
   return implode('/', $out);
 }
 
+/** Returns epoch time in millis. */
 function timestamp() {
   return round(microtime(true) * 1000);
 }
