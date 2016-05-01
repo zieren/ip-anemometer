@@ -86,8 +86,10 @@ echo
   </p>
 </form>
 <form method="post">
-  <p><input class="ipaDestructive" type="submit" name="clearAll" value="CLEAR ALL DATA" disabled />
-    </p>
+  <p>
+    CLEAR ALL DATA except config
+    <input class="ipaDestructive" type="submit" name="clearAll" value="CLEAR" disabled />
+  </p>
 </form>
 <form>
   <input type="checkbox" name="confirm" id="idIpaVwConfirm"
