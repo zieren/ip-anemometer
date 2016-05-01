@@ -21,7 +21,8 @@ ipaView.clearElement = function(element) {
 ipaView.options = {};
 
 ipaView.requestStats = function() {
-  ipaView.options.minutes = document.getElementById('idIpaVwPeriodInput').value;
+  ipaView.options.minutes = ipa.Tools.durationStringToMinutes(
+      document.getElementById('idIpaVwPeriodInput').value);
 
   ipaView.chart = new ipa.Chart(ipaView.options);
   ipaView.chart.requestStats(ipaView.updateChart);

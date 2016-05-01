@@ -59,6 +59,33 @@ ipa.Tools.compactDateString = function(date) {
   return date.toLocaleString();
 }
 
+ipa.Tools.DURATION_REGEX = /(?=[0-9]+[wdhm]?)/
+ipa.Tools.UNIT_TO_MINUTES = {
+    'w': 7 * 24 * 60,
+    'd': 24 * 60,
+    'h': 60,
+    'm': 1
+}
+/**
+ * Parses a human readable duration string, e.g. "2h5" for 2 hours and 5 minutes. Supports w, d, h
+ * and m (default).
+ */
+ipa.Tools.durationStringToMinutes = function(s) {
+  var minutes = 0;
+  var parts = s.split(ipa.Tools.DURATION_REGEX);
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i].trim().toLowerCase();
+    var unit = part.slice(-1);
+    if (unit in ipa.Tools.UNIT_TO_MINUTES) {
+      unit = ipa.Tools.UNIT_TO_MINUTES[unit];
+    } else {
+      unit = 1;
+    }
+    minutes += parseInt(part) * unit;
+  }
+  return minutes;
+}
+
 ipa.Chart = function(options) {
   this.options = new ipa.Options();
   for (var i in options) {

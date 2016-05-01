@@ -114,7 +114,7 @@ ipaView.options = { $optionsJS };
 ipaView.requestStats = function() {
   var periodInput = document.getElementById('idIpaWpPeriodInput');
   if (periodInput) {
-    ipaView.options.minutes = periodInput.value;
+    ipaView.options.minutes = ipa.Tools.durationStringToMinutes(periodInput.value);
   }
   ipaView.options.timeSeriesPoints = 100;
   ipaView.chart = new ipa.Chart(ipaView.options);
