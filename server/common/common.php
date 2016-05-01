@@ -9,6 +9,7 @@ ini_set('precision', 14);
 // Internal constants.
 define('PHP_MIN_VERSION', '5.3');
 define('LOG_DIR', '../logs');
+define('LOG_PATTERN', '/log_(\d\d\d\d)-(\d\d)-(\d\d)\.txt/');  // for pruning log files
 define('CONFIG_PHP', '../common/config.php');
 define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-client.zip');
 define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip

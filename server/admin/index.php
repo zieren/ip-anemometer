@@ -1,5 +1,17 @@
 <html>
 <body>
+<script type="text/javascript">
+function enableDestructiveButtons(toggleCheckbox) {
+  var checkbox = document.getElementById('idIpaVwConfirm');
+  if (toggleCheckbox) {
+    checkbox.checked = !checkbox.checked;
+  }
+  var buttons = document.getElementsByClassName('ipaDestructive');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].disabled = !checkbox.checked;
+  }
+}
+</script>
 <?php
 require_once '../common/common.php';
 
@@ -11,10 +23,10 @@ if (!isset($db->getConfig()['c:client_version'])) {  // first run
   echo ' done.</i></p>';
 }
 
-if (isset($_POST['clearAll']) && $_POST['confirm']) {
+if (isset($_POST['clearAll'])) {
   $db->dropTablesExceptConfig();
   $db->createMissingTables();
-} else if (isset($_POST['configDefaults']) && $_POST['confirm']) {
+} else if (isset($_POST['configDefaults'])) {
   $db->populateConfig();
   buildClientAppZip($db);
 } else if (isset($_POST['setConfig']) || isset($_POST['clearConfig'])) {
@@ -43,16 +55,17 @@ Components:
 $db->echoConfig();
 
 echo '
-<form action="" method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data">
   <select name="configComponent">
     <option value="client">Client</option>
     <option value="server">Server</option>
   </select>
-  <input type="text" name="configKey" value="key">
-  <input type="text" name="configValue" value="value">
+  <input type="text" name="configKey" value="" placeholder="key">
+  <input type="text" name="configValue" value="" placeholder="value">
   <input type="submit" name="setConfig" value="Set">
   <input type="submit" name="clearConfig" value="Clear">
-</form>';
+  <p><input type="submit" name="configDefaults" value="set defaults for missing keys" /></p>
+  </form>';
 
 echo
 '<hr />
@@ -65,12 +78,23 @@ echo
 
 echo
 '<hr />
-<h2>Manage Database</h2>
-<form action="" method="post">
-  <input type="submit" name="clearAll" value="CLEAR ALL DATA" />
-  <input type="submit" name="configDefaults" value="set missing config values to defaults" />
-  <input type="checkbox" name="confirm" />Yes, I really really want to!
-</form>';
+<h2>Manage Database/Logs</h2>
+<form action="prune.php" method="get">
+  <p>
+    PRUNE data and logs older than <input type="text" name="days" value=""> days.
+    <input class="ipaDestructive" type="submit" value="PRUNE" disabled />
+  </p>
+</form>
+<form method="post">
+  <p><input class="ipaDestructive" type="submit" name="clearAll" value="CLEAR ALL DATA" disabled />
+    </p>
+</form>
+<form>
+  <input type="checkbox" name="confirm" id="idIpaVwConfirm"
+      onclick="enableDestructiveButtons(false)"/>
+  <span onclick="enableDestructiveButtons(true)">Yes, I really really want to!</span>
+</form>
+';
 ?>
 </body>
 </html>

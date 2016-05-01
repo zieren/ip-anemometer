@@ -88,6 +88,17 @@ class Database {
     unset($this->config);
   }
 
+  /** Delete all records prior to $timestamp. */
+  public function pruneTables($timestamp) {
+    $this->query('DELETE FROM wind WHERE start_ts < '.$timestamp);
+    $this->query('DELETE FROM hist WHERE id < (SELECT COALESCE('
+      .'(SELECT hist_id FROM wind ORDER BY start_ts ASC LIMIT 1),'
+      .'9223372036854775807))');  // maximum BIGINT; in case wind is empty
+    foreach (array('temp', 'link', 'meta', 'door', 'pilots', 'temp_hum', 'adc') as $table) {
+      $this->query('DELETE FROM '.$table.' WHERE ts < '.$timestamp);
+    }
+  }
+
   public function insertTemperature($temp) {
     if (count($temp) == 0) {
       $this->log->warning('received empty temperature measurements');
