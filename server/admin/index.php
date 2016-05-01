@@ -48,10 +48,10 @@ echo '
     <option value="client">Client</option>
     <option value="server">Server</option>
   </select>
-  <input type="text" name="'."configKey".'" value="key">
-  <input type="text" name="'."configValue".'" value="value">
-  <input type="submit" name="'."setConfig".'" value="Set">
-  <input type="submit" name="'."clearConfig".'" value="Clear">
+  <input type="text" name="configKey" value="key">
+  <input type="text" name="configValue" value="value">
+  <input type="submit" name="setConfig" value="Set">
+  <input type="submit" name="clearConfig" value="Clear">
 </form>';
 
 echo
