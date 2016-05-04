@@ -1,8 +1,10 @@
 #!/bin/bash
 
-PIDS=$(ps -ef | egrep 'ipa_wrapper|python' | grep -v grep | awk '{print $2}')
-if [ -z "$PIDS" ]; then
+PID=$(ps -ef | egrep "\bsudo python main.py\b" | awk '{print $2}')
+if [ -z "$PID" ]; then
   echo "IPA not running."
   exit 1
+else
+  echo "Killing $PID..."
 fi
-sudo kill $PIDS
+sudo kill $PID
