@@ -3,7 +3,7 @@
  * Plugin Name: IP Anemometer
  * Plugin URI: http://zieren.de
  * Description: Embed wind speed charts in WordPress content. For use with the free <a href="http://zieren.de/">IP anemometer for the Raspberry Pi</a>.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author: J&ouml;rg Zieren
  * Author URI: http://zieren.de
  * License: GPL v3
