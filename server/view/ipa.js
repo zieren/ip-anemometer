@@ -59,7 +59,7 @@ ipa.Tools.compactDateString = function(date) {
   return date.toLocaleString();
 }
 
-ipa.Tools.DURATION_REGEX = /(?=[0-9]+[wdhm]?)/
+ipa.Tools.DURATION_REGEX = /([0-9]+)([wdhm]?) */g
 ipa.Tools.UNIT_TO_MINUTES = {
     'w': 7 * 24 * 60,
     'd': 24 * 60,
@@ -71,17 +71,17 @@ ipa.Tools.UNIT_TO_MINUTES = {
  * and m (default).
  */
 ipa.Tools.durationStringToMinutes = function(s) {
+  s = s.trim();
   var minutes = 0;
-  var parts = s.split(ipa.Tools.DURATION_REGEX);
-  for (var i = 0; i < parts.length; i++) {
-    var part = parts[i].trim().toLowerCase();
-    var unit = part.slice(-1);
+  var part;
+  while ((part = ipa.Tools.DURATION_REGEX.exec(s)) !== null) {
+    var unit = part[2];
     if (unit in ipa.Tools.UNIT_TO_MINUTES) {
       unit = ipa.Tools.UNIT_TO_MINUTES[unit];
     } else {
       unit = 1;
     }
-    minutes += parseInt(part) * unit;
+    minutes += parseInt(part[1]) * unit;
   }
   return minutes;
 }
