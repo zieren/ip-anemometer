@@ -26,7 +26,7 @@ if [ -z "$SERVER_URL" ]; then
 fi
 
 # Internal variables.
-GREETING="IP anemometer wrapper 0.3.1 - (c) 2016 Joerg Zieren - http://zieren.de - GNU GPL v3"
+GREETING="IP anemometer wrapper 0.3.2 - (c) 2016 Joerg Zieren - http://zieren.de - GNU GPL v3"
 DL_FILENAME=ipa-client.zip
 
 function sleep_dl_retry() {
