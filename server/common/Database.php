@@ -32,8 +32,9 @@ class Database {
       $this->createMissingTables();
     }
     // Configure global logger.
-    if (isset($this->getConfig()['s:log_level'])) {
-      $this->log->setLogLevelThreshold(strtolower($this->getConfig()['s:log_level']));
+    $config = $this->getConfig();
+    if (array_key_exists('s:log_level', $config)) {
+      $this->log->setLogLevelThreshold(strtolower($config['s:log_level']));
     }  // else: defaults to debug
   }
 

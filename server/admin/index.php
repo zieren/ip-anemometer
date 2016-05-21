@@ -16,7 +16,7 @@ function enableDestructiveButtons(toggleCheckbox) {
 require_once '../common/common.php';
 
 $db = new Database(true /* create missing tables */);
-if (!isset($db->getConfig()['c:client_version'])) {  // first run
+if (!array_key_exists('c:client_version', $db->getConfig())) {  // first run
   echo '<h2>Initializing...</h2><p><i>This seems to be the first run. Setting default config...';
   $db->populateConfig();
   buildClientAppZip($db);
