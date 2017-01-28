@@ -25,8 +25,8 @@ class Config:
   def _readFile(self):
     for line in open(K.CONFIG_FILENAME, 'r'):
       entry = [x.strip() for x in line.split('=', 1)]
-      if len(entry) != 2 or not entry[0]:
-        raise RuntimeError('invalid config file entry: %s' % line)
+      if len(entry) != 2:
+        raise RuntimeError('invalid line in config file: "%s"' % line)
       self._cfg[entry[0]] = entry[1]
 
   def DEMO_MODE_ENABLED(self):
