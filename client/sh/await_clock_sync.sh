@@ -18,7 +18,7 @@ log "waiting for clock to sync (stratum must be <= $ACCEPTABLE_STRATUM)"
 while [ $i -lt $TIMEOUT_AFTER_CHECKS ]; do
   STRATUM=$(ntpq -c "rv 0 stratum" | sed -r s/.*=//)
   log "stratum now: $STRATUM"
-  if [ -n "$STRATUM" ] && [ $STRATUM -le $ACCEPTABLE_STRATUM ]; then
+  if [ -n "$STRATUM" ] && [ "$STRATUM" -le $ACCEPTABLE_STRATUM ]; then
     log "clock is synced"
     exit 0
   fi
