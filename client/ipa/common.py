@@ -4,14 +4,16 @@ import time
 
 
 def join_all_threads(timeout_seconds):
-  """Join all threads using the specified total timeout. Returns the number of threads failed to
-  join (0 on success)."""
+  """Join all (non-daemon) threads using the specified total timeout. Returns the number of threads
+  failed to join (i.e. 0 on success)."""
   timeout_time = time.time() + timeout_seconds
+  skipped_threads = 0
   for t in threading.enumerate():
-    if t == threading.current_thread():
+    if t == threading.current_thread() or t.daemon:
+      skipped_threads += 1
       continue
     t.join(timeout_time - time.time())  # negative values are OK
-  return len(threading.enumerate()) - 1  # subtract current thread
+  return len(threading.enumerate()) - skipped_threads
 
 
 def timestamp():
