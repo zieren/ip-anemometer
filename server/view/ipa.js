@@ -385,7 +385,7 @@ ipa.Chart.prototype.drawTemperature = function(element) {
     temperatureTable.addRow([new Date(parseInt(temperature[i][0])), temperature[i][1]]);
   }
   var options = {
-      title: 'CPU temperature [\u00B0C]',  // \u00B0 is Unicode for the degree sign
+      title: 'CPU Temperature [\u00B0C]',  // \u00B0 is Unicode for the degree sign
     hAxis: {format: 'HH:mm'},
     legend: 'none'
   };
@@ -408,6 +408,7 @@ ipa.Chart.prototype.drawTempHum = function(element) {
     tempHumTable.addRow([new Date(parseInt(temp[i][0])), hum[i][1], temp[i][1]]);
   }
   var options = {
+    title: 'Temperature/Humidity',
     hAxis: {format: 'HH:mm'},
     legend: {position: 'top'},
     series: {
