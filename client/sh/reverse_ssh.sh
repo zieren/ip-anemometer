@@ -30,6 +30,7 @@ while true; do
       -o StrictHostKeyChecking=no \
       -o UserKnownHostsFile=/dev/null \
       -o ConnectTimeout=15 \
+      -o ExitOnForwardFailure=yes \
       -N -R $FWD_PORT:localhost:22 $REMOTE_ADDRESS -p $REMOTE_PORT
   sleep $WAIT_SECONDS
 done
