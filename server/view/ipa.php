@@ -16,43 +16,72 @@ function getStringParam($name, $default) {
 
 function computeStats() {
   // TODO: These defaults should match the ones in ipa.js.
-  // TODO: This isn't handling "not requested" properly.
-  // TODO: This needs to be simplified.
   // TODO: This should sanitize the input.
-  $windowMinutes = getNumParam('m', REQ_WINDOW_MINUTES_DEFAULT, 1, REQ_WINDOW_MINUTES_MAX);
-  $timestamp = getNumParam('ts', timestamp(), 0, timestamp());
-  $timeSeriesPoints = getNumParam('p', REQ_TIME_SERIES_POINTS_DEFAULT, REQ_TIME_SERIES_POINTS_MIN,
-      REQ_TIME_SERIES_POINTS_MAX);
-  $systemMinutes = getNumParam('s', REQ_SYSTEM_MINUTES, 0, REQ_SYSTEM_MINUTES_MAX);
-  $doorStartMillis = getNumParam('d',
-      $timestamp - daysToMillis(REQ_DOOR_DAYS),
-      $timestamp - daysToMillis(REQ_DOOR_DAYS_MAX),
-      $timestamp);
-  $pilotsStartMillis = getNumParam('pc',  // pc = pilot count
-      $timestamp - daysToMillis(REQ_PILOTS_DAYS),
-      $timestamp - daysToMillis(REQ_PILOTS_DAYS_MAX),
-      $timestamp);
 
   $db = new Database();
+  $config = $db->getConfig();
+  $timeSeriesMaxMinutes = $config['s:query_time_series_max_minutes'];
+  $eventMaxMinutes = $config['s:query_event_max_minutes'];
 
-  $stats = array('wind' =>
-      $db->computeWindStats($timestamp, minutesToMillis($windowMinutes), $timeSeriesPoints));
-  $stats['status'] = $db->readStatus();
-  if ($systemMinutes) {
-    $systemMillis = minutesToMillis($systemMinutes);
-    $stats['sys'] = array(
-        'temp_t' => $db->readTemperature($timestamp, $systemMillis, $timeSeriesPoints),
-        'strength_t' => $db->readSignalStrength($timestamp, $systemMillis, $timeSeriesPoints),
-        'nwtype' => $db->readNetworkType($timestamp, $systemMillis),
-        'traffic' => $db->readTransferVolume(),
-        'lag' => $db->readLag($timestamp, $systemMillis, $timeSeriesPoints));
+  $timestampNow = timestamp();
+  $endTimestamp = getNumParam('upto', $timestampNow, 0, $timestampNow);
+  $maxSamples = getNumParam('samples', REQ_TIME_SERIES_POINTS_DEFAULT, REQ_TIME_SERIES_POINTS_MIN,
+      REQ_TIME_SERIES_POINTS_MAX);
+  $result = array('status' => $db->readStatus());
+
+  // Wind
+  $windowDuration = minutesToMillis(getNumParam('wind', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['wind'] = $db->computeWindStats($endTimestamp, $windowDuration, $maxSamples);
   }
-  // TODO: Don't use $systemMillis. Should this be the same as the wind interval, or 24h?
-  $stats['temp_hum'] = $db->readTempHum($timestamp, $systemMillis, $timeSeriesPoints);
-  $stats['door'] = $db->readDoor($doorStartMillis, $timestamp);
-  $stats['pilots'] = $db->readPilots($pilotsStartMillis, $timestamp);
-  $stats['adc'] = $db->readAdcValues($timestamp, $systemMillis, $timeSeriesPoints);
-  return $stats;
+  // Temperature and humidity
+  $windowDuration = minutesToMillis(getNumParam('tempHum', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['temp_hum'] = $db->readTempHum($endTimestamp, $windowDuration, $maxSamples);
+  }
+  // ADC. TODO: Handle ADC channels individually?
+  $windowDuration = minutesToMillis(getNumParam('adc', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['adc'] = $db->readAdcValues($endTimestamp, $windowDuration, $maxSamples);
+  }
+  // Door
+  $startTimestamp =
+      getNumParam('door', 0, $endTimestamp - minutesToMillis($eventMaxMinutes), $endTimestamp);
+  if ($startTimestamp > 0) {
+    $result['door'] = $db->readDoor($startTimestamp, $endTimestamp);
+  }
+  // Pilots
+  $startTimestamp =
+      getNumParam('pilots', 0, $endTimestamp - minutesToMillis($eventMaxMinutes), $endTimestamp);
+  if ($startTimestamp > 0) {
+    $result['pilots'] = $db->readPilots($startTimestamp, $endTimestamp);
+  }
+  // CPU temperature.
+  $windowDuration = minutesToMillis(getNumParam('cpuTemp', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['cpu_temp'] = $db->readTemperature($endTimestamp, $windowDuration, $maxSamples);
+  }
+  // Signal strength.
+  $windowDuration = minutesToMillis(getNumParam('signal', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['signal_strength'] = $db->readSignalStrength($endTimestamp, $windowDuration, $maxSamples);
+  }
+  // Network type.
+  $windowDuration = minutesToMillis(getNumParam('network', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['network_type'] = $db->readNetworkType($endTimestamp, $windowDuration);
+  }
+  // Total traffic. TODO: This should give traffic within the window.
+  $windowDuration = minutesToMillis(getNumParam('traffic', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['traffic'] = $db->readTransferVolume();
+  }
+  // Lag.
+  $windowDuration = minutesToMillis(getNumParam('lag', 0, 1, $timeSeriesMaxMinutes));
+  if ($windowDuration > 0) {
+    $result['lag'] = $db->readLag($endTimestamp, $windowDuration, $maxSamples);
+  }
+  return $result;
 }
 
 try {

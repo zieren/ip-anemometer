@@ -89,6 +89,8 @@ define('WIND_SAMPLE_AVG', 2);
 define('WIND_SAMPLE_MAX', 3);
 
 // Defaults and limits for request arguments.
+// TODO: Values should be configurable.
+// XXX Remove obsolete ones.
 define('REQ_WINDOW_MINUTES_DEFAULT', 60);
 define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);

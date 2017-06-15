@@ -6,7 +6,7 @@ var ipa = {};
 ipa.Options = function() {
   this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
   this.minutes = 60;  // Compute stats for the last x minutes...
-  this.upToTimestampMillis = -1;  // ... up to here. -1 means now.
+  this.upToTimestamp = 1466004968000; // XXX -1;  // ... up to here. -1 means now.
   this.fractionalDigits = 1;  // Textual output precision.
   // Downsample time series to make charts readable. Increase for wider charts.
   this.timeSeriesPoints = 30;
@@ -112,13 +112,23 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
     spinner = new Spinner(spinnerOptions).spin(spinnerContainer);
   }
   request.open('GET',
+      // XXX Order these.
+      // XXX Use start timestamp for all, instead of duration?
       this.options.url
-      + '?m=' + this.options.minutes
-      + '&p=' + this.options.timeSeriesPoints
-      + '&s=' + this.options.systemStatusMinutes
-      + '&d=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.doorTimeDays - 1)
-      + '&pc=' + ipa.Chart.getStartOfDayDaysAgo_(this.options.pilotsTimeDays - 1)
-      + (this.options.upToTimestampMillis >= 0 ? '&ts=' + this.options.upToTimestampMillis : '')
+      + '?wind=' + this.options.minutes
+      + '&tempHum=' + this.options.minutes
+      + '&samples=' + this.options.timeSeriesPoints
+      + '&adc=' + this.options.systemStatusMinutes
+      + '&cpuTemp=' + this.options.systemStatusMinutes
+      + '&signal=' + this.options.systemStatusMinutes
+      + '&network=' + this.options.systemStatusMinutes
+      + '&traffic=' + this.options.systemStatusMinutes
+      + '&lag=' + this.options.systemStatusMinutes
+      + '&door=' + ipa.Chart.getStartOfDayDaysAgo_(
+          this.options.upToTimestamp, this.options.doorTimeDays - 1)
+      + '&pilots=' + ipa.Chart.getStartOfDayDaysAgo_(
+          this.options.upToTimestamp, this.options.pilotsTimeDays - 1)
+      + (this.options.upToTimestamp >= 0 ? '&upto=' + this.options.upToTimestamp : '')
       + (this.options.dummy ? '&dummy=1' : ''),
       isAsync);
   if (isAsync) {
@@ -380,7 +390,7 @@ ipa.Chart.prototype.drawTemperature = function(element) {
   var temperatureTable = new google.visualization.DataTable();
   temperatureTable.addColumn('datetime');
   temperatureTable.addColumn('number');
-  var temperature = ipa.Tools.sorted(this.stats.sys.temp_t);
+  var temperature = ipa.Tools.sorted(this.stats.cpu_temp);
   for (var i = 0; i < temperature.length; i++) {
     temperatureTable.addRow([new Date(parseInt(temperature[i][0])), temperature[i][1]]);
   }
@@ -440,7 +450,7 @@ ipa.Chart.prototype.drawSignalStrength = function(element) {
   var strengthTable = new google.visualization.DataTable();
   strengthTable.addColumn('datetime');
   strengthTable.addColumn('number');
-  var signalStrength = ipa.Tools.sorted(this.stats.sys.strength_t);
+  var signalStrength = ipa.Tools.sorted(this.stats.signal_strength);
   for (var i = 0; i < signalStrength.length; i++) {
     strengthTable.addRow([new Date(parseInt(signalStrength[i][0])), signalStrength[i][1]]);
   }
@@ -457,7 +467,7 @@ ipa.Chart.prototype.drawNetworkType = function(element) {
   var nwTypeTable = new google.visualization.DataTable();
   nwTypeTable.addColumn('string', 'Type');
   nwTypeTable.addColumn('number', '%');
-  var nwTypes = ipa.Tools.alphasorted(this.stats.sys.nwtype);
+  var nwTypes = ipa.Tools.alphasorted(this.stats.network_type);
   for (var i = 0; i < nwTypes.length; i++) {
     nwTypeTable.addRow([nwTypes[i][0], nwTypes[i][1]]);
   }
@@ -472,7 +482,7 @@ ipa.Chart.prototype.drawTransferVolume = function(element) {
   var volumeTable = new google.visualization.DataTable();
   volumeTable.addColumn('string', 'Volume');
   volumeTable.addColumn('number');
-  var volumes = ipa.Tools.alphasorted(this.stats.sys.traffic);
+  var volumes = ipa.Tools.alphasorted(this.stats.traffic);
   for (var i = 0; i < volumes.length; i++) {
     volumeTable.addRow([volumes[i][0], volumes[i][1] / (1024 * 1024)]);  // in MB
   }
@@ -490,7 +500,7 @@ ipa.Chart.prototype.drawLag = function(element) {
       title: 'Upload lag [m]',
       hAxis: {format: 'HH:mm'}
   };
-  var lag = this.stats.sys.lag;
+  var lag = this.stats.lag;
   for (var ts in lag) {  // just to get any property
     if (lag[ts] instanceof Array) {  // min and max in an array
       this.prepareLagChartMinMax(lagTable, options);
@@ -507,7 +517,7 @@ ipa.Chart.prototype.prepareLagChartMinMax = function(lagTable, options) {
   lagTable.addColumn('datetime');
   lagTable.addColumn('number', 'min');
   lagTable.addColumn('number', 'max');
-  var lag = ipa.Tools.sorted(this.stats.sys.lag);
+  var lag = ipa.Tools.sorted(this.stats.lag);
   for (var i = 0; i < lag.length; i++) {
     var minLag = lag[i][1][0] / (1000 * 60);  // lag in minutes
     var maxLag = lag[i][1][1] / (1000 * 60);
@@ -519,7 +529,7 @@ ipa.Chart.prototype.prepareLagChartMinMax = function(lagTable, options) {
 ipa.Chart.prototype.prepareLagChartSingleValue = function(lagTable, options) {
   lagTable.addColumn('datetime');
   lagTable.addColumn('number');
-  var lag = ipa.Tools.sorted(this.stats.sys.lag);
+  var lag = ipa.Tools.sorted(this.stats.lag);
   for (var i = 0; i < lag.length; i++) {
     lagTable.addRow([new Date(parseInt(lag[i][0])), lag[i][1] / (1000 * 60)]);  // lag in minutes
   }
@@ -535,9 +545,9 @@ ipa.Chart.insertCells_ = function(tr) {
   }
 }
 
-/** Returns epoch millis for 00:00 a.m. the specified number of daysAgo. */
-ipa.Chart.getStartOfDayDaysAgo_ = function(daysAgo) {
-  var d = new Date();
+/** Returns epoch millis for 00:00 a.m. the specified number of daysAgo before timestamp. */
+ipa.Chart.getStartOfDayDaysAgo_ = function(timestamp, daysAgo) {
+  var d = new Date(timestamp);  // XXX Take from an input.
   d.setDate(d.getDate() - daysAgo);
   d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return d.getTime();

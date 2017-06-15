@@ -440,7 +440,7 @@ class Database {
     // shifted back.
     if ($actualWindowDuration < $windowDuration) {
       $newestEndTimestamp = $this->findNewestWindEndTimestamp();
-      $this->log->notice('Rerunning query: end timestamp '
+      $this->log->notice('Rerunning query: end timestamp '  // XXX This is happening for the past.
           .$endTimestamp.' -> '.$newestEndTimestamp);
       if ($newestEndTimestamp && $newestEndTimestamp < $endTimestamp) {
         return $this->computeWindStats($newestEndTimestamp, $windowDuration, $outputLength);
@@ -694,13 +694,13 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, channel, value FROM adc WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
-    $result = $this->query($q, null);
+    $result = $this->query($q);  // XXX Remove all other null args?
     $data = array();
     while ($row = $result->fetch_row()) {
       $ts = $row[0];
       $channel = $row[1];
       $value = floatval($row[2]);
-      if (!$data[$channel]) {
+      if (!array_key_exists($channel, $data)) {
         $data[$channel] = array();
       }
       $data[$channel][tokey($ts)] = $value;
@@ -756,7 +756,7 @@ class Database {
         .$startTimestamp.' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $lag = array();
     $previousUpto = 0;
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     while ($row = $result->fetch_assoc()) {
       $upto = $row['upto'];
       if (!$upto) {  // gaps (value 0) occur when no wind sample was present in the upload
@@ -770,9 +770,9 @@ class Database {
       $lag[tokey($ts)] = $ts - $upto;
       $previousUpto = $upto;
     }
-    // Add the current lag (which might be significant).
+    // Add the final lag (which might be significant).
     if ($previousUpto) {
-      $ts = timestamp();
+      $ts = $endTimestamp;
       $lag[tokey($ts)] = $ts - $previousUpto;
     }
     return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
