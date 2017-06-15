@@ -57,7 +57,7 @@ ipaView.expand = function() {
   for (var i = 0; i < charts.length; ++i) {
     charts[i].style.width = '100%';
   }
-  ipaView.updateChart();
+  ipaView.requestStats();
 }
 
 google.setOnLoadCallback(ipaView.requestStats);
