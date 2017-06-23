@@ -109,6 +109,10 @@ while true; do
       UPDATE_CLIENT=1
       continue
       ;;
+    103)  # restart
+      log "restarting"
+      continue
+      ;;
     143)  # SIGTERM
       log "main application caught SIGTERM, exiting"
       exit
