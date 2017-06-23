@@ -278,7 +278,7 @@ class Database {
     $q = 'SELECT ts, open FROM door WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     // TODO: Read one more row, so we know the state between $startTimestamp and the first row.
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     $door = array(tokey($startTimestamp) => 0);  // assume door initially closed
     $previousOpen = 0;
     while ($row = $result->fetch_row()) {
@@ -349,7 +349,7 @@ class Database {
   public function getConfig() {
     if (!isset($this->config)) {
       $this->config = array();
-      $result = $this->query('SELECT k, v FROM config ORDER BY k ASC', null);
+      $result = $this->query('SELECT k, v FROM config ORDER BY k ASC');
       while ($row = $result->fetch_assoc()) {
         $this->config[$row['k']] = $row['v'];
       }
@@ -436,18 +436,6 @@ class Database {
       $avgKmh += $sample['avg'] * $sampleDuration;
     }
 
-    // Normally the result will cover the desired window. If not, rerun the query with the window
-    // shifted back.
-    if ($actualWindowDuration < $windowDuration) {
-      $newestEndTimestamp = $this->findNewestWindEndTimestamp();
-      $this->log->notice('Rerunning query: end timestamp '  // XXX This is happening for the past.
-          .$endTimestamp.' -> '.$newestEndTimestamp);
-      if ($newestEndTimestamp && $newestEndTimestamp < $endTimestamp) {
-        return $this->computeWindStats($newestEndTimestamp, $windowDuration, $outputLength);
-      }
-      // The window is too short, but we can't do anything about it because there is either no
-      // data at all, or we've already shifted the window back.
-    }
     if (count($selectedSamples) == 0) {
       return null;  // indicates that no data is available at all
     }
@@ -457,7 +445,7 @@ class Database {
     // Compute histogram.
     $q = 'SELECT id, v, p from hist WHERE id >= '.$minHistId.' AND id <= '.$maxHistId
         .' ORDER BY id DESC';
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     $histogram = array();
     $i = 0;
     $sampleDuration = Database::getSampleDuration($selectedSamples[0]);
@@ -494,15 +482,6 @@ class Database {
         'end_ts' => $actualEndTimestamp,
         'time_series' => Database::downsampleWind($timeSeries, $outputLength)
     );
-  }
-
-  private function findNewestWindEndTimestamp() {
-    $q = 'SELECT start_ts, end_ts FROM wind ORDER BY start_ts DESC LIMIT 1';
-    $result = $this->query($q, null);
-    if ($row = $result->fetch_assoc()) {
-      return $row['end_ts'];
-    }
-    return null;
   }
 
   private static function getSampleDuration($sample) {
@@ -666,7 +645,7 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, t FROM temp WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     $temp = array();
     while ($row = $result->fetch_row()) {
       $temp[tokey($row[0])] = floatval($row[1]);
@@ -678,7 +657,7 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, t, h FROM temp_hum WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     $temp = array();
     $hum = array();
     while ($row = $result->fetch_row()) {
@@ -694,7 +673,7 @@ class Database {
     $startTimestamp = $endTimestamp - $windowDuration;
     $q = 'SELECT ts, channel, value FROM adc WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
-    $result = $this->query($q);  // XXX Remove all other null args?
+    $result = $this->query($q);
     $data = array();
     while ($row = $result->fetch_row()) {
       $ts = $row[0];
@@ -716,7 +695,7 @@ class Database {
     $q = 'SELECT ts, strength FROM link WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $strength = array();
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     while ($row = $result->fetch_row()) {
       $strength[tokey($row[0])] = intval($row[1]);
     }
@@ -729,7 +708,7 @@ class Database {
         .' WHERE ts >= '.$startTimestamp.' AND ts <= '.$endTimestamp
         .' GROUP BY nwtype';
     $nwtypes = array();
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     while ($row = $result->fetch_row()) {
       $nwtypes[$row[0]] = intval($row[1]);  // assume equal weight
     }
@@ -738,7 +717,7 @@ class Database {
 
   public function readTransferVolume() {
     $q = 'SELECT upload, download FROM link ORDER BY ts DESC LIMIT 1';
-    $result = $this->query($q, null);
+    $result = $this->query($q);
     if ($row = $result->fetch_row()) {
       $upload = $row[0];
       $download = $row[1];
@@ -820,9 +799,7 @@ class Database {
    * the specified level (specify null to disable logging).
    */
   private function query($query, $logLevel = 'debug') {
-    if ($logLevel) {
-      $this->log->log($logLevel, 'Query: '.$query);
-    }
+    $this->log->log($logLevel, 'Query: '.$query);
     if ($result = $this->mysqli->query($query)) {
       return $result;
     }

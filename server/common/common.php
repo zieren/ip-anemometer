@@ -90,18 +90,24 @@ define('WIND_SAMPLE_MAX', 3);
 
 // Defaults and limits for request arguments.
 // TODO: Values should be configurable.
-// XXX Remove obsolete ones.
-define('REQ_WINDOW_MINUTES_DEFAULT', 60);
-define('REQ_WINDOW_MINUTES_MAX', 24 * 60);
 define('REQ_TIME_SERIES_POINTS_DEFAULT', 30);
 define('REQ_TIME_SERIES_POINTS_MIN', 1);
 define('REQ_TIME_SERIES_POINTS_MAX', 10000);  // a really wide screen
-define('REQ_SYSTEM_MINUTES', 24 * 60);
-define('REQ_SYSTEM_MINUTES_MAX', 7 * 24 * 60);
-define('REQ_DOOR_DAYS', 9);
-define('REQ_DOOR_DAYS_MAX', 31);
-define('REQ_PILOTS_DAYS', 9);
-define('REQ_PILOTS_DAYS_MAX', 31);
+
+/** Returns a map from exit command to return value. */
+function getExitReturnValue($exitCommand) {
+  $exitReturnValue = array(
+    'exit' => 0,
+    'shutdown' => 100,
+    'reboot' => 101,
+    'update' => 102,
+    'restart' => 103
+  );
+  if (array_key_exists($exitCommand, $exitReturnValue)) {
+    return $exitReturnValue[$exitCommand];
+  }
+  return null;
+}
 
 /** Converts '/a//b/./x/../c/' -> '/a/b/c' */
 function executeRelativePathComponents($path) {

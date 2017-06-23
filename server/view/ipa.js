@@ -6,7 +6,7 @@ var ipa = {};
 ipa.Options = function() {
   this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
   this.minutes = 60;  // Compute stats for the last x minutes...
-  this.upToTimestamp = 1466004968000; // XXX -1;  // ... up to here. -1 means now.
+  this.upToTimestamp = -1;  // ... up to here. -1 means now.
   this.fractionalDigits = 1;  // Textual output precision.
   // Downsample time series to make charts readable. Increase for wider charts.
   this.timeSeriesPoints = 30;
@@ -112,12 +112,11 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
     spinner = new Spinner(spinnerOptions).spin(spinnerContainer);
   }
   request.open('GET',
-      // XXX Order these.
-      // XXX Use start timestamp for all, instead of duration?
+      // TODO: The client shouldn't have to compute the start timestamp for door, pilot etc.
       this.options.url
-      + '?wind=' + this.options.minutes
+      + '?samples=' + this.options.timeSeriesPoints
+      + '&wind=' + this.options.minutes
       + '&tempHum=' + this.options.minutes
-      + '&samples=' + this.options.timeSeriesPoints
       + '&adc=' + this.options.systemStatusMinutes
       + '&cpuTemp=' + this.options.systemStatusMinutes
       + '&signal=' + this.options.systemStatusMinutes
@@ -181,7 +180,7 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
   table.firstChild.lastChild.children[1].className = 'ipaToValue';
   element.appendChild(table);
 
-  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
+  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawTimeSeries = function(element) {
@@ -209,7 +208,7 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   var timeSeriesChart = new google.visualization.LineChart(element);
   timeSeriesChart.draw(timeSeriesTable, options);
 
-  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
+  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawHistogram = function(element) {
@@ -247,7 +246,7 @@ ipa.Chart.prototype.drawHistogram = function(element) {
   var histogramChart = new google.visualization.ComboChart(element);
   histogramChart.draw(histogramDataTable, options);
 
-  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
+  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawTextHistogram = function(element) {
@@ -272,7 +271,7 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
   }
   element.appendChild(table);
 
-  ipa.Chart.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
+  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawStatus = function(element) {
@@ -547,7 +546,7 @@ ipa.Chart.insertCells_ = function(tr) {
 
 /** Returns epoch millis for 00:00 a.m. the specified number of daysAgo before timestamp. */
 ipa.Chart.getStartOfDayDaysAgo_ = function(timestamp, daysAgo) {
-  var d = new Date(timestamp);  // XXX Take from an input.
+  var d = new Date(timestamp);
   d.setDate(d.getDate() - daysAgo);
   d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return d.getTime();
@@ -580,9 +579,8 @@ ipa.Chart.showNoData_ = function(data, element, text) {
   return true;
 }
 
-ipa.Chart.indicateStaleData_ = function(timestamp, maxMinutes, element) {
-  var now = Date.now();
-  var latencyMinutes = ipa.Tools.millisToMinutes(now - timestamp);
+ipa.Chart.prototype.indicateStaleData_ = function(timestamp, maxMinutes, element) {
+  var latencyMinutes = ipa.Tools.millisToMinutes(this.options.upToTimestamp - timestamp);
   if (latencyMinutes > maxMinutes) {
     var text = 'last update: ' + ipa.Tools.compactDateString(new Date(parseInt(timestamp)));
     var staleDataLabel = document.createElement('div');

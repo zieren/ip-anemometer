@@ -32,6 +32,7 @@ function handleRequest() {
       $response['exit'] = 102;  // retval 102 will exit -> update -> restart the client
       // We trigger the client update also if our status is not OK, since that may be caused by an
       // outdated client version.
+      // NOTE: This may be overridden by an 'exit' command below.
     }
 
     // TODO: If 'upto' is only the newest wind timestamp, we don't really need it.
@@ -71,9 +72,14 @@ function handleRequest() {
     }
 
     $db->commit();
-
     $response['status'] = 'ok';
-    // TODO: Add support for reboot, shutdown etc.
+
+    // Explicit 'exit' command (may override exit=102 from client update above).
+    $exitReturnValue = getExitReturnValue(get($config['c:exit']));
+    if ($exitReturnValue !== null) {
+      $response['exit'] = $exitReturnValue;
+      $db->clearConfig('c:exit');
+    }
   } catch (Exception $e) {
     $db->rollback();
     $logger->critical('Exception in ul.php: '.$e);
