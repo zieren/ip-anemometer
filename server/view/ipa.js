@@ -561,11 +561,14 @@ ipa.Chart.isFullDay_ = function(a, b) {
 }
 
 ipa.Chart.formatTimestamp_ = function(timestamp) {
-  var date = new Date(parseInt(timestamp));
-  var hh = ('0' + date.getHours()).slice(-2);
-  var mm = ('0' + date.getMinutes()).slice(-2);
-  var ss = ('0' + date.getSeconds()).slice(-2);
-  return hh + ':' + mm + ':' + ss;
+  var now = new Date();
+  var timestampDate = new Date(parseInt(timestamp));
+  if (timestampDate.getFullYear() == now.getFullYear()
+      && timestampDate.getMonth() == now.getMonth()
+      && timestampDate.getDay() == now.getDay()) {
+    return timestampDate.toLocaleTimeString();
+  }
+  return timestampDate.toLocaleString();
 }
 
 ipa.Chart.showNoData_ = function(data, element, text) {

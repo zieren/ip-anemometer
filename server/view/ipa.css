@@ -86,3 +86,9 @@ div.ipaStatusHide {
 div#idIpaSpinnerContainer {
   position: relative;
 }
+
+span#idIpaVwPeriodDateAndNow {
+  padding: 5px;
+  margin-right: 5px;
+  background: #bbb;
+}

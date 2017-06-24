@@ -1,15 +1,74 @@
 <html>
 <head>
 <title>IP Anemometer</title>
-
 <link rel="stylesheet" type="text/css" href="ipa.css" />
-
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
 <script type="text/javascript" src="ipa.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
+<script src="https://unpkg.com/flatpickr"></script>
+</head>
+
+<body>
+<div id="idIpaVwStatus" class="ipaVwElementWidth"></div>
+<div id="idIpaVwPeriodSelector" class="ipaVwElementWidth ipaVwElementCenter">
+  <button onclick="ipaView.requestStats()">Show</button>
+  <input id="idIpaVwPeriodInput" type="text" maxlength="8" size="4"
+      onkeypress="ipaView.handleKeyPress(event)" value="60m" />
+  up to
+  <span id="idIpaVwPeriodDateAndNow">
+    <input id="idUpToDate" size="16" placeholder="end date">
+    <button onclick="ipaView.setNow()">Now</button></span>
+  <div id="idIpaSpinnerContainer"></div>
+</div>
+<div id="idIpaVwSummary" class="ipaVwContainer ipaVwElementWidth"></div>
+<div id="idIpaVwTime" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwHist" class="ipaVwElementWidth ipaVwExpand"></div>
+<h3>Pilot count</h3>
+<div id="idIpaVwPilots" class="ipaVwElementWidthHeight ipaVwExpand"></div>
+<h3>Weather</h3>
+<div id="idIpaVwTempHum" class="ipaVwElementWidthHeight ipaVwExpand"></div>
+<h3>Shed door</h3>
+<div id="idIpaVwDoor" class="ipaVwElementWidthHeight ipaVwExpand"></div>
+<h3>A/D converter channel 7</h3>
+<div id="idIpaVwAdc" data-channel="7" data-label="Volt" class="ipaVwElementWidthHeight ipaVwExpand">
+    </div>
+<h3>System status (last 24h)</h3>
+<div id="idIpaVwLag" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwTemp" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwSignalStrength" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwTransferVolume" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwNwType" class="ipaVwElementWidth ipaVwExpand"></div>
+<div class="ipaVwElementWidth ipaVwElementCenter">
+  <button onclick="ipaView.expand()">Max Width</button>
+</div>
+
 <script type="text/javascript">
 
 var ipaView = {};
+
+var now = new Date();
+var uptoPickr = flatpickr("#idUpToDate", {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: now,
+  maxDate: now,
+  allowInput: true,
+  locale: {
+    firstDayOfWeek: 1
+  },
+  onChange: function(selectedDates, dateStr, instance) {
+    if (selectedDates.length == 1) {
+      var now = new Date();
+      if (selectedDates[0] > now) {
+        instance.setDate(now);
+      }
+    }
+  },
+  onClose: function(selectedDates, dateStr, instance) {
+    ipaView.requestStats();
+  }
+});
 
 ipaView.clearElement = function(element) {
   while (element.firstChild) {
@@ -20,9 +79,19 @@ ipaView.clearElement = function(element) {
 
 ipaView.options = {};
 
+ipaView.setNow = function() {
+  var now = new Date();
+  uptoPickr.set('maxDate', now);
+  uptoPickr.setDate(now);
+  ipaView.requestStats();
+}
+
 ipaView.requestStats = function() {
   ipaView.options.minutes = ipa.Tools.durationStringToMinutes(
       document.getElementById('idIpaVwPeriodInput').value);
+  if (uptoPickr.selectedDates.length == 1) {
+    ipaView.options.upToTimestamp = uptoPickr.selectedDates[0].getTime();
+  }
 
   ipaView.chart = new ipa.Chart(ipaView.options);
   ipaView.chart.requestStats(ipaView.updateChart);
@@ -61,40 +130,7 @@ ipaView.expand = function() {
 }
 
 google.setOnLoadCallback(ipaView.requestStats);
-
 </script>
-
-</head>
-<body>
-<div id="idIpaVwStatus" class="ipaVwElementWidth"></div>
-<div id="idIpaVwPeriodSelector" class="ipaVwElementWidth ipaVwElementCenter">
-  Minutes:
-  <input id="idIpaVwPeriodInput" type="text" maxlength="8" size="4"
-      onkeypress="ipaView.handleKeyPress(event)" value="60" />
-  <button onclick="ipaView.requestStats()">Load</button>
-  <div id="idIpaSpinnerContainer"></div>
-</div>
-<div id="idIpaVwSummary" class="ipaVwContainer ipaVwElementWidth"></div>
-<div id="idIpaVwTime" class="ipaVwElementWidth ipaVwExpand"></div>
-<div id="idIpaVwHist" class="ipaVwElementWidth ipaVwExpand"></div>
-<h3>Pilot count</h3>
-<div id="idIpaVwPilots" class="ipaVwElementWidthHeight ipaVwExpand"></div>
-<h3>Weather</h3>
-<div id="idIpaVwTempHum" class="ipaVwElementWidthHeight ipaVwExpand"></div>
-<h3>Shed door</h3>
-<div id="idIpaVwDoor" class="ipaVwElementWidthHeight ipaVwExpand"></div>
-<h3>A/D converter channel 7</h3>
-<div id="idIpaVwAdc" data-channel="7" data-label="Volt" class="ipaVwElementWidthHeight ipaVwExpand">
-    </div>
-<h3>System status (last 24h)</h3>
-<div id="idIpaVwLag" class="ipaVwElementWidth ipaVwExpand"></div>
-<div id="idIpaVwTemp" class="ipaVwElementWidth ipaVwExpand"></div>
-<div id="idIpaVwSignalStrength" class="ipaVwElementWidth ipaVwExpand"></div>
-<div id="idIpaVwTransferVolume" class="ipaVwElementWidth ipaVwExpand"></div>
-<div id="idIpaVwNwType" class="ipaVwElementWidth ipaVwExpand"></div>
-<div class="ipaVwElementWidth ipaVwElementCenter">
-  <button onclick="ipaView.expand()">Max Width</button>
-</div>
 
 </body>
 </html>
