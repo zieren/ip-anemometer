@@ -29,7 +29,6 @@ td.ipaMaxLabel, td.ipaMaxValue {
 td.ipaMaxtsLabel, td.ipaMaxtsValue {
   background: #ffc;
 }
-
 td.ipaFromLabel, td.ipaFromValue {
   background: #ca5;
 }
@@ -45,6 +44,11 @@ div.ipaVwElementWidth {
 div.ipaVwElementWidthHeight {
   width: 400px;
   max-height: 500px;
+}
+
+div#idIpaVwUpToDate {
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 div#idIpaVwPeriodSelector {
@@ -85,10 +89,4 @@ div.ipaStatusHide {
 
 div#idIpaSpinnerContainer {
   position: relative;
-}
-
-span#idIpaVwPeriodDateAndNow {
-  padding: 5px;
-  margin-right: 5px;
-  background: #bbb;
 }

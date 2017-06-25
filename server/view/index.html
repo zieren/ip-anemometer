@@ -11,14 +11,14 @@
 
 <body>
 <div id="idIpaVwStatus" class="ipaVwElementWidth"></div>
+<div id="idIpaVwUpToDate" class="ipaVwElementWidth">
+    Date and time: <input id="idUpToDate" size="16" placeholder="end date" />
+    <button onclick="ipaView.setNow()">Now</button>
+</div>
 <div id="idIpaVwPeriodSelector" class="ipaVwElementWidth ipaVwElementCenter">
+  Period: <input id="idIpaVwPeriodInput" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event)" value="1h30m" />
   <button onclick="ipaView.requestStats()">Show</button>
-  <input id="idIpaVwPeriodInput" type="text" maxlength="8" size="4"
-      onkeypress="ipaView.handleKeyPress(event)" value="60m" />
-  up to
-  <span id="idIpaVwPeriodDateAndNow">
-    <input id="idUpToDate" size="16" placeholder="end date">
-    <button onclick="ipaView.setNow()">Now</button></span>
   <div id="idIpaSpinnerContainer"></div>
 </div>
 <div id="idIpaVwSummary" class="ipaVwContainer ipaVwElementWidth"></div>
