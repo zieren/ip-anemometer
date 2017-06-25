@@ -70,6 +70,13 @@ var uptoPickr = flatpickr("#idUpToDate", {
   }
 });
 
+ipaView.setNow = function() {
+  var now = new Date();
+  uptoPickr.set('maxDate', now);
+  uptoPickr.setDate(now);
+  ipaView.requestStats();
+}
+
 ipaView.clearElement = function(element) {
   while (element.firstChild) {
     element.removeChild(element.firstChild);
@@ -78,13 +85,6 @@ ipaView.clearElement = function(element) {
 }
 
 ipaView.options = {};
-
-ipaView.setNow = function() {
-  var now = new Date();
-  uptoPickr.set('maxDate', now);
-  uptoPickr.setDate(now);
-  ipaView.requestStats();
-}
 
 ipaView.requestStats = function() {
   ipaView.options.minutes = ipa.Tools.durationStringToMinutes(
