@@ -10,8 +10,10 @@
  */
 
 add_shortcode('ipa', 'ipa');
-wp_register_style('ipaCss', plugin_dir_url(__FILE__).'/ipa.css');
-wp_enqueue_style('ipaCss');
+wp_register_style('ipa', plugin_dir_url(__FILE__).'/ipa.css');
+wp_enqueue_style('ipa');
+wp_register_style('ipaFlatpickr', 'https://unpkg.com/flatpickr/dist/flatpickr.min.css', array(), null);
+wp_enqueue_style('ipaFlatpickr');
 
 function get(&$value, $default=null) {
   return isset($value) ? $value : $default;
@@ -92,8 +94,6 @@ function ipaViewJS($optionsJS) {
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
-<script src="https://unpkg.com/flatpickr"></script>
 <script type="text/javascript" src="$jsUrl"></script>
 <script>
 
@@ -174,6 +174,7 @@ function dateSelector($atts) {
 '<div id="idIpaWpDateSelector" class="ipaVwElementWidth">
 Date/time: <input id="idIpaDateSelector" size="16" placeholder="up to date/time" />
 <button onclick="ipaView.setNow()">Now</button></div>
+<script src="https://unpkg.com/flatpickr"></script>
 <script type="text/javascript">
 var now = new Date();
 var upToPickr = flatpickr("#idIpaDateSelector", {
