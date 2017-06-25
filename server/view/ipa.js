@@ -49,16 +49,6 @@ ipa.Tools.millisToMinutes = function(millis) {
   return millis / (1000 * 60);
 }
 
-/**
- * Returns time if date is today, otherwise returns date and time.
- */
-ipa.Tools.compactDateString = function(date) {
-  if (new Date(Date.now()).toLocaleDateString() == date.toLocaleDateString()) {
-    return date.toLocaleTimeString();
-  }
-  return date.toLocaleString();
-}
-
 ipa.Tools.DURATION_REGEX = /([0-9]+)([wdhm]?) */g
 ipa.Tools.UNIT_TO_MINUTES = {
     'w': 7 * 24 * 60,
@@ -84,6 +74,22 @@ ipa.Tools.durationStringToMinutes = function(s) {
     minutes += parseInt(part[1]) * unit;
   }
   return minutes;
+}
+
+ipa.Tools.isSameDate = function(dateA, dateB) {
+  return dateA.getFullYear() == dateB.getFullYear()
+      && dateA.getMonth() == dateB.getMonth()
+      && dateA.getDay() == dateB.getDay();
+} 
+
+/**
+ * Returns time if date is today, otherwise returns date and time.
+ */
+ipa.Tools.compactDateString = function(date) {
+  if (ipa.Tools.isSameDate(date, new Date())) {
+    return date.toLocaleTimeString();
+  }
+  return date.toLocaleString();
 }
 
 ipa.Chart = function(options) {
@@ -166,16 +172,16 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
   table.firstChild.lastChild.children[1].className = 'ipaMaxValue';
   if (this.options.showTimeOfMax) {
     ipa.Chart.insertCells_(table.insertRow())('max@',
-        ipa.Chart.formatTimestamp_(this.stats.wind.max_ts));
+        ipa.Tools.compactDateString(new Date(parseInt(this.stats.wind.max_ts))));
     table.firstChild.lastChild.children[0].className = 'ipaMaxtsLabel';
     table.firstChild.lastChild.children[1].className = 'ipaMaxtsValue';
   }
   ipa.Chart.insertCells_(table.insertRow())('from',
-      ipa.Chart.formatTimestamp_(this.stats.wind.start_ts));
+      ipa.Tools.compactDateString(new Date(parseInt(this.stats.wind.start_ts))));
   table.firstChild.lastChild.children[0].className = 'ipaFromLabel';
   table.firstChild.lastChild.children[1].className = 'ipaFromValue';
   ipa.Chart.insertCells_(table.insertRow())('to',
-      ipa.Chart.formatTimestamp_(this.stats.wind.end_ts));
+      ipa.Tools.compactDateString(new Date(parseInt(this.stats.wind.end_ts))));
   table.firstChild.lastChild.children[0].className = 'ipaToLabel';
   table.firstChild.lastChild.children[1].className = 'ipaToValue';
   element.appendChild(table);
@@ -558,17 +564,6 @@ ipa.Chart.endOfDay_ = new Date(0, 0, 0, 23, 59, 59);
 ipa.Chart.isFullDay_ = function(a, b) {
   return a.getHours() == 0 && a.getMinutes() == 0 && a.getSeconds() == 0
       && b.getHours() == 23 && b.getMinutes() == 59 && b.getSeconds() == 59;
-}
-
-ipa.Chart.formatTimestamp_ = function(timestamp) {
-  var now = new Date();
-  var timestampDate = new Date(parseInt(timestamp));
-  if (timestampDate.getFullYear() == now.getFullYear()
-      && timestampDate.getMonth() == now.getMonth()
-      && timestampDate.getDay() == now.getDay()) {
-    return timestampDate.toLocaleTimeString();
-  }
-  return timestampDate.toLocaleString();
 }
 
 ipa.Chart.showNoData_ = function(data, element, text) {
