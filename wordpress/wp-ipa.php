@@ -41,6 +41,7 @@ function ipa($atts) {
   );
   $handlers = array(
     'status' => status,
+    'date_selector' => dateSelector,
     'period_selector' => periodSelector,
     'summary' => summary,
     'speed' => speed,
@@ -91,10 +92,19 @@ function ipaViewJS($optionsJS) {
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
+<script src="https://unpkg.com/flatpickr"></script>
 <script type="text/javascript" src="$jsUrl"></script>
 <script>
 
 var ipaView = {};
+
+ipaView.setNow = function() {
+  var now = new Date();
+  upToPickr.set('maxDate', now);
+  upToPickr.setDate(now);
+  ipaView.requestStats();
+}
 
 ipaView.clearElement = function(element) {
   while (element.firstChild) {
@@ -115,6 +125,10 @@ ipaView.requestStats = function() {
   var periodInput = document.getElementById('idIpaWpPeriodInput');
   if (periodInput) {
     ipaView.options.minutes = ipa.Tools.durationStringToMinutes(periodInput.value);
+  }
+  var dateInput = document.getElementById('idIpaWpDateSelector');
+  if (dateInput && 'selectedDates' in upToPickr && upToPickr.selectedDates.length == 1) {
+    ipaView.options.upToTimestamp = upToPickr.selectedDates[0].getTime(); 
   }
   ipaView.options.timeSeriesPoints = 100;
   ipaView.chart = new ipa.Chart(ipaView.options);
@@ -155,12 +169,42 @@ function status($atts) {
   return '<div id="idIpaWpStatus" data-hideok="'.$atts['hideok'].'"></div>';
 }
 
+function dateSelector($atts) {
+  return 
+'<div id="idIpaWpDateSelector" class="ipaVwElementWidth">
+Date/time: <input id="idIpaDateSelector" size="16" placeholder="up to date/time" />
+<button onclick="ipaView.setNow()">Now</button></div>
+<script type="text/javascript">
+var now = new Date();
+var upToPickr = flatpickr("#idIpaDateSelector", {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: now,
+  maxDate: now,
+  allowInput: true,
+  locale: {
+    firstDayOfWeek: 1
+  },
+  onChange: function(selectedDates, dateStr, instance) {
+    if (selectedDates.length == 1) {
+      var now = new Date();
+      if (selectedDates[0] > now) {
+        instance.setDate(now);
+      }
+    }
+  },
+  onClose: function(selectedDates, dateStr, instance) {
+    ipaView.requestStats();
+  }
+});</script>';
+}
+
 function periodSelector($atts) {
   return
-    '<div id="idIpaWpPeriodSelector" class="ipaInput">
-      Minutes: <input id="idIpaWpPeriodInput" type="text" maxlength="8" size="4"
+    '<div id="idIpaWpPeriodSelector">
+      Period: <input id="idIpaWpPeriodInput" type="text" maxlength="8" size="6"
           onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period_selector'].'" />
-      <button onclick="ipaView.requestStats()">Load</button>
+      <button onclick="ipaView.requestStats()">Show</button>
       <div id="idIpaSpinnerContainer"></div>
     </div>';
 }

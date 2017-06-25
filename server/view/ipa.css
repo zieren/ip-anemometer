@@ -1,5 +1,17 @@
+div#idIpaWpDateSelector {
+  width: 33ch;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
+div#idIpaVwDateSelector {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 div#idIpaWpPeriodSelector {
-  width: 25ch;
+  width: 22ch;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 20px;
@@ -8,7 +20,7 @@ div#idIpaWpPeriodSelector {
 table.ipaSummary {
   border: 1px solid black;
   border-spacing: 0;
-  width: 25ch;
+  width: 30ch;
   margin-left: auto;
   margin-right: auto;
 }
@@ -44,11 +56,6 @@ div.ipaVwElementWidth {
 div.ipaVwElementWidthHeight {
   width: 400px;
   max-height: 500px;
-}
-
-div#idIpaVwUpToDate {
-  margin-bottom: 10px;
-  text-align: center;
 }
 
 div#idIpaVwPeriodSelector {

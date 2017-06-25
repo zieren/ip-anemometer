@@ -11,8 +11,8 @@
 
 <body>
 <div id="idIpaVwStatus" class="ipaVwElementWidth"></div>
-<div id="idIpaVwUpToDate" class="ipaVwElementWidth">
-    Date and time: <input id="idUpToDate" size="16" placeholder="end date" />
+<div id="idIpaVwDateSelector" class="ipaVwElementWidth">
+    Date and time: <input id="idIpaDateSelector" size="16" placeholder="up to date/time" />
     <button onclick="ipaView.setNow()">Now</button>
 </div>
 <div id="idIpaVwPeriodSelector" class="ipaVwElementWidth ipaVwElementCenter">
@@ -48,7 +48,7 @@
 var ipaView = {};
 
 var now = new Date();
-var uptoPickr = flatpickr("#idUpToDate", {
+var upToPickr = flatpickr("#idIpaDateSelector", {
   enableTime: true,
   time_24hr: true,
   defaultDate: now,
@@ -72,8 +72,8 @@ var uptoPickr = flatpickr("#idUpToDate", {
 
 ipaView.setNow = function() {
   var now = new Date();
-  uptoPickr.set('maxDate', now);
-  uptoPickr.setDate(now);
+  upToPickr.set('maxDate', now);
+  upToPickr.setDate(now);
   ipaView.requestStats();
 }
 
@@ -89,8 +89,8 @@ ipaView.options = {};
 ipaView.requestStats = function() {
   ipaView.options.minutes = ipa.Tools.durationStringToMinutes(
       document.getElementById('idIpaVwPeriodInput').value);
-  if (uptoPickr.selectedDates.length == 1) {
-    ipaView.options.upToTimestamp = uptoPickr.selectedDates[0].getTime();
+  if (upToPickr.selectedDates.length == 1) {
+    ipaView.options.upToTimestamp = upToPickr.selectedDates[0].getTime();
   }
 
   ipaView.chart = new ipa.Chart(ipaView.options);
