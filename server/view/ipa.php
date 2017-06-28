@@ -4,82 +4,85 @@ require_once '../common/common.php';
 header("Access-Control-Allow-Origin: *");
 
 function getNumParam($name, $default, $min, $max) {
-  if (!isset($_REQUEST[$name])) {
-    return $default;
+  if (isset($_REQUEST[$name]) && is_numeric($_REQUEST[$name])) {
+    return max($min, min($_REQUEST[$name], $max));
   }
-  return max($min, min($_REQUEST[$name], $max));
+  return $default;
 }
 
-function getStringParam($name, $default) {
-  return isset($_REQUEST[$name]) ? $_REQUEST[$name] : $default;
+function getEffectiveStartTimestamp($requestParameter, $timestampNow, $maxMinutes) {
+  if (isset($_REQUEST[$requestParameter]) && is_numeric($_REQUEST[$requestParameter])) {
+    return max($_REQUEST[$requestParameter], $timestampNow - minutesToMillis($maxMinutes));
+  }
+  return null;
 }
 
 function computeStats() {
-  // TODO: These defaults should match the ones in ipa.js.
-  // TODO: This should sanitize the input.
-
   $db = new Database();
   $config = $db->getConfig();
   $timeSeriesMaxMinutes = $config['s:query_time_series_max_minutes'];
   $eventMaxMinutes = $config['s:query_event_max_minutes'];
 
   $timestampNow = timestamp();
-  $endTimestamp = getNumParam('upto', $timestampNow, 0, $timestampNow);
-  $maxSamples = getNumParam('samples', REQ_TIME_SERIES_POINTS_DEFAULT, REQ_TIME_SERIES_POINTS_MIN,
-      REQ_TIME_SERIES_POINTS_MAX);
+  $endTimestamp = $timestampNow;
+  if (isset($_REQUEST['upTo']) && is_numeric($_REQUEST['upTo'])) {
+    $endTimestamp = $_REQUEST['upTo'];
+  }
+  $maxSamples = getNumParam('samples', REQ_TIME_SERIES_POINTS_DEFAULT,
+      REQ_TIME_SERIES_POINTS_MIN, REQ_TIME_SERIES_POINTS_MAX);
+
+  // Status is always returned.
   $result = array('status' => $db->readStatus());
 
   // Wind
-  $windowDuration = minutesToMillis(getNumParam('wind', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['wind'] = $db->computeWindStats($endTimestamp, $windowDuration, $maxSamples);
+  $startTimestamp = getEffectiveStartTimestamp('wind', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['wind'] = $db->computeWindStats($startTimestamp, $endTimestamp, $maxSamples);
   }
   // Temperature and humidity
-  $windowDuration = minutesToMillis(getNumParam('tempHum', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['temp_hum'] = $db->readTempHum($endTimestamp, $windowDuration, $maxSamples);
+  $startTimestamp = getEffectiveStartTimestamp('tempHum', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['temp_hum'] = $db->readTempHum($startTimestamp, $endTimestamp, $maxSamples);
   }
   // ADC. TODO: Handle ADC channels individually?
-  $windowDuration = minutesToMillis(getNumParam('adc', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['adc'] = $db->readAdcValues($endTimestamp, $windowDuration, $maxSamples);
+  $startTimestamp = getEffectiveStartTimestamp('adc', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['adc'] = $db->readAdcValues($startTimestamp, $endTimestamp, $maxSamples);
   }
   // Door
-  $startTimestamp =
-      getNumParam('door', 0, $endTimestamp - minutesToMillis($eventMaxMinutes), $endTimestamp);
-  if ($startTimestamp > 0) {
+  $startTimestamp = getEffectiveStartTimestamp('door', $timestampNow, $eventMaxMinutes);
+  if ($startTimestamp != null) {
     $result['door'] = $db->readDoor($startTimestamp, $endTimestamp);
   }
   // Pilots
-  $startTimestamp =
-      getNumParam('pilots', 0, $endTimestamp - minutesToMillis($eventMaxMinutes), $endTimestamp);
-  if ($startTimestamp > 0) {
+  $startTimestamp = getEffectiveStartTimestamp('pilots', $timestampNow, $eventMaxMinutes);
+  if ($startTimestamp != null) {
     $result['pilots'] = $db->readPilots($startTimestamp, $endTimestamp);
   }
   // CPU temperature.
-  $windowDuration = minutesToMillis(getNumParam('cpuTemp', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['cpu_temp'] = $db->readTemperature($endTimestamp, $windowDuration, $maxSamples);
+  $startTimestamp = getEffectiveStartTimestamp('cpuTemp', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['cpu_temp'] = $db->readTemperature($startTimestamp, $endTimestamp, $maxSamples);
   }
   // Signal strength.
-  $windowDuration = minutesToMillis(getNumParam('signal', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['signal_strength'] = $db->readSignalStrength($endTimestamp, $windowDuration, $maxSamples);
+  $startTimestamp = getEffectiveStartTimestamp('signal', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['signal_strength'] = $db->readSignalStrength($startTimestamp, $endTimestamp, $maxSamples);
   }
   // Network type.
-  $windowDuration = minutesToMillis(getNumParam('network', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['network_type'] = $db->readNetworkType($endTimestamp, $windowDuration);
+  $startTimestamp = getEffectiveStartTimestamp('network', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['network_type'] = $db->readNetworkType($startTimestamp, $endTimestamp);
   }
   // Total traffic. TODO: This should give traffic within the window.
-  $windowDuration = minutesToMillis(getNumParam('traffic', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
+  $startTimestamp = getEffectiveStartTimestamp('traffic', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
     $result['traffic'] = $db->readTransferVolume();
   }
   // Lag.
-  $windowDuration = minutesToMillis(getNumParam('lag', 0, 1, $timeSeriesMaxMinutes));
-  if ($windowDuration > 0) {
-    $result['lag'] = $db->readLag($endTimestamp, $windowDuration, $maxSamples);
+  $startTimestamp = getEffectiveStartTimestamp('lag', $timestampNow, $timeSeriesMaxMinutes);
+  if ($startTimestamp != null) {
+    $result['lag'] = $db->readLag($startTimestamp, $endTimestamp, $maxSamples);
   }
   return $result;
 }

@@ -10,45 +10,93 @@
 </head>
 
 <body>
+
 <div id="idIpaVwStatus" class="ipaVwElementWidth"></div>
-<div id="idIpaVwDateSelector" class="ipaVwElementWidth">
-    Date and time: <input id="idIpaDateSelector" size="16" placeholder="up to date/time" />
-    <button onclick="ipaView.setNow()">Now</button>
+
+<div id="idIpaVwDivDate" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  Date and time: <input id="idIpaDateSelector" size="16" placeholder="up to date/time" />
+  <button onclick="ipaView.setNow('idIpaVwDivDate')">Now</button>
 </div>
-<div id="idIpaVwPeriodSelector" class="ipaVwElementWidth ipaVwElementCenter">
-  Period: <input id="idIpaVwPeriodInput" type="text" maxlength="8" size="6"
-      onkeypress="ipaView.handleKeyPress(event)" value="1h30m" />
-  <button onclick="ipaView.requestStats()">Show</button>
-  <div id="idIpaSpinnerContainer"></div>
+
+<div id="idIpaVwDivPeriodWind" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  Period: <input id="idIpaVwPeriodInputWind" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodWind')" value="1h30m" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodWind')">Show</button>
 </div>
-<div id="idIpaVwSummary" class="ipaVwContainer ipaVwElementWidth"></div>
-<div id="idIpaVwTime" class="ipaVwElementWidth ipaVwExpand"></div>
-<div id="idIpaVwHist" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwWindSummary" class="ipaVwContainer ipaVwElementWidth"></div>
+<div id="idIpaVwWindTimeSeries" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwWindHist" class="ipaVwElementWidth ipaVwExpand"></div>
+
 <h3>Pilot count</h3>
+<div id="idIpaVwDivPeriodPilots" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  Period: <input id="idIpaVwPeriodInputPilots" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodPilots')" value="1d" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodPilots')">Show</button>
+</div>
 <div id="idIpaVwPilots" class="ipaVwElementWidthHeight ipaVwExpand"></div>
+
 <h3>Weather</h3>
+<div id="idIpaVwDivPeriodWeather" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  Period: <input id="idIpaVwPeriodInputTempHum" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodWeather')" value="1d" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodWeather')">Show</button>
+</div>
 <div id="idIpaVwTempHum" class="ipaVwElementWidthHeight ipaVwExpand"></div>
+
 <h3>Shed door</h3>
+<div id="idIpaVwDivPeriodDoor" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  Period: <input id="idIpaVwPeriodInputDoor" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodDoor')" value="7d" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodDoor')">Show</button>
+</div>
 <div id="idIpaVwDoor" class="ipaVwElementWidthHeight ipaVwExpand"></div>
+
 <h3>A/D converter channel 7</h3>
+<div id="idIpaVwDivPeriodAdc" class="ipaVwSpinnerContainer ipaVwElementWidth ipaVwElementCenter">
+  Period: <input id="idIpaVwPeriodInputAdc" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodAdc')" value="1d" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodAdc')">Show</button>
+</div>
 <div id="idIpaVwAdc" data-channel="7" data-label="Volt" class="ipaVwElementWidthHeight ipaVwExpand">
-    </div>
-<h3>System status (last 24h)</h3>
+</div>
+
+<h3>System status</h3>
+<div id="idIpaVwDivPeriodSystem" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  Period: <input id="idIpaVwPeriodInputSystem" type="text" maxlength="8" size="6"
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodSystem')" value="1d" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodSystem')">Show</button>
+</div>
 <div id="idIpaVwLag" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwTemp" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwSignalStrength" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwTransferVolume" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwNwType" class="ipaVwElementWidth ipaVwExpand"></div>
-<div class="ipaVwElementWidth ipaVwElementCenter">
-  <button onclick="ipaView.expand()">Max Width</button>
+
+<div id="idIpaVwDivExpand" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+  <button onclick="ipaView.expand('idIpaVwDivExpand')">Max Width</button>
 </div>
 
 <script type="text/javascript">
 
 var ipaView = {};
 
+//XXX magic duration "today", "thisweek" or whatever to pick start of day?
+//or postfix "+"/"-" to increase/decrease until next full day/week? maybe "+d"?
+ipaView.durationInputs = {
+wind: 'idIpaVwPeriodInputWind',
+tempHum: 'idIpaVwPeriodInputTempHum',
+adc: 'idIpaVwPeriodInputAdc',
+door: 'idIpaVwPeriodInputDoor',
+pilots: 'idIpaVwPeriodInputPilots',
+cpuTemp: 'idIpaVwPeriodInputSystem',
+signal: 'idIpaVwPeriodInputSystem',
+network: 'idIpaVwPeriodInputSystem',
+traffic: 'idIpaVwPeriodInputSystem',
+lag: 'idIpaVwPeriodInputSystem'
+}
+
 var now = new Date();
-var upToPickr = flatpickr("#idIpaDateSelector", {
+var endPickr = flatpickr("#idIpaDateSelector", {
   enableTime: true,
   time_24hr: true,
   defaultDate: now,
@@ -57,24 +105,16 @@ var upToPickr = flatpickr("#idIpaDateSelector", {
   locale: {
     firstDayOfWeek: 1
   },
-  onChange: function(selectedDates, dateStr, instance) {
-    if (selectedDates.length == 1) {
-      var now = new Date();
-      if (selectedDates[0] > now) {
-        instance.setDate(now);
-      }
-    }
-  },
   onClose: function(selectedDates, dateStr, instance) {
-    ipaView.requestStats();
+    ipaView.requestStats('idIpaVwDivDate');
   }
 });
 
-ipaView.setNow = function() {
+ipaView.setNow = function(spinnerId) {
   var now = new Date();
-  upToPickr.set('maxDate', now);
-  upToPickr.setDate(now);
-  ipaView.requestStats();
+  endPickr.set('maxDate', now);
+  endPickr.setDate(now);
+  ipaView.requestStats(spinnerId);
 }
 
 ipaView.clearElement = function(element) {
@@ -86,23 +126,33 @@ ipaView.clearElement = function(element) {
 
 ipaView.options = {};
 
-ipaView.requestStats = function() {
-  ipaView.options.minutes = ipa.Tools.durationStringToMinutes(
-      document.getElementById('idIpaVwPeriodInput').value);
-  if (upToPickr.selectedDates.length == 1) {
-    ipaView.options.upToTimestamp = upToPickr.selectedDates[0].getTime();
+ipaView.getStartTimestamp = function(timestampNow, inputElementId) {
+  var e = document.getElementById(inputElementId);
+  return timestampNow - ipa.Tools.durationStringToMillies(e.value);
+}
+
+ipaView.requestStats = function(spinnerId) {
+  var spinnerContainer = document.getElementById(spinnerId);
+  var spinner = new Spinner({ scale: 5 }).spin(spinnerContainer);
+
+  ipaView.options.endTimestamp = endPickr.selectedDates[0].getTime();
+  for (var i in ipaView.durationInputs) {
+    ipaView.options[i] = {}
+    ipaView.options[i].startTimestamp =
+        ipaView.getStartTimestamp(ipaView.options.endTimestamp, ipaView.durationInputs[i]);
   }
 
   ipaView.chart = new ipa.Chart(ipaView.options);
-  ipaView.chart.requestStats(ipaView.updateChart);
+  ipaView.chart.requestStats(function() { ipaView.updateChart(spinner); });
 }
 
-ipaView.updateChart = function() {
+ipaView.updateChart = function(spinner) {
+  spinner.stop();
   var chart = ipaView.chart;
   chart.drawStatus(ipaView.clearElement(document.getElementById('idIpaVwStatus')));
-  chart.drawWindSummary(ipaView.clearElement(document.getElementById('idIpaVwSummary')));
-  chart.drawTimeSeries(ipaView.clearElement(document.getElementById('idIpaVwTime')));
-  chart.drawHistogram(ipaView.clearElement(document.getElementById('idIpaVwHist')));
+  chart.drawWindSummary(ipaView.clearElement(document.getElementById('idIpaVwWindSummary')));
+  chart.drawWindTimeSeries(ipaView.clearElement(document.getElementById('idIpaVwWindTimeSeries')));
+  chart.drawWindHistogram(ipaView.clearElement(document.getElementById('idIpaVwWindHist')));
   chart.drawTempHum(ipaView.clearElement(document.getElementById('idIpaVwTempHum')));
   chart.drawDoor(ipaView.clearElement(document.getElementById('idIpaVwDoor')));
   chart.drawAdcChannel(ipaView.clearElement(document.getElementById('idIpaVwAdc')));
@@ -112,24 +162,24 @@ ipaView.updateChart = function() {
   chart.drawSignalStrength(ipaView.clearElement(document.getElementById('idIpaVwSignalStrength')));
   chart.drawNetworkType(ipaView.clearElement(document.getElementById('idIpaVwNwType')));
   chart.drawTransferVolume(ipaView.clearElement(document.getElementById('idIpaVwTransferVolume')));
-}
+ }
 
-ipaView.handleKeyPress = function(event) {
+ipaView.handleKeyPress = function(event, spinnerId) {
   if (event.keyCode == 13) {
-    ipaView.requestStats();
+    ipaView.requestStats(spinnerId);
   }
 }
 
-ipaView.expand = function() {
+ipaView.expand = function(spinnerId) {
   ipaView.options.timeSeriesPoints = 123456;  // effectively disable downsampling
   var charts = document.getElementsByClassName('ipaVwExpand');
   for (var i = 0; i < charts.length; ++i) {
     charts[i].style.width = '100%';
   }
-  ipaView.requestStats();
+  ipaView.requestStats(spinnerId);
 }
 
-google.setOnLoadCallback(ipaView.requestStats);
+google.setOnLoadCallback(function() { ipaView.requestStats('idIpaVwDivDate'); });
 </script>
 
 </body>

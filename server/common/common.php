@@ -14,9 +14,6 @@ define('CONFIG_PHP', '../common/config.php');
 define('CLIENT_APP_ZIP_FILENAME', '../client/ipa-client.zip');
 define('CLIENT_APP_CFG_FILENAME', 'ipa.cfg');  // filename inside .zip
 define('CONFIG_DEFAULT_FILENAME', '../admin/default.cfg');
-// Maximum amount of time the desired window size is shifted back to compensate for upload
-// latency. TODO: This (and possibly other values) should be configurable.
-define('WIND_MAX_LATENCY', 15 * 60 * 1000);  // 15 minutes
 define('CLIENT_APP_MAX_SIZE', 1024 * 1024);  // 1MB
 
 function autoloader($class) {

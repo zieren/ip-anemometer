@@ -376,17 +376,17 @@ class Database {
   /**
    * Compute statistics for the specified time period.
    *
+   * @param int $startTimestamp Consider samples starting at this timestamp in millis.
    * @param int $endTimestamp Consider samples up to this end timestamp in millis (usually the
    *    current time).
-   * @param int $windowDuration Length of the window to consider, in millis.
    * @param int $outputLength Maximum number of samples in time series (will be downsampled if
    *    required).
    * @return array An array containing some scalar and the following non-scalar stats:
    *    'hist': An array of int(km/h) -> percentage.
    *    'time_series': A list of 3-tuples (timestamp, avg, max).
    */
-  public function computeWindStats($endTimestamp, $windowDuration, $outputLength) {
-    $startTimestamp = $endTimestamp - $windowDuration - WIND_MAX_LATENCY;
+  public function computeWindStats($startTimestamp, $endTimestamp, $outputLength) {
+    $windowDuration = $endTimestamp - $startTimestamp;
     $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind WHERE '
         .'start_ts >= '.$startTimestamp.' AND end_ts <= '.$endTimestamp.' ORDER BY start_ts DESC';
     $result = $this->query($q);
@@ -405,6 +405,7 @@ class Database {
     $timeSeries = array();
     while ($sample = $result->fetch_assoc()) {
       // TODO: What about gaps?
+      // XXX: Remove this for timestamp API.
       // Can we approximate the desired duration better by including this row?
       $sampleDuration = Database::getSampleDuration($sample);
       if (abs($actualWindowDuration - $windowDuration) <
@@ -641,8 +642,7 @@ class Database {
     return array(min($values), max($values));
   }
 
-  public function readTemperature($endTimestamp, $windowDuration, $timeSeriesPoints) {
-    $startTimestamp = $endTimestamp - $windowDuration;
+  public function readTemperature($startTimestamp, $endTimestamp, $timeSeriesPoints) {
     $q = 'SELECT ts, t FROM temp WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $result = $this->query($q);
@@ -653,8 +653,7 @@ class Database {
     return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
   }
 
-  public function readTempHum($endTimestamp, $windowDuration, $timeSeriesPoints) {
-    $startTimestamp = $endTimestamp - $windowDuration;
+  public function readTempHum($startTimestamp, $endTimestamp, $timeSeriesPoints) {
     $q = 'SELECT ts, t, h FROM temp_hum WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $result = $this->query($q);
@@ -669,8 +668,7 @@ class Database {
         Database::downsampleTimeSeries($hum, $timeSeriesPoints));
   }
 
-  public function readAdcValues($endTimestamp, $windowDuration, $timeSeriesPoints) {
-    $startTimestamp = $endTimestamp - $windowDuration;
+  public function readAdcValues($startTimestamp, $endTimestamp, $timeSeriesPoints) {
     $q = 'SELECT ts, channel, value FROM adc WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $result = $this->query($q);
@@ -690,8 +688,7 @@ class Database {
     return $data;
   }
 
-  public function readSignalStrength($endTimestamp, $windowDuration, $timeSeriesPoints) {
-    $startTimestamp = $endTimestamp - $windowDuration;
+  public function readSignalStrength($startTimestamp, $endTimestamp, $timeSeriesPoints) {
     $q = 'SELECT ts, strength FROM link WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $strength = array();
@@ -702,8 +699,7 @@ class Database {
     return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
   }
 
-  public function readNetworkType($endTimestamp, $windowDuration) {
-    $startTimestamp = $endTimestamp - $windowDuration;
+  public function readNetworkType($startTimestamp, $endTimestamp) {
     $q = 'SELECT nwtype, count(*) FROM link'
         .' WHERE ts >= '.$startTimestamp.' AND ts <= '.$endTimestamp
         .' GROUP BY nwtype';
@@ -728,8 +724,7 @@ class Database {
     return array('upload' => $upload, 'download' => $download);
   }
 
-  public function readLag($endTimestamp, $windowDuration, $timeSeriesPoints) {
-    $startTimestamp = $endTimestamp - $windowDuration;
+  public function readLag($startTimestamp, $endTimestamp, $timeSeriesPoints) {
     // TODO: Filter rows with bad stratum (possibly require that the previous row is already good).
     $q = 'SELECT ts, stratum, upto FROM meta WHERE ts >= '
         .$startTimestamp.' AND ts <= '.$endTimestamp.' ORDER BY ts';

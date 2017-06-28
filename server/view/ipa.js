@@ -4,22 +4,41 @@ var ipa = {};
 
 // Options and their defaults.
 ipa.Options = function() {
-  this.url = 'ipa.php';  // Default in same directory, but can be an absolute URL.
-  this.minutes = 60;  // Compute stats for the last x minutes...
-  this.upToTimestamp = -1;  // ... up to here. -1 means now.
-  this.fractionalDigits = 1;  // Textual output precision.
+  // --- Global options ---
+
+  // Default in same directory, but can be an absolute URL.
+  this.url = 'ipa.php';
+  // Output inconsistent dummy data for testing.
+  this.dummy = false;
+  // Show data up to this point in time. -1 means now.
+  this.endTimestamp = -1;
+  // Maximum acceptable latency. A warning is shown when this is exceeded. It depends on your
+  // effective upload frequency and may be higher for flaky uplinks.
+  this.maxLatencyMinutes = 15;
   // Downsample time series to make charts readable. Increase for wider charts.
   this.timeSeriesPoints = 30;
-  // Number of days to show. 1 shows data for today, 2 for yesterday and today, ...
-  this.doorTimeDays = 9;  // Show shed door status.
-  this.pilotsTimeDays = 1;  // Show pilot count.
-  // TODO: Figure out how to display mutliple days.
-  this.systemStatusMinutes = 24 * 60;
-  // Show system status (temperature, signal etc.) (0 to disable).
-  this.showTimeOfMax = false;  // Show timestamp of maximum wind speed.
-  this.dummy = false;  // Output inconsistent dummy data for testing.
-  this.maxWindLatencyMinutes = 15;  // Show a warning when wind data is older.
-  this.showSpinner = 1;  // Show spinner while loading.
+  // Textual output precision. Currently only used for wind.
+  this.fractionalDigits = 1;
+
+  // --- Options for specific data ---
+
+  var timestampNow = new Date().getTime();
+
+  // If startTimestamp for a key is absent, no data is returned.
+  this.wind = {
+    // Show timestamp of maximum wind speed.
+    showTimeOfMax: false /* ,
+    startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) */
+  }
+  // this.tempHum = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) };
+  // this.adc = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.door = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.pilots = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.cpuTemp = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.signal = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.network = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.traffic = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(7 * 24 * 60) };
+  // this.lag = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
 }
 
 ipa.Tools = {}
@@ -49,6 +68,10 @@ ipa.Tools.millisToMinutes = function(millis) {
   return millis / (1000 * 60);
 }
 
+ipa.Tools.minutesToMillis = function(minutes) {
+  return minutes * 1000 * 60;
+}
+
 ipa.Tools.DURATION_REGEX = /([0-9]+)([wdhm]?) */g
 ipa.Tools.UNIT_TO_MINUTES = {
     'w': 7 * 24 * 60,
@@ -59,8 +82,8 @@ ipa.Tools.UNIT_TO_MINUTES = {
 /**
  * Parses a human readable duration string, e.g. "2h5" for 2 hours and 5 minutes. Supports w, d, h
  * and m (default).
- */
-ipa.Tools.durationStringToMinutes = function(s) {
+ */ // XXX get rid of all "period" terminology
+ipa.Tools.durationStringToMillies = function(s) {
   s = s.trim();
   var minutes = 0;
   var part;
@@ -73,14 +96,14 @@ ipa.Tools.durationStringToMinutes = function(s) {
     }
     minutes += parseInt(part[1]) * unit;
   }
-  return minutes;
+  return ipa.Tools.minutesToMillis(minutes);
 }
 
 ipa.Tools.isSameDate = function(dateA, dateB) {
   return dateA.getFullYear() == dateB.getFullYear()
       && dateA.getMonth() == dateB.getMonth()
       && dateA.getDay() == dateB.getDay();
-} 
+}
 
 /**
  * Returns time if date is today, otherwise returns date and time.
@@ -92,11 +115,17 @@ ipa.Tools.compactDateString = function(date) {
   return date.toLocaleString();
 }
 
+
 ipa.Chart = function(options) {
-  this.options = new ipa.Options();
-  for (var i in options) {
-    this.options[i] = options[i];
+  this.options = new ipa.Options();  // Set all defaults.
+  ipa.Chart.copyProperties_(options, this.options);  // Overwrite with specified values.
+}
+
+ipa.Chart.prototype.requestArgument = function(dataKey) {
+  if (dataKey in this.options && 'startTimestamp' in this.options[dataKey]) {
+    return '&' + dataKey + '=' + this.options[dataKey].startTimestamp;
   }
+  return '';
 }
 
 /**
@@ -109,39 +138,27 @@ ipa.Chart = function(options) {
 ipa.Chart.prototype.requestStats = function(opt_callback) {
   var isAsync = typeof(opt_callback) !== 'undefined';
   var request = new XMLHttpRequest();
-  var spinner = null;
-  if (this.options.showSpinner) {
-    var spinnerContainer = document.getElementById('idIpaSpinnerContainer');
-    var spinnerOptions = {
-        scale: 4
-    }
-    spinner = new Spinner(spinnerOptions).spin(spinnerContainer);
+  var url = this.options.url + '?samples=' + this.options.timeSeriesPoints;
+  url += this.requestArgument('wind');
+  url += this.requestArgument('tempHum');
+  url += this.requestArgument('adc');
+  url += this.requestArgument('door');
+  url += this.requestArgument('pilots');
+  url += this.requestArgument('cpuTemp');
+  url += this.requestArgument('signal');
+  url += this.requestArgument('network');
+  url += this.requestArgument('traffic');
+  url += this.requestArgument('lag');
+  if (this.options.dummy) {
+    url += '&dummy=1';
   }
-  request.open('GET',
-      // TODO: The client shouldn't have to compute the start timestamp for door, pilot etc.
-      this.options.url
-      + '?samples=' + this.options.timeSeriesPoints
-      + '&wind=' + this.options.minutes
-      + '&tempHum=' + this.options.minutes
-      + '&adc=' + this.options.systemStatusMinutes
-      + '&cpuTemp=' + this.options.systemStatusMinutes
-      + '&signal=' + this.options.systemStatusMinutes
-      + '&network=' + this.options.systemStatusMinutes
-      + '&traffic=' + this.options.systemStatusMinutes
-      + '&lag=' + this.options.systemStatusMinutes
-      + '&door=' + ipa.Chart.getStartOfDayDaysAgo_(
-          this.options.upToTimestamp, this.options.doorTimeDays - 1)
-      + '&pilots=' + ipa.Chart.getStartOfDayDaysAgo_(
-          this.options.upToTimestamp, this.options.pilotsTimeDays - 1)
-      + (this.options.upToTimestamp >= 0 ? '&upto=' + this.options.upToTimestamp : '')
-      + (this.options.dummy ? '&dummy=1' : ''),
-      isAsync);
+  if (this.options.endTimestamp >= 0) {
+    url += '&upTo=' + this.options.endTimestamp;
+  }
+  request.open('GET', url, isAsync);
   if (isAsync) {
     var chart = this;
     request.onreadystatechange = function() {
-      if (spinner) {
-        spinner.stop();
-      }
       if (request.readyState == 4 && request.status == 200) {
         chart.stats = JSON.parse(request.responseText);
         // TODO: Should we run the callback for all states instead of just success?
@@ -170,7 +187,7 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
       this.stats.wind.max.toFixed(this.options.fractionalDigits) + ' km/h');
   table.firstChild.lastChild.children[0].className = 'ipaMaxLabel';
   table.firstChild.lastChild.children[1].className = 'ipaMaxValue';
-  if (this.options.showTimeOfMax) {
+  if (this.options.showTimeOfMaxWindSpeed) {
     ipa.Chart.insertCells_(table.insertRow())('max@',
         ipa.Tools.compactDateString(new Date(parseInt(this.stats.wind.max_ts))));
     table.firstChild.lastChild.children[0].className = 'ipaMaxtsLabel';
@@ -189,7 +206,7 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
   this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
-ipa.Chart.prototype.drawTimeSeries = function(element) {
+ipa.Chart.prototype.drawWindTimeSeries = function(element) {
   if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
     return;
   }
@@ -217,7 +234,7 @@ ipa.Chart.prototype.drawTimeSeries = function(element) {
   this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
-ipa.Chart.prototype.drawHistogram = function(element) {
+ipa.Chart.prototype.drawWindHistogram = function(element) {
   if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
     return;
   }
@@ -578,12 +595,37 @@ ipa.Chart.showNoData_ = function(data, element, text) {
 }
 
 ipa.Chart.prototype.indicateStaleData_ = function(timestamp, maxMinutes, element) {
-  var latencyMinutes = ipa.Tools.millisToMinutes(this.options.upToTimestamp - timestamp);
+  var latencyMinutes = ipa.Tools.millisToMinutes(this.options.endTimestamp - timestamp);
   if (latencyMinutes > maxMinutes) {
     var text = 'last update: ' + ipa.Tools.compactDateString(new Date(parseInt(timestamp)));
     var staleDataLabel = document.createElement('div');
     staleDataLabel.className = 'ipaStaleData';
     staleDataLabel.appendChild(document.createTextNode(text));
     element.appendChild(staleDataLabel);
+  }
+}
+
+/**
+ * Copy properties, overwriting them if they exist. Objects are handled recursively. Fails if object
+ * structure does not match, i.e. from.a is an object but to.a is not.
+ */
+ipa.Chart.copyProperties_ = function(from, to) {
+  for (var i in from) {
+    if (typeof from[i] === 'object') {
+      // Make sure to[i] is an object, too.
+      if (i in to) {
+        if (typeof to[i] !== 'object') {
+          throw 'options structure incorrect - ' + i + ' is not an object';
+        }
+      } else {
+        to[i] = {};
+      }
+      ipa.Chart.copyProperties_(from[i], to[i]);
+    } else {  // Regular property.
+      if (typeof to[i] === 'object') {
+        throw 'options structure incorrect - ' + i + ' is an object';
+      }
+      to[i] = from[i];
+    }
   }
 }

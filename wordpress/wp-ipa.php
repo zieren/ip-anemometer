@@ -146,8 +146,8 @@ ipaView.updateChart = function(opt_request) {
   var c = ipaView.chart;
   ipaView.draw(c, c.drawStatus, 'idIpaWpStatus');
   ipaView.draw(c, c.drawWindSummary, 'idIpaWpSummary');
-  ipaView.draw(c, c.drawTimeSeries, 'idIpaWpSpeed');
-  ipaView.draw(c, c.drawHistogram, 'idIpaWpHistogram');
+  ipaView.draw(c, c.drawWindTimeSeries, 'idIpaWpSpeed');
+  ipaView.draw(c, c.drawWindHistogram, 'idIpaWpHistogram');
   ipaView.draw(c, c.drawTempHum, 'idIpaWpTempHum');
   ipaView.draw(c, c.drawAdcChannel, 'idIpaWpAdc');
   ipaView.draw(c, c.drawDoor, 'idIpaWpDoor');
@@ -206,7 +206,7 @@ function periodSelector($atts) {
       Period: <input id="idIpaWpPeriodInput" type="text" maxlength="8" size="6"
           onkeypress="ipaView.handleKeyPress(event)" value="'.$atts['period_selector'].'" />
       <button onclick="ipaView.requestStats()">Show</button>
-      <div id="idIpaSpinnerContainer"></div>
+      <div id="idipaVwSpinnerContainer"></div>
     </div>';
 }
 

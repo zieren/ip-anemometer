@@ -94,6 +94,6 @@ div.ipaStatusHide {
   display: none;
 }
 
-div#idIpaSpinnerContainer {
+.ipaVwSpinnerContainer {
   position: relative;
 }
