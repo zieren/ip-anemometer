@@ -1,4 +1,4 @@
-div#idIpaWpDateSelector {
+div#idIpaWpDivDate {
   width: 33ch;
   margin-left: auto;
   margin-right: auto;
@@ -10,7 +10,7 @@ div#idIpaVwDateSelector {
   text-align: center;
 }
 
-div#idIpaWpPeriodSelector {
+div#idIpaWpPeriodWind {
   width: 22ch;
   margin-left: auto;
   margin-right: auto;
@@ -49,6 +49,39 @@ td.ipaToLabel, td.ipaToValue {
   background: #bf9;
 }
 
+table.ipaTraffic {
+  border: 1px solid black;
+  border-spacing: 0;
+  width: 30ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.ipaTraffic td {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+td.ipaTrafficDateTime {
+  background: #bf9;
+}
+
+td.ipaTrafficPeriod {
+  background: #ffc;
+}
+
+td.ipaTrafficDownload {
+  background: #42d4f4;
+}
+
+td.ipaTrafficUpload {
+  background: #fc0;
+}
+
+td.ipaTrafficTotal {
+  background: #f96;
+}
+
 div.ipaVwElementWidth {
   width: 400px;
 }
@@ -58,11 +91,11 @@ div.ipaVwElementWidthHeight {
   max-height: 500px;
 }
 
-div#idIpaVwPeriodSelector {
-  margin-bottom: 10px;
+div.ipaVwElementCenter {
+  text-align: center;
 }
 
-div.ipaVwElementCenter {
+div.ipaWpElementCenter {
   text-align: center;
 }
 
@@ -94,6 +127,6 @@ div.ipaStatusHide {
   display: none;
 }
 
-.ipaVwSpinnerContainer {
+.ipaSpinnerContainer {
   position: relative;
 }

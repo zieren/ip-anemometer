@@ -72,6 +72,14 @@ ipa.Tools.minutesToMillis = function(minutes) {
   return minutes * 1000 * 60;
 }
 
+ipa.Tools.millisToDays = function(millis) {
+  return millis / (1000 * 60 * 60 * 24);
+}
+
+ipa.Tools.bytesToMiB = function(bytes) {
+  return (bytes / (1024 * 1024)).toFixed(1);
+}
+
 ipa.Tools.DURATION_REGEX = /([0-9]+)([wdhm]?) */g
 ipa.Tools.UNIT_TO_MINUTES = {
     'w': 7 * 24 * 60,
@@ -102,7 +110,7 @@ ipa.Tools.durationStringToMillies = function(s) {
 ipa.Tools.isSameDate = function(dateA, dateB) {
   return dateA.getFullYear() == dateB.getFullYear()
       && dateA.getMonth() == dateB.getMonth()
-      && dateA.getDay() == dateB.getDay();
+      && dateA.getDate() == dateB.getDate();
 }
 
 /**
@@ -426,6 +434,9 @@ ipa.Chart.prototype.drawTemperature = function(element) {
 }
 
 ipa.Chart.prototype.drawTempHum = function(element) {
+  if (!('temp_hum' in this.stats)) {
+    return;  // XXX report this; also handle in other drawers?
+  }
   var tempHumTable = new google.visualization.DataTable();
   tempHumTable.addColumn('datetime', 't');
   // Make sure temperature vAxis label is more prominent; put it on the right, where the latest
@@ -453,6 +464,9 @@ ipa.Chart.prototype.drawTempHum = function(element) {
 }
 
 ipa.Chart.prototype.drawAdcChannel = function(element) {
+  if (!('adc' in this.stats)) {
+    return;  // XXX report this; also handle in other drawers?
+  }
   var adcTable = new google.visualization.DataTable();
   adcTable.addColumn('datetime', 't');
   adcTable.addColumn('number', element.dataset.label);
@@ -501,19 +515,34 @@ ipa.Chart.prototype.drawNetworkType = function(element) {
 }
 
 ipa.Chart.prototype.drawTransferVolume = function(element) {
-  var volumeTable = new google.visualization.DataTable();
-  volumeTable.addColumn('string', 'Volume');
-  volumeTable.addColumn('number');
-  var volumes = ipa.Tools.alphasorted(this.stats.traffic);
-  for (var i = 0; i < volumes.length; i++) {
-    volumeTable.addRow([volumes[i][0], volumes[i][1] / (1024 * 1024)]);  // in MB
+  if (ipa.Chart.showNoData_(this.stats.traffic, element, 'no traffic data available')) {
+    return;
   }
-  var options = {
-    title: 'Transfer volume [MB]',
-    legend: 'none'
-  };
-  var volumeChart = new google.visualization.ColumnChart(element);
-  volumeChart.draw(volumeTable, options);
+  var table = document.createElement('table');
+  table.className = 'ipaTraffic';
+  ipa.Chart.insertCells_(table.insertRow())('date/time',
+      ipa.Tools.compactDateString(new Date(parseInt(this.stats.traffic.end_ts))));
+  table.firstChild.lastChild.children[0].className = 'ipaTrafficDateTime';
+  table.firstChild.lastChild.children[1].className = 'ipaTrafficDateTime';
+  ipa.Chart.insertCells_(table.insertRow())('period',
+      ipa.Tools.millisToDays(
+          parseInt(this.stats.traffic.end_ts) - parseInt(this.stats.traffic.start_ts)).toFixed(1)
+      + ' days');
+  table.firstChild.lastChild.children[0].className = 'ipaTrafficPeriod';
+  table.firstChild.lastChild.children[1].className = 'ipaTrafficPeriod';
+  ipa.Chart.insertCells_(table.insertRow())('download',
+      ipa.Tools.bytesToMiB(this.stats.traffic.download) + ' MB');
+  table.firstChild.lastChild.children[0].className = 'ipaTrafficDownload';
+  table.firstChild.lastChild.children[1].className = 'ipaTrafficDownload';
+  ipa.Chart.insertCells_(table.insertRow())('upload',
+      ipa.Tools.bytesToMiB(this.stats.traffic.upload) + ' MB');
+  table.firstChild.lastChild.children[0].className = 'ipaTrafficUpload';
+  table.firstChild.lastChild.children[1].className = 'ipaTrafficUpload';
+  ipa.Chart.insertCells_(table.insertRow())('total',
+      ipa.Tools.bytesToMiB(this.stats.traffic.download + this.stats.traffic.upload) + ' MB');
+  table.firstChild.lastChild.children[0].className = 'ipaTrafficTotal';
+  table.firstChild.lastChild.children[1].className = 'ipaTrafficTotal';
+  element.appendChild(table);
 }
 
 ipa.Chart.prototype.drawLag = function(element) {

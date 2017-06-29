@@ -13,12 +13,12 @@
 
 <div id="idIpaVwStatus" class="ipaVwElementWidth"></div>
 
-<div id="idIpaVwDivDate" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
-  Date and time: <input id="idIpaDateSelector" size="16" placeholder="up to date/time" />
+<div id="idIpaVwDivDate" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
+  Date/time: <input id="idIpaVwDateSelector" size="16" placeholder="up to date/time" />
   <button onclick="ipaView.setNow('idIpaVwDivDate')">Now</button>
 </div>
 
-<div id="idIpaVwDivPeriodWind" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+<div id="idIpaVwDivPeriodWind" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
   Period: <input id="idIpaVwPeriodInputWind" type="text" maxlength="8" size="6"
       onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodWind')" value="1h30m" />
   <button onclick="ipaView.requestStats('idIpaVwDivPeriodWind')">Show</button>
@@ -28,7 +28,7 @@
 <div id="idIpaVwWindHist" class="ipaVwElementWidth ipaVwExpand"></div>
 
 <h3>Pilot count</h3>
-<div id="idIpaVwDivPeriodPilots" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+<div id="idIpaVwDivPeriodPilots" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
   Period: <input id="idIpaVwPeriodInputPilots" type="text" maxlength="8" size="6"
       onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodPilots')" value="1d" />
   <button onclick="ipaView.requestStats('idIpaVwDivPeriodPilots')">Show</button>
@@ -36,15 +36,15 @@
 <div id="idIpaVwPilots" class="ipaVwElementWidthHeight ipaVwExpand"></div>
 
 <h3>Weather</h3>
-<div id="idIpaVwDivPeriodWeather" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+<div id="idIpaVwDivPeriodTempHum" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
   Period: <input id="idIpaVwPeriodInputTempHum" type="text" maxlength="8" size="6"
-      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodWeather')" value="1d" />
-  <button onclick="ipaView.requestStats('idIpaVwDivPeriodWeather')">Show</button>
+      onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodTempHum')" value="1d" />
+  <button onclick="ipaView.requestStats('idIpaVwDivPeriodTempHum')">Show</button>
 </div>
 <div id="idIpaVwTempHum" class="ipaVwElementWidthHeight ipaVwExpand"></div>
 
 <h3>Shed door</h3>
-<div id="idIpaVwDivPeriodDoor" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+<div id="idIpaVwDivPeriodDoor" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
   Period: <input id="idIpaVwPeriodInputDoor" type="text" maxlength="8" size="6"
       onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodDoor')" value="7d" />
   <button onclick="ipaView.requestStats('idIpaVwDivPeriodDoor')">Show</button>
@@ -52,7 +52,7 @@
 <div id="idIpaVwDoor" class="ipaVwElementWidthHeight ipaVwExpand"></div>
 
 <h3>A/D converter channel 7</h3>
-<div id="idIpaVwDivPeriodAdc" class="ipaVwSpinnerContainer ipaVwElementWidth ipaVwElementCenter">
+<div id="idIpaVwDivPeriodAdc" class="ipaSpinnerContainer ipaVwElementWidth ipaVwElementCenter">
   Period: <input id="idIpaVwPeriodInputAdc" type="text" maxlength="8" size="6"
       onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodAdc')" value="1d" />
   <button onclick="ipaView.requestStats('idIpaVwDivPeriodAdc')">Show</button>
@@ -61,7 +61,7 @@
 </div>
 
 <h3>System status</h3>
-<div id="idIpaVwDivPeriodSystem" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+<div id="idIpaVwDivPeriodSystem" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
   Period: <input id="idIpaVwPeriodInputSystem" type="text" maxlength="8" size="6"
       onkeypress="ipaView.handleKeyPress(event, 'idIpaVwDivPeriodSystem')" value="1d" />
   <button onclick="ipaView.requestStats('idIpaVwDivPeriodSystem')">Show</button>
@@ -69,10 +69,11 @@
 <div id="idIpaVwLag" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwTemp" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwSignalStrength" class="ipaVwElementWidth ipaVwExpand"></div>
+<h4>Traffic</h4>
 <div id="idIpaVwTransferVolume" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwNwType" class="ipaVwElementWidth ipaVwExpand"></div>
 
-<div id="idIpaVwDivExpand" class="ipaVwElementWidth ipaVwElementCenter ipaVwSpinnerContainer">
+<div id="idIpaVwDivExpand" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
   <button onclick="ipaView.expand('idIpaVwDivExpand')">Max Width</button>
 </div>
 
@@ -80,23 +81,25 @@
 
 var ipaView = {};
 
+// XXX extract duration selector to a function, like in wp-ipa.php
+
 //XXX magic duration "today", "thisweek" or whatever to pick start of day?
 //or postfix "+"/"-" to increase/decrease until next full day/week? maybe "+d"?
 ipaView.durationInputs = {
-wind: 'idIpaVwPeriodInputWind',
-tempHum: 'idIpaVwPeriodInputTempHum',
-adc: 'idIpaVwPeriodInputAdc',
-door: 'idIpaVwPeriodInputDoor',
-pilots: 'idIpaVwPeriodInputPilots',
-cpuTemp: 'idIpaVwPeriodInputSystem',
-signal: 'idIpaVwPeriodInputSystem',
-network: 'idIpaVwPeriodInputSystem',
-traffic: 'idIpaVwPeriodInputSystem',
-lag: 'idIpaVwPeriodInputSystem'
+  wind: 'idIpaVwPeriodInputWind',
+  tempHum: 'idIpaVwPeriodInputTempHum',
+  adc: 'idIpaVwPeriodInputAdc',
+  door: 'idIpaVwPeriodInputDoor',
+  pilots: 'idIpaVwPeriodInputPilots',
+  cpuTemp: 'idIpaVwPeriodInputSystem',
+  signal: 'idIpaVwPeriodInputSystem',
+  network: 'idIpaVwPeriodInputSystem',
+  traffic: 'idIpaVwPeriodInputSystem',
+  lag: 'idIpaVwPeriodInputSystem'
 }
 
 var now = new Date();
-var endPickr = flatpickr("#idIpaDateSelector", {
+var endPickr = flatpickr("#idIpaVwDateSelector", {  // XXX move into ipaView?
   enableTime: true,
   time_24hr: true,
   defaultDate: now,
@@ -127,7 +130,7 @@ ipaView.clearElement = function(element) {
 ipaView.options = {};
 
 ipaView.getStartTimestamp = function(timestampNow, inputElementId) {
-  var e = document.getElementById(inputElementId);
+  var e = document.getElementById(inputElementId);  // XXX skip if not found?
   return timestampNow - ipa.Tools.durationStringToMillies(e.value);
 }
 

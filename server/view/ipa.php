@@ -59,27 +59,27 @@ function computeStats() {
   if ($startTimestamp != null) {
     $result['pilots'] = $db->readPilots($startTimestamp, $endTimestamp);
   }
-  // CPU temperature.
+  // CPU temperature
   $startTimestamp = getEffectiveStartTimestamp('cpuTemp', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
     $result['cpu_temp'] = $db->readTemperature($startTimestamp, $endTimestamp, $maxSamples);
   }
-  // Signal strength.
+  // Signal strength
   $startTimestamp = getEffectiveStartTimestamp('signal', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
     $result['signal_strength'] = $db->readSignalStrength($startTimestamp, $endTimestamp, $maxSamples);
   }
-  // Network type.
+  // Network type
   $startTimestamp = getEffectiveStartTimestamp('network', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
     $result['network_type'] = $db->readNetworkType($startTimestamp, $endTimestamp);
   }
-  // Total traffic. TODO: This should give traffic within the window.
+  // Traffic
   $startTimestamp = getEffectiveStartTimestamp('traffic', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
-    $result['traffic'] = $db->readTransferVolume();
+    $result['traffic'] = $db->readTransferVolume($startTimestamp, $endTimestamp);
   }
-  // Lag.
+  // Lag
   $startTimestamp = getEffectiveStartTimestamp('lag', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
     $result['lag'] = $db->readLag($startTimestamp, $endTimestamp, $maxSamples);

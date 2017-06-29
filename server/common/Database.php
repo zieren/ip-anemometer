@@ -711,17 +711,33 @@ class Database {
     return $nwtypes;
   }
 
-  public function readTransferVolume() {
-    $q = 'SELECT upload, download FROM link ORDER BY ts DESC LIMIT 1';
+  public function readTransferVolume($startTimestamp, $endTimestamp) {
+    $q = 'SELECT ts, upload, download FROM link WHERE ts <= '.$endTimestamp
+        .' ORDER BY ts DESC LIMIT 1';
     $result = $this->query($q);
+    $actualStartTimestamp = $startTimestamp;
+    $actualEndTimestamp = $endTimestamp;
     if ($row = $result->fetch_row()) {
-      $upload = $row[0];
-      $download = $row[1];
+      $actualEndTimestamp = $row[0];
+      $upload = $row[1];
+      $download = $row[2];
+      $q = 'SELECT ts, upload, download FROM link WHERE ts <= '.$startTimestamp
+          .' ORDER BY ts DESC LIMIT 1';
+      $result = $this->query($q);
+      if ($row = $result->fetch_row()) {
+        $actualStartTimestamp = $row[0];
+        $upload -= $row[1];
+        $download -= $row[2];
+      }
     } else {
       $upload = 0;
       $download = 0;
     }
-    return array('upload' => $upload, 'download' => $download);
+    return array(
+        'start_ts' => $actualStartTimestamp,
+        'end_ts' => $actualEndTimestamp,
+        'upload' => $upload,
+        'download' => $download);
   }
 
   public function readLag($startTimestamp, $endTimestamp, $timeSeriesPoints) {
