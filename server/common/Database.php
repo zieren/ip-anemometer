@@ -642,7 +642,7 @@ class Database {
     return array(min($values), max($values));
   }
 
-  public function readTemperature($startTimestamp, $endTimestamp, $timeSeriesPoints) {
+  public function readCpuTemp($startTimestamp, $endTimestamp, $timeSeriesPoints) {
     $q = 'SELECT ts, t FROM temp WHERE ts >= '.$startTimestamp
         .' AND ts <= '.$endTimestamp.' ORDER BY ts';
     $result = $this->query($q);
@@ -711,7 +711,7 @@ class Database {
     return $nwtypes;
   }
 
-  public function readTransferVolume($startTimestamp, $endTimestamp) {
+  public function readTraffic($startTimestamp, $endTimestamp) {
     $q = 'SELECT ts, upload, download FROM link WHERE ts <= '.$endTimestamp
         .' ORDER BY ts DESC LIMIT 1';
     $result = $this->query($q);

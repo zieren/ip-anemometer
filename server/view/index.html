@@ -70,7 +70,7 @@
 <div id="idIpaVwTemp" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwSignalStrength" class="ipaVwElementWidth ipaVwExpand"></div>
 <h4>Traffic</h4>
-<div id="idIpaVwTransferVolume" class="ipaVwElementWidth ipaVwExpand"></div>
+<div id="idIpaVwTraffic" class="ipaVwElementWidth ipaVwExpand"></div>
 <div id="idIpaVwNwType" class="ipaVwElementWidth ipaVwExpand"></div>
 
 <div id="idIpaVwDivExpand" class="ipaVwElementWidth ipaVwElementCenter ipaSpinnerContainer">
@@ -87,11 +87,11 @@ var ipaView = {};
 //or postfix "+"/"-" to increase/decrease until next full day/week? maybe "+d"?
 ipaView.durationInputs = {
   wind: 'idIpaVwPeriodInputWind',
-  tempHum: 'idIpaVwPeriodInputTempHum',
+  temp_hum: 'idIpaVwPeriodInputTempHum',
   adc: 'idIpaVwPeriodInputAdc',
   door: 'idIpaVwPeriodInputDoor',
   pilots: 'idIpaVwPeriodInputPilots',
-  cpuTemp: 'idIpaVwPeriodInputSystem',
+  cpu_temp: 'idIpaVwPeriodInputSystem',
   signal: 'idIpaVwPeriodInputSystem',
   network: 'idIpaVwPeriodInputSystem',
   traffic: 'idIpaVwPeriodInputSystem',
@@ -161,10 +161,10 @@ ipaView.updateChart = function(spinner) {
   chart.drawAdcChannel(ipaView.clearElement(document.getElementById('idIpaVwAdc')));
   chart.drawPilots(ipaView.clearElement(document.getElementById('idIpaVwPilots')));
   chart.drawLag(ipaView.clearElement(document.getElementById('idIpaVwLag')));
-  chart.drawTemperature(ipaView.clearElement(document.getElementById('idIpaVwTemp')));
+  chart.drawCpuTemp(ipaView.clearElement(document.getElementById('idIpaVwTemp')));
   chart.drawSignalStrength(ipaView.clearElement(document.getElementById('idIpaVwSignalStrength')));
   chart.drawNetworkType(ipaView.clearElement(document.getElementById('idIpaVwNwType')));
-  chart.drawTransferVolume(ipaView.clearElement(document.getElementById('idIpaVwTransferVolume')));
+  chart.drawTraffic(ipaView.clearElement(document.getElementById('idIpaVwTraffic')));
  }
 
 ipaView.handleKeyPress = function(event, spinnerId) {

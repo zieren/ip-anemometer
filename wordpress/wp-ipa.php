@@ -45,18 +45,18 @@ function ipa($atts) {
     'date_selector' => dateSelector,
     'duration_selector' => durationSelector,
     'status' => status,
-    'summary' => summary,
-    'speed' => speed,
-    'histogram' => histogram,
+    'wind_summary' => windSummary,
+    'wind_speed' => windSpeed,
+    'wind_histogram' => windHistogram,
     'pilots' => pilots,
     'adc' => adc,
     'temp_hum' => tempHum,
     'door' => door,
     'lag' => lag,
-    'temperature' => temperature,
-    'signal' => signalStrength,
-    'network' => networkType,
-    'transfer' => transferVolume
+    'cpu_temp' => cpuTemp,
+    'signal' => signal,
+    'network' => network,
+    'traffic' => traffic
   );
   $arguments = array(
     // For all charts:
@@ -73,6 +73,9 @@ function ipa($atts) {
   );
   $code = '';
   $optionsJS = '';
+  if (!isset($GLOBALS['ipaViewDurations'])) {
+    $GLOBALS['ipaViewDurations'] = array();
+  }
   foreach ($atts as $k => $v) {
     if (get($options[$k])) {
       $optionsJS .= $options[$k][0].' = '.$options[$k][1]($v).';'."\n";
@@ -186,10 +189,10 @@ ipaView.updateChart = function(spinner) {
   ipaView.draw(c, c.drawDoor, 'idIpaWpDoor');
   ipaView.draw(c, c.drawPilots, 'idIpaWpPilots');
   ipaView.draw(c, c.drawLag, 'idIpaWpLag');
-  ipaView.draw(c, c.drawTemperature, 'idIpaWpTemperature');
+  ipaView.draw(c, c.drawCpuTemp, 'idIpaWpTemperature');
   ipaView.draw(c, c.drawSignalStrength, 'idIpaWpSignalStrength');
   ipaView.draw(c, c.drawNetworkType, 'idIpaWpNetworkType');
-  ipaView.draw(c, c.drawTransferVolume, 'idIpaWpTransferVolume');
+  ipaView.draw(c, c.drawTraffic, 'idIpaWpTraffic');
 }
 
 google.setOnLoadCallback(function() {
@@ -225,7 +228,6 @@ ipaView.endPickr = flatpickr("#idIpaWpDateSelector", {
 </script>';
 }
 
-// XXX for="wind" -> "summary", "speed", "histogram" need renaming. "speed" is also too generic.
 function durationSelector($atts) {
   if (!isset($atts['id'])) {
     return '<p><b>duration_selector requires id="[unique id]"</b></p>';
@@ -244,42 +246,50 @@ function durationSelector($atts) {
 }
 
 function setDurationSource($name, $atts) {
-  if (array_key_exists('duration_id', $atts)) {
-    return '<script type="text/javascript">ipaView.durations.'.$name
-        .' = { id: "idIpa-'.$atts['duration_id'].'-input" };</script>';
-  }
-  if (!array_key_exists('duration', $atts)) {
-    echo '<p><b>Either duration_id or duration must be specified for '.$name.'</b></p>';
-    // XXX Use under_score arguments in request, so names match.
+  $hasDurationId = array_key_exists('duration_id', $atts);
+  $hasDuration = array_key_exists('duration', $atts);
+  if ($hasDurationId == $hasDuration) {
+    echo '<p><b>Exactly one of duration_id and duration must be specified for '.$name.'</b></p>';
     return '';
   }
-  return '<script type="text/javascript">ipaView.durations.'.$name
-      .' = { fixed: "'.$atts['duration'].'" };</script>';
+  if ($hasDurationId) {
+    $duration = 'id: "idIpa-'.$atts['duration_id'].'-input"';
+  } else {
+    $duration = 'fixed: "'.$atts['duration'].'"';
+  }
+  if (isset($GLOBALS['ipaViewDurations'][$name])
+      && $GLOBALS['ipaViewDurations'][$name] != $duration) {
+    echo '<p><b>Duration for '.$name.' has already been set to '
+        .$GLOBALS['ipaViewDurations'][$name].'</b></p>';
+    return '';
+  }
+  $GLOBALS['ipaViewDurations'][$name] = $duration;
+  return '<script type="text/javascript">ipaView.durations.'.$name.' = { '.$duration.' };</script>';
 }
 
 function status($atts) {
   return '<div id="idIpaWpStatus" data-hideok="'.$atts['hideok'].'"></div>';
 }
 
-function summary($atts) {
-  // XXX should we support separate durations for summary, speed, histogram? I think yes...
+// TODO: Rename CSS identifiers to better match handlers (summary -> windSummary).
+function windSummary($atts) {
   return setDurationSource('wind', $atts).'<div id="idIpaWpSummary"></div>';
 }
 
-function speed($atts) {
+function windSpeed($atts) {
   return setDurationSource('wind', $atts).'<div id="idIpaWpSpeed"></div>';
 }
 
-function histogram($atts) {
+function windHistogram($atts) {
   return setDurationSource('wind', $atts).'<div id="idIpaWpHistogram"></div>';
 }
 
 function tempHum($atts) {
-  return setDurationSource('tempHum', $atts).'<div id="idIpaWpTempHum"></div>';
+  return setDurationSource('temp_hum', $atts).'<div id="idIpaWpTempHum"></div>';
 }
 
 function pilots($atts) {
-  return '<div id="idIpaWpPilots"></div>';
+  return setDurationSource('pilots', $atts).'<div id="idIpaWpPilots"></div>';
 }
 
 function adc($atts) {
@@ -289,25 +299,25 @@ function adc($atts) {
 }
 
 function door($atts) {
-  return '<div id="idIpaWpDoor"></div>';
+  return setDurationSource('door', $atts).'<div id="idIpaWpDoor"></div>';
 }
 
 function lag($atts) {
   return setDurationSource('lag', $atts).'<div id="idIpaWpLag"></div>';
 }
 
-function temperature($atts) {  // XXX this naming sucks
-  return setDurationSource('cpuTemp', $atts).'<div id="idIpaWpTemperature"></div>';
+function cpuTemp($atts) {
+  return setDurationSource('cpu_temp', $atts).'<div id="idIpaWpTemperature"></div>';
 }
 
-function signalStrength($atts) {
+function signal($atts) {
   return setDurationSource('signal', $atts).'<div id="idIpaWpSignalStrength"></div>';
 }
 
-function networkType($atts) {
+function network($atts) {
   return setDurationSource('network', $atts).'<div id="idIpaWpNetworkType"></div>';
 }
 
-function transferVolume($atts) {
-  return setDurationSource('traffic', $atts).'<div id="idIpaWpTransferVolume"></div>';  // XXX fix name?
+function traffic($atts) {
+  return setDurationSource('traffic', $atts).'<div id="idIpaWpTraffic"></div>';
 }

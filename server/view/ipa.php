@@ -40,7 +40,7 @@ function computeStats() {
     $result['wind'] = $db->computeWindStats($startTimestamp, $endTimestamp, $maxSamples);
   }
   // Temperature and humidity
-  $startTimestamp = getEffectiveStartTimestamp('tempHum', $timestampNow, $timeSeriesMaxMinutes);
+  $startTimestamp = getEffectiveStartTimestamp('temp_hum', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
     $result['temp_hum'] = $db->readTempHum($startTimestamp, $endTimestamp, $maxSamples);
   }
@@ -60,9 +60,9 @@ function computeStats() {
     $result['pilots'] = $db->readPilots($startTimestamp, $endTimestamp);
   }
   // CPU temperature
-  $startTimestamp = getEffectiveStartTimestamp('cpuTemp', $timestampNow, $timeSeriesMaxMinutes);
+  $startTimestamp = getEffectiveStartTimestamp('cpu_temp', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
-    $result['cpu_temp'] = $db->readTemperature($startTimestamp, $endTimestamp, $maxSamples);
+    $result['cpu_temp'] = $db->readCpuTemp($startTimestamp, $endTimestamp, $maxSamples);
   }
   // Signal strength
   $startTimestamp = getEffectiveStartTimestamp('signal', $timestampNow, $timeSeriesMaxMinutes);
@@ -77,7 +77,7 @@ function computeStats() {
   // Traffic
   $startTimestamp = getEffectiveStartTimestamp('traffic', $timestampNow, $timeSeriesMaxMinutes);
   if ($startTimestamp != null) {
-    $result['traffic'] = $db->readTransferVolume($startTimestamp, $endTimestamp);
+    $result['traffic'] = $db->readTraffic($startTimestamp, $endTimestamp);
   }
   // Lag
   $startTimestamp = getEffectiveStartTimestamp('lag', $timestampNow, $timeSeriesMaxMinutes);

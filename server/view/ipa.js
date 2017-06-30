@@ -30,11 +30,11 @@ ipa.Options = function() {
     showTimeOfMax: false /* ,
     startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) */
   }
-  // this.tempHum = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) };
+  // this.temp_hum = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) };
   // this.adc = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
   // this.door = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
   // this.pilots = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
-  // this.cpuTemp = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
+  // this.cpu_temp = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
   // this.signal = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
   // this.network = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
   // this.traffic = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(7 * 24 * 60) };
@@ -90,7 +90,7 @@ ipa.Tools.UNIT_TO_MINUTES = {
 /**
  * Parses a human readable duration string, e.g. "2h5" for 2 hours and 5 minutes. Supports w, d, h
  * and m (default).
- */ // XXX get rid of all "period" terminology
+ */ // XXX get rid of all "duration" terminology
 ipa.Tools.durationStringToMillies = function(s) {
   s = s.trim();
   var minutes = 0;
@@ -148,11 +148,11 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
   var request = new XMLHttpRequest();
   var url = this.options.url + '?samples=' + this.options.timeSeriesPoints;
   url += this.requestArgument('wind');
-  url += this.requestArgument('tempHum');
+  url += this.requestArgument('temp_hum');
   url += this.requestArgument('adc');
   url += this.requestArgument('door');
   url += this.requestArgument('pilots');
-  url += this.requestArgument('cpuTemp');
+  url += this.requestArgument('cpu_temp');
   url += this.requestArgument('signal');
   url += this.requestArgument('network');
   url += this.requestArgument('traffic');
@@ -416,7 +416,7 @@ ipa.Chart.prototype.drawPilots = function(element) {
   pilotsChart.draw(pilotsTable, options);
 }
 
-ipa.Chart.prototype.drawTemperature = function(element) {
+ipa.Chart.prototype.drawCpuTemp = function(element) {
   var temperatureTable = new google.visualization.DataTable();
   temperatureTable.addColumn('datetime');
   temperatureTable.addColumn('number');
@@ -514,12 +514,14 @@ ipa.Chart.prototype.drawNetworkType = function(element) {
   nwTypeChart.draw(nwTypeTable, options);
 }
 
-ipa.Chart.prototype.drawTransferVolume = function(element) {
+ipa.Chart.prototype.drawTraffic = function(element) {
   if (ipa.Chart.showNoData_(this.stats.traffic, element, 'no traffic data available')) {
     return;
   }
   var table = document.createElement('table');
   table.className = 'ipaTraffic';
+  // XXX Is this date really needed? We'd have a staleness indicator if it's off, right?
+  // (Same applies to wind summary.)
   ipa.Chart.insertCells_(table.insertRow())('date/time',
       ipa.Tools.compactDateString(new Date(parseInt(this.stats.traffic.end_ts))));
   table.firstChild.lastChild.children[0].className = 'ipaTrafficDateTime';
