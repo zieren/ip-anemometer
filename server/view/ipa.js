@@ -80,7 +80,7 @@ ipa.Tools.bytesToMiB = function(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1);
 }
 
-ipa.Tools.DURATION_REGEX = /([0-9]+)([wdhm]?) */g
+ipa.Tools.PERIOD_REGEX = /([0-9]+)([wdhm]?) */g
 ipa.Tools.UNIT_TO_MINUTES = {
     'w': 7 * 24 * 60,
     'd': 24 * 60,
@@ -88,14 +88,14 @@ ipa.Tools.UNIT_TO_MINUTES = {
     'm': 1
 }
 /**
- * Parses a human readable duration string, e.g. "2h5" for 2 hours and 5 minutes. Supports w, d, h
+ * Parses a human readable period string, e.g. "2h5" for 2 hours and 5 minutes. Supports w, d, h
  * and m (default).
- */ // XXX get rid of all "duration" terminology
-ipa.Tools.durationStringToMillies = function(s) {
+ */
+ipa.Tools.periodStringToMillies = function(s) {
   s = s.trim();
   var minutes = 0;
   var part;
-  while ((part = ipa.Tools.DURATION_REGEX.exec(s)) !== null) {
+  while ((part = ipa.Tools.PERIOD_REGEX.exec(s)) !== null) {
     var unit = part[2];
     if (unit in ipa.Tools.UNIT_TO_MINUTES) {
       unit = ipa.Tools.UNIT_TO_MINUTES[unit];

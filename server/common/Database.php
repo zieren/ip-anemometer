@@ -392,7 +392,7 @@ class Database {
     $result = $this->query($q);
 
     // Read samples in reverse chronological order until the desired duration is best approximated.
-    // At the same time, compute running stats except histogram.
+    // At the same time, compute running stats. The histogram is computed later.
     $actualStartTimestamp = 0;
     $actualEndTimestamp = 0;
     $actualWindowDuration = 0;

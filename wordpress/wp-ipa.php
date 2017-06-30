@@ -43,7 +43,7 @@ function ipa($atts) {
   );
   $handlers = array(
     'date_selector' => dateSelector,
-    'duration_selector' => durationSelector,
+    'period_selector' => periodSelector,
     'status' => status,
     'wind_summary' => windSummary,
     'wind_speed' => windSpeed,
@@ -60,11 +60,11 @@ function ipa($atts) {
   );
   $arguments = array(
     // For all charts:
-    'duration_id',  // duration_selector id
-    'duration',     // fixed duration
-    // For duration_selector:
+    'period_id',  // period_selector id
+    'period',     // fixed period
+    // For period_selector:
     'default',  // initial value
-    'id',       // ID for referencing in duration_id above
+    'id',       // ID for referencing in period_id above
     // For status chart:
     'hideok',
     // For ADC chart:
@@ -73,8 +73,8 @@ function ipa($atts) {
   );
   $code = '';
   $optionsJS = '';
-  if (!isset($GLOBALS['ipaViewDurations'])) {
-    $GLOBALS['ipaViewDurations'] = array();
+  if (!isset($GLOBALS['ipaViewPeriods'])) {
+    $GLOBALS['ipaViewPeriods'] = array();
   }
   foreach ($atts as $k => $v) {
     if (get($options[$k])) {
@@ -114,7 +114,7 @@ ipaView.options.timeSeriesPoints = 100;
 ipaView.optionsLocal.spinner = 1;
 $optionsJS
 
-ipaView.durations = {}
+ipaView.periods = {}
 
 ipaView.setNow = function(spinnerId) {
   var now = new Date();
@@ -136,14 +136,14 @@ ipaView.handleKeyPress = function(event, spinnerId) {
   }
 }
 
-ipaView.getStartTimestamp = function(timestampNow, duration) {
-  if ('id' in duration) {
-    var e = document.getElementById(duration['id']);
+ipaView.getStartTimestamp = function(timestampNow, period) {
+  if ('id' in period) {
+    var e = document.getElementById(period['id']);
     if (e) {
-      return timestampNow - ipa.Tools.durationStringToMillies(e.value);
+      return timestampNow - ipa.Tools.periodStringToMillies(e.value);
     }
-  } else if ('fixed' in duration) {
-    return timestampNow - ipa.Tools.durationStringToMillies(duration['fixed']);
+  } else if ('fixed' in period) {
+    return timestampNow - ipa.Tools.periodStringToMillies(period['fixed']);
   }
   return null;
 }
@@ -155,9 +155,9 @@ ipaView.requestStats = function(spinnerId) {
   ipaView.options.endTimestamp = 'endPickr' in ipaView
       ? ipaView.endPickr.selectedDates[0].getTime()
       : new Date().getTime();
-  for (var i in ipaView.durations) {
+  for (var i in ipaView.periods) {
     var startTimestamp =
-        ipaView.getStartTimestamp(ipaView.options.endTimestamp, ipaView.durations[i]);
+        ipaView.getStartTimestamp(ipaView.options.endTimestamp, ipaView.periods[i]);
     if (startTimestamp) {
       ipaView.options[i] = {}
       ipaView.options[i].startTimestamp = startTimestamp;
@@ -228,12 +228,12 @@ ipaView.endPickr = flatpickr("#idIpaWpDateSelector", {
 </script>';
 }
 
-function durationSelector($atts) {
+function periodSelector($atts) {
   if (!isset($atts['id'])) {
-    return '<p><b>duration_selector requires id="[unique id]"</b></p>';
+    return '<p><b>period_selector requires id="[unique id]"</b></p>';
   }
   if (!isset($atts['default'])) {
-    return '<p><b>duration_selector requires default="[default duration]"</b></p>';
+    return '<p><b>period_selector requires default="[default period]"</b></p>';
   }
   $id = 'idIpa-'.$atts['id'];
   return
@@ -245,26 +245,26 @@ function durationSelector($atts) {
 </div>';
 }
 
-function setDurationSource($name, $atts) {
-  $hasDurationId = array_key_exists('duration_id', $atts);
-  $hasDuration = array_key_exists('duration', $atts);
-  if ($hasDurationId == $hasDuration) {
-    echo '<p><b>Exactly one of duration_id and duration must be specified for '.$name.'</b></p>';
+function setPeriodSource($name, $atts) {
+  $hasPeriodId = array_key_exists('period_id', $atts);
+  $hasPeriod = array_key_exists('period', $atts);
+  if ($hasPeriodId == $hasPeriod) {
+    echo '<p><b>Exactly one of period_id and period must be specified for '.$name.'</b></p>';
     return '';
   }
-  if ($hasDurationId) {
-    $duration = 'id: "idIpa-'.$atts['duration_id'].'-input"';
+  if ($hasPeriodId) {
+    $period = 'id: "idIpa-'.$atts['period_id'].'-input"';
   } else {
-    $duration = 'fixed: "'.$atts['duration'].'"';
+    $period = 'fixed: "'.$atts['period'].'"';
   }
-  if (isset($GLOBALS['ipaViewDurations'][$name])
-      && $GLOBALS['ipaViewDurations'][$name] != $duration) {
-    echo '<p><b>Duration for '.$name.' has already been set to '
-        .$GLOBALS['ipaViewDurations'][$name].'</b></p>';
+  if (isset($GLOBALS['ipaViewPeriods'][$name])
+      && $GLOBALS['ipaViewPeriods'][$name] != $period) {
+    echo '<p><b>Period for '.$name.' has already been set to '
+        .$GLOBALS['ipaViewPeriods'][$name].'</b></p>';
     return '';
   }
-  $GLOBALS['ipaViewDurations'][$name] = $duration;
-  return '<script type="text/javascript">ipaView.durations.'.$name.' = { '.$duration.' };</script>';
+  $GLOBALS['ipaViewPeriods'][$name] = $period;
+  return '<script type="text/javascript">ipaView.periods.'.$name.' = { '.$period.' };</script>';
 }
 
 function status($atts) {
@@ -273,51 +273,51 @@ function status($atts) {
 
 // TODO: Rename CSS identifiers to better match handlers (summary -> windSummary).
 function windSummary($atts) {
-  return setDurationSource('wind', $atts).'<div id="idIpaWpSummary"></div>';
+  return setPeriodSource('wind', $atts).'<div id="idIpaWpSummary"></div>';
 }
 
 function windSpeed($atts) {
-  return setDurationSource('wind', $atts).'<div id="idIpaWpSpeed"></div>';
+  return setPeriodSource('wind', $atts).'<div id="idIpaWpSpeed"></div>';
 }
 
 function windHistogram($atts) {
-  return setDurationSource('wind', $atts).'<div id="idIpaWpHistogram"></div>';
+  return setPeriodSource('wind', $atts).'<div id="idIpaWpHistogram"></div>';
 }
 
 function tempHum($atts) {
-  return setDurationSource('temp_hum', $atts).'<div id="idIpaWpTempHum"></div>';
+  return setPeriodSource('temp_hum', $atts).'<div id="idIpaWpTempHum"></div>';
 }
 
 function pilots($atts) {
-  return setDurationSource('pilots', $atts).'<div id="idIpaWpPilots"></div>';
+  return setPeriodSource('pilots', $atts).'<div id="idIpaWpPilots"></div>';
 }
 
 function adc($atts) {
-  return setDurationSource('adc', $atts)
+  return setPeriodSource('adc', $atts)
       .'<div id="idIpaWpAdc" data-channel="'.$atts['channel']
       .'" data-label="'.$atts['label'].'"></div>';
 }
 
 function door($atts) {
-  return setDurationSource('door', $atts).'<div id="idIpaWpDoor"></div>';
+  return setPeriodSource('door', $atts).'<div id="idIpaWpDoor"></div>';
 }
 
 function lag($atts) {
-  return setDurationSource('lag', $atts).'<div id="idIpaWpLag"></div>';
+  return setPeriodSource('lag', $atts).'<div id="idIpaWpLag"></div>';
 }
 
 function cpuTemp($atts) {
-  return setDurationSource('cpu_temp', $atts).'<div id="idIpaWpTemperature"></div>';
+  return setPeriodSource('cpu_temp', $atts).'<div id="idIpaWpTemperature"></div>';
 }
 
 function signal($atts) {
-  return setDurationSource('signal', $atts).'<div id="idIpaWpSignalStrength"></div>';
+  return setPeriodSource('signal', $atts).'<div id="idIpaWpSignalStrength"></div>';
 }
 
 function network($atts) {
-  return setDurationSource('network', $atts).'<div id="idIpaWpNetworkType"></div>';
+  return setPeriodSource('network', $atts).'<div id="idIpaWpNetworkType"></div>';
 }
 
 function traffic($atts) {
-  return setDurationSource('traffic', $atts).'<div id="idIpaWpTraffic"></div>';
+  return setPeriodSource('traffic', $atts).'<div id="idIpaWpTraffic"></div>';
 }
