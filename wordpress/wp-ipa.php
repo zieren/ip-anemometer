@@ -235,7 +235,7 @@ function periodSelector($atts) {
   if (!isset($atts['default'])) {
     return '<p><b>period_selector requires default="[default period]"</b></p>';
   }
-  $id = 'idIpa-'.$atts['id'];
+  $id = 'idIpaWp-'.$atts['id'];
   return
 '<div id="'.$id.'-div" class="ipaWpElementCenter ipaSpinnerContainer">
   Period: <input id="'.$id.'-input" type="text" maxlength="8" size="6"
