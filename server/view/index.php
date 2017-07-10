@@ -21,7 +21,7 @@ function periodSelector($keys, $default) {
   if (!is_array($keys)) {
     $keys = array($keys);
   }
-  $id = 'idIpaVw-'.implode('-', $keys);
+  $id = 'idIpaVw-'.implode('_', $keys);
   foreach ($keys as $key) {
     echo '<script type="text/javascript">ipaView.periodInputs.'.$key.' = "'.$id.'-input";</script>'
       ."\n";
@@ -84,7 +84,7 @@ function periodSelector($keys, $default) {
 //or postfix "+"/"-" to increase/decrease until next full day/week? maybe "+d"?
 
 var ipaNow = new Date();
-var endPickr = flatpickr("#idIpaVwDateSelector", {  // XXX move into ipaView?
+ipaView.endPickr = flatpickr("#idIpaVwDateSelector", {
   enableTime: true,
   time_24hr: true,
   defaultDate: ipaNow,
@@ -100,8 +100,8 @@ var endPickr = flatpickr("#idIpaVwDateSelector", {  // XXX move into ipaView?
 
 ipaView.setNow = function(spinnerId) {
   var now = new Date();
-  endPickr.set('maxDate', now);
-  endPickr.setDate(now);
+  ipaView.endPickr.set('maxDate', now);
+  ipaView.endPickr.setDate(now);
   ipaView.requestStats(spinnerId);
 }
 
@@ -115,7 +115,7 @@ ipaView.clearElement = function(element) {
 ipaView.options = {};
 
 ipaView.getStartTimestamp = function(timestampNow, inputElementId) {
-  var e = document.getElementById(inputElementId);  // XXX skip if not found?
+  var e = document.getElementById(inputElementId);
   return timestampNow - ipa.Tools.periodStringToMillies(e.value);
 }
 
@@ -123,7 +123,7 @@ ipaView.requestStats = function(spinnerId) {
   var spinnerContainer = document.getElementById(spinnerId);
   var spinner = new Spinner({ scale: 5 }).spin(spinnerContainer);
 
-  ipaView.options.endTimestamp = endPickr.selectedDates[0].getTime();
+  ipaView.options.endTimestamp = ipaView.endPickr.selectedDates[0].getTime();
   for (var i in ipaView.periodInputs) {
     ipaView.options[i] = {}
     ipaView.options[i].startTimestamp =
