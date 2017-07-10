@@ -182,7 +182,7 @@ ipa.Chart.prototype.requestStats = function(opt_callback) {
 }
 
 ipa.Chart.prototype.drawWindSummary = function(element) {
-  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+  if (this.maybeShowNoData('wind', element, 'no wind data available')) {
     return;
   }
   var table = document.createElement('table');
@@ -210,12 +210,10 @@ ipa.Chart.prototype.drawWindSummary = function(element) {
   table.firstChild.lastChild.children[0].className = 'ipaToLabel';
   table.firstChild.lastChild.children[1].className = 'ipaToValue';
   element.appendChild(table);
-
-  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawWindTimeSeries = function(element) {
-  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+  if (this.maybeShowNoData('wind', element, 'no wind data available')) {
     return;
   }
   var timeSeriesTable = new google.visualization.DataTable();
@@ -238,12 +236,10 @@ ipa.Chart.prototype.drawWindTimeSeries = function(element) {
   };
   var timeSeriesChart = new google.visualization.LineChart(element);
   timeSeriesChart.draw(timeSeriesTable, options);
-
-  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawWindHistogram = function(element) {
-  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+  if (this.maybeShowNoData('wind', element, 'no wind data available')) {
     return;
   }
   var histogramDataTable = new google.visualization.DataTable();
@@ -276,12 +272,10 @@ ipa.Chart.prototype.drawWindHistogram = function(element) {
   }
   var histogramChart = new google.visualization.ComboChart(element);
   histogramChart.draw(histogramDataTable, options);
-
-  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawTextHistogram = function(element) {
-  if (ipa.Chart.showNoData_(this.stats.wind, element, 'no wind data available')) {
+  if (this.maybeShowNoData('wind', element, 'no wind data available')) {
     return;
   }
   table = document.createElement('table');
@@ -301,13 +295,10 @@ ipa.Chart.prototype.drawTextHistogram = function(element) {
     totalPercent -= percent;
   }
   element.appendChild(table);
-
-  this.indicateStaleData_(this.stats.wind.end_ts, this.options.maxWindLatencyMinutes, element);
 }
 
 ipa.Chart.prototype.drawStatus = function(element) {
-  if (ipa.Chart.showNoData_(
-      this.stats.status && this.stats.status.length > 0, element, 'no status available')) {
+  if (this.maybeShowNoData('status', element, 'no status available')) {
     return;
   }
   var statusText = this.stats.status[1];
@@ -327,6 +318,7 @@ ipa.Chart.prototype.drawStatus = function(element) {
 }
 
 ipa.Chart.prototype.drawDoor = function(element) {
+  // The server extrapolates the door as closed; "no data" cannot occur.
   var doorTable = new google.visualization.DataTable();
   doorTable.addColumn({type: 'string'});  // day, e.g. 'Fr 13'
   doorTable.addColumn({type: 'string'});  // 'open' or 'closed'
@@ -385,6 +377,7 @@ ipa.Chart.prototype.drawDoor = function(element) {
 }
 
 ipa.Chart.prototype.drawPilots = function(element) {
+  // The server extrapolates the pilot count as zero; "no data" cannot occur.
   var pilotsTable = new google.visualization.DataTable();
   pilotsTable.addColumn('datetime');
   pilotsTable.addColumn('number');
@@ -417,6 +410,9 @@ ipa.Chart.prototype.drawPilots = function(element) {
 }
 
 ipa.Chart.prototype.drawCpuTemp = function(element) {
+  if (this.maybeShowNoData('cpu_temp', element, 'no CPU temperature data available')) {
+    return;
+  }
   var temperatureTable = new google.visualization.DataTable();
   temperatureTable.addColumn('datetime');
   temperatureTable.addColumn('number');
@@ -434,8 +430,8 @@ ipa.Chart.prototype.drawCpuTemp = function(element) {
 }
 
 ipa.Chart.prototype.drawTempHum = function(element) {
-  if (!('temp_hum' in this.stats)) {
-    return;  // XXX report this; also handle in other drawers?
+  if (this.maybeShowNoData('temp_hum', element, 'no temperature/humidity data available')) {
+    return;
   }
   var tempHumTable = new google.visualization.DataTable();
   tempHumTable.addColumn('datetime', 't');
@@ -464,8 +460,8 @@ ipa.Chart.prototype.drawTempHum = function(element) {
 }
 
 ipa.Chart.prototype.drawAdcChannel = function(element) {
-  if (!('adc' in this.stats)) {
-    return;  // XXX report this; also handle in other drawers?
+  if (this.maybeShowNoData('adc', element, 'no ADC data available')) {
+    return;
   }
   var adcTable = new google.visualization.DataTable();
   adcTable.addColumn('datetime', 't');
@@ -483,6 +479,9 @@ ipa.Chart.prototype.drawAdcChannel = function(element) {
 }
 
 ipa.Chart.prototype.drawSignalStrength = function(element) {
+  if (this.maybeShowNoData('signal_strength', element, 'no signal strength data available')) {
+    return;
+  }
   var strengthTable = new google.visualization.DataTable();
   strengthTable.addColumn('datetime');
   strengthTable.addColumn('number');
@@ -500,6 +499,9 @@ ipa.Chart.prototype.drawSignalStrength = function(element) {
 }
 
 ipa.Chart.prototype.drawNetworkType = function(element) {
+  if (this.maybeShowNoData('network_type', element, 'no network type data available')) {
+    return;
+  }
   var nwTypeTable = new google.visualization.DataTable();
   nwTypeTable.addColumn('string', 'Type');
   nwTypeTable.addColumn('number', '%');
@@ -515,13 +517,11 @@ ipa.Chart.prototype.drawNetworkType = function(element) {
 }
 
 ipa.Chart.prototype.drawTraffic = function(element) {
-  if (ipa.Chart.showNoData_(this.stats.traffic, element, 'no traffic data available')) {
+  if (this.maybeShowNoData('traffic', element, 'no traffic data available')) {
     return;
   }
   var table = document.createElement('table');
   table.className = 'ipaTraffic';
-  // XXX Is this date really needed? We'd have a staleness indicator if it's off, right?
-  // (Same applies to wind summary.)
   ipa.Chart.insertCells_(table.insertRow())('date/time',
       ipa.Tools.compactDateString(new Date(parseInt(this.stats.traffic.end_ts))));
   table.firstChild.lastChild.children[0].className = 'ipaTrafficDateTime';
@@ -548,6 +548,9 @@ ipa.Chart.prototype.drawTraffic = function(element) {
 }
 
 ipa.Chart.prototype.drawLag = function(element) {
+  if (this.maybeShowNoData('lag', element, 'no upload lag data available')) {
+    return;
+  }
   var lagTable = new google.visualization.DataTable();
   var options = {
       title: 'Upload lag [m]',
@@ -614,8 +617,8 @@ ipa.Chart.isFullDay_ = function(a, b) {
       && b.getHours() == 23 && b.getMinutes() == 59 && b.getSeconds() == 59;
 }
 
-ipa.Chart.showNoData_ = function(data, element, text) {
-  if (data) {
+ipa.Chart.prototype.maybeShowNoData = function(key, element, text) {
+  if (key in this.stats && !!this.stats[key]) {
     return false;
   }
   var noDataLabel = document.createElement('div')
@@ -625,6 +628,7 @@ ipa.Chart.showNoData_ = function(data, element, text) {
   return true;
 }
 
+// TODO: Fix this and use it (GitHub issue #78).
 ipa.Chart.prototype.indicateStaleData_ = function(timestamp, maxMinutes, element) {
   var latencyMinutes = ipa.Tools.millisToMinutes(this.options.endTimestamp - timestamp);
   if (latencyMinutes > maxMinutes) {

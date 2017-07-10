@@ -324,11 +324,10 @@ class Database {
   public function readStatus() {
     $q = 'SELECT ts, text FROM status WHERE type = "client"';
     $result = $this->query($q);
-    $status = array();
     if ($row = $result->fetch_row()) {
-      $status = array($row[0], $row[1]);
+      return array($row[0], $row[1]);
     }
-    return $status;
+    return null;
   }
 
   /** Updates the specified config value. */
@@ -438,7 +437,7 @@ class Database {
     }
 
     if (count($selectedSamples) == 0) {
-      return null;  // indicates that no data is available at all
+      return null;
     }
 
     $avgKmh /= $actualWindowDuration;
@@ -650,6 +649,9 @@ class Database {
     while ($row = $result->fetch_row()) {
       $temp[tokey($row[0])] = floatval($row[1]);
     }
+    if (count($temp) == 0) {
+      return null;
+    }
     return Database::downsampleTimeSeries($temp, $timeSeriesPoints);
   }
 
@@ -662,6 +664,9 @@ class Database {
     while ($row = $result->fetch_row()) {
       $temp[tokey($row[0])] = floatval($row[1]);
       $hum[tokey($row[0])] = floatval($row[2]);
+    }
+    if (count($temp) == 0) {
+      return null;
     }
     return array(
         Database::downsampleTimeSeries($temp, $timeSeriesPoints),
@@ -682,6 +687,9 @@ class Database {
       }
       $data[$channel][tokey($ts)] = $value;
     }
+    if (count($data) == 0) {
+      return null;
+    }
     foreach ($data as $channel => &$values) {
       $values = Database::downsampleTimeSeries($values, $timeSeriesPoints);
     }
@@ -696,6 +704,9 @@ class Database {
     while ($row = $result->fetch_row()) {
       $strength[tokey($row[0])] = intval($row[1]);
     }
+    if (count($strength) == 0) {
+      return null;
+    }
     return Database::downsampleTimeSeries($strength, $timeSeriesPoints);
   }
 
@@ -707,6 +718,9 @@ class Database {
     $result = $this->query($q);
     while ($row = $result->fetch_row()) {
       $nwtypes[$row[0]] = intval($row[1]);  // assume equal weight
+    }
+    if (count($nwtypes) == 0) {
+      return null;
     }
     return $nwtypes;
   }
@@ -728,10 +742,14 @@ class Database {
         $actualStartTimestamp = $row[0];
         $upload -= $row[1];
         $download -= $row[2];
+      } else {
+        return null;
       }
     } else {
-      $upload = 0;
-      $download = 0;
+      return null;
+    }
+    if ($actualEndTimestamp <= $actualStartTimestamp || $actualEndTimestamp < $startTimestamp) {
+      return null;
     }
     return array(
         'start_ts' => $actualStartTimestamp,
@@ -764,6 +782,9 @@ class Database {
     if ($previousUpto) {
       $ts = $endTimestamp;
       $lag[tokey($ts)] = $ts - $previousUpto;
+    }
+    if (count($lag) == 0) {
+      return null;
     }
     return Database::downsampleTimeSeries($lag, $timeSeriesPoints, DownsampleMode::MIN_MAX);
   }
