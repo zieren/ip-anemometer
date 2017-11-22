@@ -385,9 +385,8 @@ class Database {
    *    'time_series': A list of 3-tuples (timestamp, avg, max).
    */
   public function computeWindStats($startTimestamp, $endTimestamp, $outputLength) {
-    $windowDuration = $endTimestamp - $startTimestamp;
     $q = 'SELECT start_ts, end_ts, avg, max, max_ts, hist_id, buckets FROM wind WHERE '
-        .'start_ts >= '.$startTimestamp.' AND end_ts <= '.$endTimestamp.' ORDER BY start_ts DESC';
+        .'start_ts >= '.$startTimestamp.' AND start_ts < '.$endTimestamp.' ORDER BY start_ts DESC';
     $result = $this->query($q);
 
     // Read samples in reverse chronological order until the desired duration is best approximated.
@@ -404,13 +403,7 @@ class Database {
     $timeSeries = array();
     while ($sample = $result->fetch_assoc()) {
       // TODO: What about gaps?
-      // XXX: Remove this for timestamp API.
-      // Can we approximate the desired duration better by including this row?
       $sampleDuration = Database::getSampleDuration($sample);
-      if (abs($actualWindowDuration - $windowDuration) <
-          abs($actualWindowDuration + $sampleDuration - $windowDuration)) {
-        break;
-      }
       $timeSeries[] = array(  // order as per WIND_SAMPLE_*
           $sample['start_ts'],
           $sample['end_ts'],
