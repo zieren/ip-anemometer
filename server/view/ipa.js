@@ -449,6 +449,13 @@ ipa.Chart.prototype.drawTempHum = function(element) {
   var options = {
     title: 'Temperature/Humidity',
     hAxis: {format: 'HH:mm'},
+    vAxes: {
+      0: {viewWindowMode: 'explicit'},
+      viewWindow: {
+        min: 0,
+        max: 100
+      }
+    },
     legend: {position: 'top'},
     series: {
       0: {targetAxisIndex: 0, color: '#0000ff'},
