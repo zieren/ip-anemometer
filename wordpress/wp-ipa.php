@@ -98,11 +98,11 @@ function ipa($atts) {
 
 // TODO: Unify and extract code shared with index.html.
 function ipaViewCommonJs($optionsJS) {
-  $jsUrl = plugin_dir_url(__FILE__).'/ipa.js';
+  $jsBaseUrl = plugin_dir_url(__FILE__);
   return <<<THEEND
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
-<script type="text/javascript" src="$jsUrl"></script>
+<script type="text/javascript" src="$jsBaseUrl/spin.min.js"></script>
+<script type="text/javascript" src="$jsBaseUrl/ipa.js"></script>
 <script>
 
 var ipaView = {};
