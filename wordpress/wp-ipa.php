@@ -253,7 +253,7 @@ function setPeriodSource($name, $atts) {
     return '';
   }
   if ($hasPeriodId) {
-    $period = 'id: "idIpa-'.$atts['period_id'].'-input"';
+    $period = 'id: "idIpaWp-'.$atts['period_id'].'-input"';
   } else {
     $period = 'fixed: "'.$atts['period'].'"';
   }
