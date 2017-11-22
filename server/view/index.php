@@ -3,7 +3,7 @@
 <title>IP Anemometer</title>
 <link rel="stylesheet" type="text/css" href="ipa.css" />
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<script type="text/javascript" src="http://fgnass.github.io/spin.js/spin.min.js"></script>
+<script type="text/javascript" src="spin.min.js"></script>
 <script type="text/javascript" src="ipa.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
 <script src="https://unpkg.com/flatpickr"></script>
