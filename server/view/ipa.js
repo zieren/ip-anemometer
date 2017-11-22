@@ -30,6 +30,7 @@ ipa.Options = function() {
     showTimeOfMax: false /* ,
     startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) */
   }
+  // These are just examples; the client sets these properties depending on what data to show.
   // this.temp_hum = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(60) };
   // this.adc = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
   // this.door = { startTimestamp: timestampNow - ipa.Tools.minutesToMillis(24 * 60) };
