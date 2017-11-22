@@ -75,7 +75,7 @@ function ipaFatalErrorHandler() {
 }
 register_shutdown_function('ipaFatalErrorHandler');
 
-define('IPA_SERVER_HEADING', 'IP anemometer server 0.3.2');
+define('IPA_SERVER_HEADING', 'IP anemometer server 0.4.0');
 
 define('NOT_AVAILABLE', 'n/a');
 

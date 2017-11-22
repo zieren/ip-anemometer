@@ -2,7 +2,7 @@
 Contributors: zieren
 Tags: weather, wind, anemometer, rc model aircraft
 Requires at least: 4
-Tested up to: 4.5.2
+Tested up to: 4.9
 License: GPL v3
 License URI: https://www.gnu.org/licenses/gpl-3.0-standalone.html
 
