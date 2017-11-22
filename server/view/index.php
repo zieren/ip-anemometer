@@ -80,9 +80,6 @@ function periodSelector($keys, $default) {
 
 <script type="text/javascript">
 
-//XXX magic period "today", "thisweek" or whatever to pick start of day?
-//or postfix "+"/"-" to increase/decrease until next full day/week? maybe "+d"?
-
 var ipaNow = new Date();
 ipaView.endPickr = flatpickr("#idIpaVwDateSelector", {
   enableTime: true,
