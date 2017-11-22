@@ -71,15 +71,15 @@ function handleRequest() {
       $db->insertStatus($data['status']);
     }
 
-    $db->commit();
-    $response['status'] = 'ok';
-
     // Explicit 'exit' command (may override exit=102 from client update above).
     $exitReturnValue = getExitReturnValue(get($config['c:exit']));
     if ($exitReturnValue !== null) {
       $response['exit'] = $exitReturnValue;
       $db->clearConfig('c:exit');
     }
+
+    $db->commit();
+    $response['status'] = 'ok';
   } catch (Exception $e) {
     $db->rollback();
     $logger->critical('Exception in ul.php: '.$e);
