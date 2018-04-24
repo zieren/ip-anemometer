@@ -63,7 +63,7 @@ function ipa($atts) {
     'period_id',  // period_selector id
     'period',     // fixed period
     // For period_selector:
-    'default',  // initial value TODO: This should be default_period
+    'default_period',  // initial value
     'id',       // ID for referencing in period_id above
     // For date_selector:
     'default_date',  // initial value
@@ -237,15 +237,15 @@ function periodSelector($atts) {
   if (!isset($atts['id'])) {
     return '<p><b>period_selector requires id="[unique id]"</b></p>';
   }
-  if (!isset($atts['default'])) {
-    return '<p><b>period_selector requires default="[default period]"</b></p>';
+  if (!isset($atts['default_period'])) {
+    return '<p><b>period_selector requires default_period="[default period]"</b></p>';
   }
   $id = 'idIpaWp-'.$atts['id'];
   return
 '<div id="'.$id.'-div" class="ipaWpElementCenter ipaSpinnerContainer">
   Period: <input id="'.$id.'-input" type="text" maxlength="8" size="6"
       onkeypress="ipaView.handleKeyPress(event, \''.$id.'-div\')"
-      value="'.$atts['default'].'" />
+      value="'.$atts['default_period'].'" />
   <button onclick="ipaView.requestStats(\''.$id.'-div\')">Show</button>
 </div>';
 }
