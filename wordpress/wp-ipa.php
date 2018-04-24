@@ -63,8 +63,10 @@ function ipa($atts) {
     'period_id',  // period_selector id
     'period',     // fixed period
     // For period_selector:
-    'default',  // initial value
+    'default',  // initial value TODO: This should be default_period
     'id',       // ID for referencing in period_id above
+    // For date_selector:
+    'default_date',  // initial value
     // For status chart:
     'hideok',
     // For ADC chart:
@@ -212,10 +214,13 @@ Date/time: <input id="idIpaWpDateSelector" size="16" placeholder="up to date/tim
 <script src="https://unpkg.com/flatpickr"></script>
 <script type="text/javascript">
 var ipaNow = new Date();
+var date = '.(isset($atts['default_date'])
+    ? 'new Date("'.$atts['default_date'].'")'
+    : 'ipaNow').';
 ipaView.endPickr = flatpickr("#idIpaWpDateSelector", {
   enableTime: true,
   time_24hr: true,
-  defaultDate: ipaNow,
+  defaultDate: date,
   maxDate: ipaNow,
   allowInput: true,
   locale: {
