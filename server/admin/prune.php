@@ -24,6 +24,7 @@ if (get($_GET['days'], null)) {
     // Delete log files. Parse KLogger default file name format to determine date.
     $dateString = date('Y-m-d H:i:s', $pruneTimestamp / 1000);
     $logfiles = scandir(LOG_DIR);
+    $matches = null;
     foreach ($logfiles as $f) {
       if (preg_match(LOG_PATTERN, $f, $matches)) {
         $ts = dateStringToTimestamp($matches[1].'-'.$matches[2].'-'.$matches[3])
