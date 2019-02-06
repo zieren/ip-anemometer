@@ -459,7 +459,7 @@ class Database {
       $v = intVal($bucket['v']);
       $histogram[$v] = get($histogram[$v], 0) + $bucket['p'] * $sampleDuration;
     }
-    foreach ($histogram as $v => $p) {
+    foreach (array_keys($histogram) as $v) {
       $histogram[$v] /= $actualWindowDuration;
     }
     ksort($histogram);
