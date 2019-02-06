@@ -37,26 +37,26 @@ function intvalWithTrim($s) {
 
 function ipa($atts) {
   $options = array(
-    'url' => array('ipaView.options.url', quoteWithTrim),
-    'spinner' => array('ipaView.optionsLocal.spinner', intvalWithTrim),
-    'samples' => array('ipaView.options.timeSeriesPoints', intvalWithTrim)
+    'url' => array('ipaView.options.url', 'quoteWithTrim'),
+    'spinner' => array('ipaView.optionsLocal.spinner', 'intvalWithTrim'),
+    'samples' => array('ipaView.options.timeSeriesPoints', 'intvalWithTrim')
   );
   $handlers = array(
-    'date_selector' => dateSelector,
-    'period_selector' => periodSelector,
-    'status' => status,
-    'wind_summary' => windSummary,
-    'wind_speed' => windSpeed,
-    'wind_histogram' => windHistogram,
-    'pilots' => pilots,
-    'adc' => adc,
-    'temp_hum' => tempHum,
-    'door' => door,
-    'lag' => lag,
-    'cpu_temp' => cpuTemp,
-    'signal' => signal,
-    'network' => network,
-    'traffic' => traffic
+    'date_selector' => 'dateSelector',
+    'period_selector' => 'periodSelector',
+    'status' => 'status',
+    'wind_summary' => 'windSummary',
+    'wind_speed' => 'windSpeed',
+    'wind_histogram' => 'windHistogram',
+    'pilots' => 'pilots',
+    'adc' => 'adc',
+    'temp_hum' => 'tempHum',
+    'door' => 'door',
+    'lag' => 'lag',
+    'cpu_temp' => 'cpuTemp',
+    'signal' => 'signal',
+    'network' => 'network',
+    'traffic' => 'traffic'
   );
   $arguments = array(
     // For all charts:
