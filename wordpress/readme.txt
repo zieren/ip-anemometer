@@ -1,6 +1,6 @@
 === IP Anemometer ===
 Contributors: zieren
-Tags: weather, wind, anemometer, rc model aircraft
+Tags: weather, wind, anemometer, raspberry pi
 Requires at least: 4
 Tested up to: 4.9
 License: GPL v3
