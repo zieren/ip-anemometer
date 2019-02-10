@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO  #@UnresolvedImport
+import sys
 
 
 import K
@@ -23,11 +24,16 @@ class Config:
     self._readFile();
 
   def _readFile(self):
-    for line in open(K.CONFIG_FILENAME, 'r'):
-      entry = [x.strip() for x in line.split('=', 1)]
-      if len(entry) != 2:
-        raise RuntimeError('invalid line in config file: "%s"' % line)
-      self._cfg[entry[0]] = entry[1]
+    try:
+      for line in open(K.CONFIG_FILENAME, 'r'):
+        entry = [x.strip() for x in line.split('=', 1)]
+        if len(entry) != 2:
+          raise RuntimeError('invalid line in config file: "%s"' % line)
+        self._cfg[entry[0]] = entry[1]
+    except IOError, e:
+      print '---> Failed to read config file %s' % K.CONFIG_FILENAME
+      print '---> Please see the FAQ here: https://zieren.de/ip-anemometer/faq/'
+      raise e
 
   def DEMO_MODE_ENABLED(self):
     return int(self._cfg['demo_mode_enabled']) != 0
