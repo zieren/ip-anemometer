@@ -48,6 +48,7 @@ echo '
 Components:
 <a href="http://codefury.net/projects/klogger/">KLogger</a> by Kenny Katzgrau, MIT license.
 <a href="http://spin.js.org/">spin.js</a> by Felix Gnass, Timothy Gu and others, MIT license.
+<a href="https://github.com/flatpickr/flatpickr">flatpickr</a>, MIT license.
 </p>
 <p><a href="../view/">View anemometer</a></p>
 
