@@ -11,4 +11,4 @@ Also supported:
 - MCP3008 analog/digital converter for custom inputs, e.g. voltage.
 - Digital switches, e.g. "door open" detection and pilot counter.
 
-See http://zieren.de for more information.
+Read the [full documentation](https://zieren.de/software/ip-anemometer).
